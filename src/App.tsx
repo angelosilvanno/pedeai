@@ -242,7 +242,7 @@ function App() {
             ) : !lojaSelecionada ? (
               /* LISTAGEM DE ESTABELECIMENTOS (RF03) */
               <div className="space-y-8">
-                <h2 className="font-black text-zinc-400 text-[10px] uppercase tracking-widest ml-2 tracking-[0.2em]">Lojas prontas para te atender</h2>
+                <h2 className="font-black text-zinc-400 text-[10px] uppercase tracking-widest ml-2">Lojas prontas para te atender</h2>
                 <div className="grid grid-cols-1 gap-4">
                   {todasAsLojas.filter(l => l.status === 'Ativa').map(loja => (
                     <div 
@@ -354,8 +354,8 @@ function App() {
           /* --- ÁREA DO VENDEDOR (RF12 ao RF19) --- */
           <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
             <div className="flex gap-3 bg-zinc-200 p-2.5 rounded-[35px] shadow-inner">
-              <button onClick={() => setAbaVendedor('Pedidos')} className={`flex-1 p-5 rounded-[25px] font-black text-xs transition-all tracking-[0.1em] ${abaVendedor === 'Pedidos' ? 'bg-white shadow-md text-orange-600' : 'text-zinc-500'}`}>VENDAS</button>
-              <button onClick={() => setAbaVendedor('Cardapio')} className={`flex-1 p-5 rounded-[25px] font-black text-xs transition-all tracking-[0.1em] ${abaVendedor === 'Cardapio' ? 'bg-white shadow-md text-orange-600' : 'text-zinc-500'}`}>CARDÁPIO</button>
+              <button onClick={() => setAbaVendedor('Pedidos')} className={`flex-1 p-5 rounded-[25px] font-black text-xs transition-all tracking-widest ${abaVendedor === 'Pedidos' ? 'bg-white shadow-md text-orange-600' : 'text-zinc-500'}`}>VENDAS</button>
+              <button onClick={() => setAbaVendedor('Cardapio')} className={`flex-1 p-5 rounded-[25px] font-black text-xs transition-all tracking-widest ${abaVendedor === 'Cardapio' ? 'bg-white shadow-md text-orange-600' : 'text-zinc-500'}`}>CARDÁPIO</button>
             </div>
             {abaVendedor === 'Pedidos' ? (
               todosOsPedidos.length === 0 ? <p className="text-center py-32 text-zinc-300 font-black italic uppercase tracking-widest">Aguardando seu primeiro pedido... 🍕</p> :
