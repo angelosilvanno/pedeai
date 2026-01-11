@@ -330,11 +330,9 @@ function App() {
               <div className="bg-white p-12 rounded-[55px] shadow-sm border border-zinc-100 space-y-8 text-center relative overflow-hidden transition-all hover:shadow-md">
                 <div className="w-32 h-32 bg-orange-100 rounded-[40px] flex items-center justify-center text-7xl mx-auto border-8 border-white shadow-xl shadow-orange-100">👤</div>
                 <div>
-                  {/* AJUSTE: Nome completo em destaque com a primeira letra maiúscula (capitalize) */}
                   <h3 className="font-black text-3xl text-zinc-800 tracking-tighter capitalize">
                     {usuarioNomeCompleto || 'Usuário PedeAí'}
                   </h3>
-                  {/* AJUSTE: Username em minúsculas discretas logo abaixo */}
                   <p className="text-zinc-400 font-bold text-sm lowercase mt-1 tracking-wide">
                     @{usuarioUsername.toLowerCase() || 'pedeai'}
                   </p>
