@@ -330,7 +330,7 @@ function App() {
               )}
             </div>
           ) : (
-            /* VISÃO DO PERFIL DO CLIENTE (AJUSTADA CONFORME SOLICITADO) */
+            /* VISÃO DO PERFIL DO CLIENTE*/
             <div className="space-y-10 text-center animate-in fade-in duration-700">
               <h2 className="text-2xl font-black text-zinc-800 tracking-tight uppercase">Meu Perfil</h2>
               <div className="bg-white p-12 rounded-[55px] shadow-sm border border-zinc-100 space-y-8 text-center relative overflow-hidden transition-all hover:shadow-md">
@@ -355,7 +355,7 @@ function App() {
         )}
 
         {visao === 'Vendedor' && (
-          /* --- ÁREA DO VENDEDOR (RF12 ao RF19) --- */
+          /* --- ÁREA DO VENDEDOR --- */
           <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
             <div className="flex gap-3 bg-zinc-200 p-2.5 rounded-[35px] shadow-inner">
               <button onClick={() => setAbaVendedor('Pedidos')} className={`flex-1 p-5 rounded-[25px] font-black text-xs transition-all tracking-widest ${abaVendedor === 'Pedidos' ? 'bg-white shadow-md text-orange-600' : 'text-zinc-500'}`}>VENDAS</button>
