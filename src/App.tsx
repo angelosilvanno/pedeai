@@ -18,6 +18,10 @@ function App() {
   const [campoLoginIdentificacao, setCampoLoginIdentificacao] = useState('');
   const [campoLoginSenha, setCampoLoginSenha] = useState('');
 
+  // ESTADO CORRIGIDO: Adicionado 'Admin' para ser compatível com as props de AuthScreen
+  const [tipoUsuario, setTipoUsuario] = useState<'Cliente' | 'Vendedor' | 'Admin'>('Cliente');
+  const [nomeLoja, setNomeLoja] = useState('');
+
   // --- ESTADOS DE NAVEGAÇÃO PRINCIPAL ---
   const [visao, setVisao] = useState<'Cliente' | 'Vendedor' | 'Admin'>('Cliente');
   const [abaAtiva, setAbaAtiva] = useState<'Inicio' | 'Pedidos' | 'Perfil'>('Inicio');
@@ -169,6 +173,10 @@ function App() {
         setUsuarioEmail={setUsuarioEmail}
         usuarioSenha={usuarioSenha}
         setUsuarioSenha={setUsuarioSenha}
+        tipoUsuario={tipoUsuario}
+        setTipoUsuario={setTipoUsuario}
+        nomeLoja={nomeLoja}
+        setNomeLoja={setNomeLoja}
         handleLogin={handleLogin}
         handleCadastro={handleCadastro}
       />
@@ -432,7 +440,6 @@ function App() {
       {/* MENU INFERIOR FIXO PARA O CLIENTE (NAVEGAÇÃO TIPO APP) */}
       {visao === 'Cliente' && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-5 flex justify-around max-w-xl mx-auto z-50 rounded-t-[45px] shadow-2xl">
-          {/* AJUSTE: scale-105 e text-[10px] para uma navegação suave e limpa */}
           <button 
             onClick={() => { setAbaAtiva('Inicio'); setLojaSelecionada(null); setEstaFinalizando(false); }} 
             className={`flex flex-col items-center gap-1 transition-all duration-300 ${abaAtiva === 'Inicio' ? 'text-orange-600 scale-105' : 'text-zinc-300'}`}
