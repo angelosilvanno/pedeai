@@ -401,7 +401,7 @@ function App() {
         )}
 
         {visao === 'Admin' && (
-          /* --- ÁREA DO ADMINISTRADOR (RF20 ao RF22) --- */
+          /* --- ÁREA DO ADMINISTRADOR --- */
           <div className="space-y-10 animate-in slide-in-from-top duration-500">
             <h2 className="text-2xl font-black text-zinc-800 text-center tracking-tighter uppercase">Painel Geral PedeAí</h2>
             <div className="grid grid-cols-2 gap-6 text-center">
