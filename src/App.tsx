@@ -437,7 +437,7 @@ function App() {
         )}
       </main>
 
-      {/* MENU INFERIOR FIXO PARA O CLIENTE (NAVEGAÇÃO TIPO APP) */}
+      {/* MENU NAVEGAÇÃO APP) */}
       {visao === 'Cliente' && (
         <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-5 flex justify-around max-w-xl mx-auto z-50 rounded-t-[45px] shadow-2xl">
           <button 
