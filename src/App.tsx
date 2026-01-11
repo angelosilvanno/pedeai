@@ -19,13 +19,11 @@ function App() {
   const [campoLoginSenha, setCampoLoginSenha] = useState('');
 
   // --- ESTADOS DE NAVEGAÇÃO PRINCIPAL ---
-  // Aqui definimos o que cada um dos 3 tipos de usuários verá na tela.
   const [visao, setVisao] = useState<'Cliente' | 'Vendedor' | 'Admin'>('Cliente');
   const [abaAtiva, setAbaAtiva] = useState<'Inicio' | 'Pedidos' | 'Perfil'>('Inicio');
   const [abaVendedor, setAbaVendedor] = useState<'Pedidos' | 'Cardapio'>('Pedidos');
 
   // --- ESTADOS DE DADOS (Simulação de Banco de Dados Completo) ---
-  // Estes dados alimentam as listas e cardápios de todo o PedeAí.
   const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([
     { id: 1, nome: "Pizzaria do João", categoria: "Pizzas", imagem: "🍕", status: 'Ativa' },
     { id: 2, nome: "Hambúrguer da Vila", categoria: "Lanches", imagem: "🍔", status: 'Ativa' },
@@ -242,7 +240,7 @@ function App() {
             ) : !lojaSelecionada ? (
               /* LISTAGEM DE ESTABELECIMENTOS (RF03) */
               <div className="space-y-8">
-                <h2 className="font-black text-zinc-400 text-[10px] uppercase tracking-widest ml-2">Lojas prontas para te atender</h2>
+                <h2 className="font-black text-zinc-400 text-[10px] uppercase tracking-widest ml-2">Onde vamos pedir hoje?</h2>
                 <div className="grid grid-cols-1 gap-4">
                   {todasAsLojas.filter(l => l.status === 'Ativa').map(loja => (
                     <div 
@@ -262,7 +260,7 @@ function App() {
             ) : (
               /* VISUALIZAÇÃO DO CARDÁPIO (RF04, RF05) */
               <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
-                <button onClick={() => setLojaSelecionada(null)} className="text-orange-600 font-black flex items-center gap-2"><span>←</span> Outras lojas</button>
+                <button onClick={() => setLojaSelecionada(null)} className="text-orange-600 font-black flex items-center gap-2"><span>←</span> Outros estabelecimentos</button>
                 <div className="flex items-center gap-6">
                    <div className="text-6xl bg-white p-4 rounded-3xl shadow-sm border border-zinc-100">{lojaSelecionada.imagem}</div>
                    <div>
@@ -409,7 +407,7 @@ function App() {
               </div>
             </div>
             <div className="space-y-5 px-2">
-              <h3 className="font-black text-zinc-400 text-xs uppercase ml-2 tracking-[0.3em]">Gestão de Lojas</h3>
+              <h3 className="font-black text-zinc-400 text-xs uppercase ml-2 tracking-[0.3em]">Gestão de Estabelecimentos</h3>
               {todasAsLojas.map(loja => (
                 <div key={loja.id} className="bg-white p-6 rounded-[40px] shadow-sm border border-zinc-100 flex justify-between items-center transition-all hover:shadow-md">
                   <div className="flex items-center gap-5">
