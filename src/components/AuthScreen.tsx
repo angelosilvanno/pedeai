@@ -44,7 +44,7 @@ export function AuthScreen({
   handleCadastro
 }: AuthProps) {
   return (
-    <div className="min-h-screen bg-orange-600 flex flex-col items-center justify-center p-6 font-sans text-zinc-900">
+    <div className="min-h-screen overflow-hidden bg-orange-600 flex flex-col items-center justify-center p-6 font-sans text-zinc-900">
       <div className="max-w-md w-full bg-white rounded-[45px] shadow-2xl p-10 space-y-8 animate-in zoom-in duration-500">
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-black italic text-orange-600 tracking-tighter uppercase">PedeAí</h1>
