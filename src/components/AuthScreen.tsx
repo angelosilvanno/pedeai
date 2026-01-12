@@ -13,7 +13,6 @@ interface AuthProps {
   setUsuarioEmail: (val: string) => void;
   usuarioSenha: string;
   setUsuarioSenha: (val: string) => void;
-  // Propriedades adicionadas para corrigir o erro da imagem
   tipoUsuario: 'Cliente' | 'Vendedor' | 'Admin';
   setTipoUsuario: (tipo: 'Cliente' | 'Vendedor' | 'Admin') => void;
   nomeLoja: string;
@@ -37,7 +36,6 @@ export function AuthScreen({
   setUsuarioEmail,
   usuarioSenha,
   setUsuarioSenha,
-  // Extração das novas propriedades para uso no HTML
   tipoUsuario,
   setTipoUsuario,
   nomeLoja,
@@ -81,7 +79,6 @@ export function AuthScreen({
           <div className="space-y-5">
             <h2 className="text-xl font-black text-zinc-800 tracking-tight">Criar Cadastro</h2>
             
-            {/* Seletor de Tipo de Usuário (Correção da Imagem) */}
             <div className="flex gap-2 bg-zinc-100 p-1 rounded-2xl mb-4">
               {(['Cliente', 'Vendedor', 'Admin'] as const).map((tipo) => (
                 <button
@@ -104,13 +101,12 @@ export function AuthScreen({
               />
               <input 
                 type="text" 
-                placeholder="Username desejado" 
+                placeholder="Username" 
                 className="w-full p-5 bg-zinc-100 border-none rounded-3xl outline-none focus:ring-2 ring-orange-400 font-medium transition-all" 
                 value={usuarioUsername}
                 onChange={(e) => setUsuarioUsername(e.target.value)}
               />
               
-              {/* Campo que aparece apenas se for Vendedor */}
               {tipoUsuario === 'Vendedor' && (
                 <input 
                   type="text" 
