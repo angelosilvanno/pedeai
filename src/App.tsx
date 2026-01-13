@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { 
   Home, 
   ClipboardList, 
@@ -19,16 +19,18 @@ import {
   Trash2,
   Lock,
   ChevronRight,
-  ShoppingBasket
+  ShoppingBasket,
+  LogOut
 } from 'lucide-react'
 import type { Loja, Produto, Pedido } from './types'
 import { AuthScreen } from './components/AuthScreen'
 
 /**
  * --- COMPONENTE PRINCIPAL APP ---
+ * Versão Integral Absoluta: Sem cortes, Persistência LocalStorage Total e UI Profissional.
  */
 function App() {
-  // --- 1. ESTADOS DE ACESSO (PERSISTÊNCIA COM LOCALSTORAGE) ---
+  // --- 1. ESTADOS DE ACESSO E SEGURANÇA (PERSISTÊNCIA) ---
   const [estaLogado, setEstaLogado] = useState(() => {
     return localStorage.getItem('@PedeAi:estaLogado') === 'true';
   });
@@ -55,63 +57,88 @@ function App() {
     return (localStorage.getItem('@PedeAi:tipo') as 'Cliente' | 'Vendedor' | 'Admin') || 'Cliente';
   });
 
-  // Campos temporários de formulário
+  // Campos temporários de formulário (não persistem no F5)
   const [usuarioSenha, setUsuarioSenha] = useState('');
   const [usuarioSenhaConfirm, setUsuarioSenhaConfirm] = useState('');
   const [campoLoginIdentificacao, setCampoLoginIdentificacao] = useState('');
   const [campoLoginSenha, setCampoLoginSenha] = useState('');
   const [nomeLoja, setNomeLoja] = useState('');
 
-  // --- ESTADOS DE NAVEGAÇÃO ---
+  // --- 2. ESTADOS DE NAVEGAÇÃO E INTERFACE ---
   const [abaAtiva, setAbaAtiva] = useState<'Inicio' | 'Pedidos' | 'Perfil'>('Inicio');
   const [abaVendedor, setAbaVendedor] = useState<'Pedidos' | 'Cardapio'>('Pedidos');
   const [busca, setBusca] = useState('');
   const [toast, setToast] = useState<{ mensagem: string; tipo: 'sucesso' | 'erro' } | null>(null);
 
-  // --- ESTADOS DE DADOS (INTEGRAL) ---
-  const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([
-    { id: 1, nome: "Pizzaria do João", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
-    { id: 2, nome: "Hambúrguer da Vila", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
-    { id: 3, nome: "Doces da Maria", categoria: "Doceria", imagem: "CakeSlice", status: 'Ativa' },
-    { id: 4, nome: "Sushiman da Cidade", categoria: "Japonesa", imagem: "Fish", status: 'Ativa' },
-    { id: 5, nome: "Farmácia Central", categoria: "Saúde", imagem: "Stethoscope", status: 'Pendente' },
-    { id: 6, nome: "Supermercado Econômico", categoria: "Mercado", imagem: "Store", status: 'Ativa' },
-  ]);
+  // --- 3. ESTADOS DE DADOS (COM SINCRONIZAÇÃO LOCALSTORAGE) ---
+  
+  // Lista de Estabelecimentos
+  const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>(() => {
+    const salvo = localStorage.getItem('@PedeAi:lojas');
+    return salvo ? JSON.parse(salvo) : [
+      { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
+      { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
+      { id: 3, nome: "Doçuras da Ana", categoria: "Doceria", imagem: "CakeSlice", status: 'Ativa' },
+      { id: 4, nome: "Tanaka Sushi", categoria: "Japonesa", imagem: "Fish", status: 'Ativa' },
+      { id: 5, nome: "Farmácia São Lucas", categoria: "Saúde", imagem: "Stethoscope", status: 'Pendente' },
+      { id: 6, nome: "Mercado do Sr. Zé", categoria: "Mercado", imagem: "Store", status: 'Ativa' },
+    ];
+  });
 
-  const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>([
-    // Cardápio da Pizzaria
-    { id: 'p1', lojaId: 1, nome: "Pizza Calabresa Familiar", preco: 45.90, descricao: "Mussarela, calabresa selecionada e cebola." },
-    { id: 'p2', lojaId: 1, nome: "Pizza de Frango c/ Catupiry", preco: 49.00, descricao: "Frango desfiado temperado e Catupiry legítimo." },
-    { id: 'p3', lojaId: 1, nome: "Pizza Margherita", preco: 44.00, descricao: "Tomate fresco, manjericão e mussarela." },
-    // Cardápio da Hamburgueria
-    { id: 'h1', lojaId: 2, nome: "X-Bacon Supremo", preco: 28.50, descricao: "Pão brioche, blend 150g, muito bacon e cheddar." },
-    { id: 'h2', lojaId: 2, nome: "Smash Burger Simples", preco: 19.90, descricao: "Carne smash 90g, queijo e molho especial." },
-    { id: 'h3', lojaId: 2, nome: "Porção Batata G", preco: 18.00, descricao: "Batata frita rústica com alecrim e sal." },
-    // Cardápio da Doceria
-    { id: 'd1', lojaId: 3, nome: "Bolo de Pote Ninho", preco: 15.00, descricao: "Creme de ninho com pedaços de morango." },
-    { id: 'd2', lojaId: 3, nome: "Fatia Torta Holandesa", preco: 12.50, descricao: "Creme leve e cobertura de chocolate." },
-    { id: 'd3', lojaId: 3, nome: "Brigadeiro Gourmet", preco: 4.50, descricao: "Chocolate belga 50% cacau." },
-    // Cardápio Japonês
-    { id: 'j1', lojaId: 4, nome: "Combinado 15 peças", preco: 55.00, descricao: "Sashimis, hossomakis e uramakis variados." },
-    { id: 'j2', lojaId: 4, nome: "Temaki Salmão Completo", preco: 29.90, descricao: "Salmão fresco, cream cheese e cebolinha." },
-  ]);
+  // Lista de Todos os Produtos
+  const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>(() => {
+    const salvo = localStorage.getItem('@PedeAi:produtos');
+    return salvo ? JSON.parse(salvo) : [
+      // Pizzaria Oliveira
+      { id: 'p1', lojaId: 1, nome: "Margherita Especial", preco: 48.90, descricao: "Molho artesanal, muçarela premium, tomate cereja e manjericão fresco." },
+      { id: 'p2', lojaId: 1, nome: "Calabresa com Cebola Roxa", preco: 45.00, descricao: "Calabresa defumada, cebola roxa caramelizada e azeitonas pretas." },
+      { id: 'p3', lojaId: 1, nome: "Frango com Catupiry Real", preco: 52.00, descricao: "Peito de frango desfiado com tempero da casa e Catupiry legítimo." },
+      // Burger da Mari
+      { id: 'h1', lojaId: 2, nome: "Smash Mari Clássico", preco: 26.50, descricao: "Dois blends de 90g, cheddar derretido e molho secreto no pão brioche." },
+      { id: 'h2', lojaId: 2, nome: "Bacon Supreme", preco: 32.90, descricao: "Carne 160g grelhada, bacon crocante, maionese defumada e picles." },
+      { id: 'h3', lojaId: 2, nome: "Veggie Delight", preco: 29.00, descricao: "Hambúrguer de grão-de-bico, rúcula e geleia de pimenta no pão australiano." },
+      // Doçuras da Ana
+      { id: 'd1', lojaId: 3, nome: "Ninho com Nutella", preco: 18.00, descricao: "Camadas generosas de creme de leite Ninho e cobertura de Nutella pura." },
+      { id: 'd2', lojaId: 3, nome: "Fatia Torta Holandesa", preco: 15.50, descricao: "Base crocante de biscoito, creme de baunilha e ganache meio amargo." },
+      { id: 'd3', lojaId: 3, nome: "Brigadeiro de Pistache", preco: 6.50, descricao: "Brigadeiro gourmet com pistache triturado e chocolate belga branco." },
+      // Tanaka Sushi
+      { id: 'j1', lojaId: 4, nome: "Combinado Premium (15pçs)", preco: 65.00, descricao: "5 Sashimis, 5 Uramakis Philadelphia e 5 Hossomakis de Kani." },
+      { id: 'j2', lojaId: 4, nome: "Temaki Salmão Completo", preco: 34.90, descricao: "Salmão fresco em cubos, cream cheese e cebolinha crocante." },
+      { id: 'j3', lojaId: 4, nome: "Hot Roll Especial", preco: 28.00, descricao: "Salmão empanado frito com molho tarê e gergelim tostado." },
+    ];
+  });
 
-  const [todosOsPedidos, setTodosOsPedidos] = useState<Pedido[]>([]);
+  // Histórico de Pedidos
+  const [todosOsPedidos, setTodosOsPedidos] = useState<Pedido[]>(() => {
+    const salvo = localStorage.getItem('@PedeAi:pedidos');
+    return salvo ? JSON.parse(salvo) : [];
+  });
+
+  // Estados de Compra
   const [lojaSelecionada, setLojaSelecionada] = useState<Loja | null>(null);
   const [carrinho, setCarrinho] = useState<Produto[]>([]);
   const [estaFinalizando, setEstaFinalizando] = useState(false);
   const [enderecoEntrega, setEnderecoEntrega] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Dinheiro');
 
-  // --- FUNÇÕES DE FEEDBACK ---
+  // --- 4. EFEITOS DE PERSISTÊNCIA (AUTO-SAVE) ---
+  useEffect(() => {
+    localStorage.setItem('@PedeAi:lojas', JSON.stringify(todasAsLojas));
+  }, [todasAsLojas]);
+
+  useEffect(() => {
+    localStorage.setItem('@PedeAi:produtos', JSON.stringify(todosOsProdutos));
+  }, [todosOsProdutos]);
+
+  useEffect(() => {
+    localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos));
+  }, [todosOsPedidos]);
+
+  // --- 5. FUNÇÕES DE FEEDBACK E SUPORTE ---
   const notify = (mensagem: string, tipo: 'sucesso' | 'erro' = 'sucesso') => {
     setToast({ mensagem, tipo });
     setTimeout(() => setToast(null), 3000);
   };
-
-  /**
-   * --- FUNÇÕES DE LÓGICA DO SISTEMA ---
-   */
 
   const handleLogin = () => {
     if (!campoLoginIdentificacao || !campoLoginSenha) {
@@ -120,24 +147,30 @@ function App() {
     }
     const nomeFinal = usuarioNomeCompleto || "Angelo Silvano";
     const userFinal = usuarioUsername || campoLoginIdentificacao.toLowerCase();
+    const emailFinal = usuarioEmail || "contato@pedeai.com";
 
     localStorage.setItem('@PedeAi:estaLogado', 'true');
     localStorage.setItem('@PedeAi:nome', nomeFinal);
     localStorage.setItem('@PedeAi:username', userFinal);
+    localStorage.setItem('@PedeAi:email', emailFinal);
     localStorage.setItem('@PedeAi:tipo', tipoUsuario);
 
     setUsuarioNomeCompleto(nomeFinal);
+    setUsuarioUsername(userFinal);
+    setUsuarioEmail(emailFinal);
     setVisao(tipoUsuario); 
     setEstaLogado(true);
     notify(`Bem-vindo, ${nomeFinal.split(' ')[0]}!`);
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    setEstaLogado(false);
-    setVisao('Cliente');
-    setAbaAtiva('Inicio');
-    notify("Você saiu da conta.");
+    if (confirm("Deseja realmente sair da conta?")) {
+      localStorage.removeItem('@PedeAi:estaLogado');
+      setEstaLogado(false);
+      setVisao('Cliente');
+      setAbaAtiva('Inicio');
+      notify("Você saiu da conta.");
+    }
   };
 
   const handleCadastro = () => {
@@ -156,9 +189,10 @@ function App() {
     notify("Cadastro realizado com sucesso!");
   };
 
+  // --- 6. FUNÇÕES DE NEGÓCIO E GERENCIAMENTO ---
   const realizarPedidoFinal = () => {
     if (!enderecoEntrega) {
-      notify("O endereço de entrega é obrigatório.", 'erro');
+      notify("O endereço de entrega é fundamental!", 'erro');
       return;
     }
     const novoPedido: Pedido = {
@@ -182,12 +216,14 @@ function App() {
 
   const mudarStatusPedidoVendedor = (id: string, novoStatus: Pedido['status']) => {
     setTodosOsPedidos(todosOsPedidos.map(p => p.id === id ? { ...p, status: novoStatus } : p));
-    notify(`Pedido atualizado para: ${novoStatus}`);
+    notify(`Status atualizado para: ${novoStatus}`);
   };
 
   const removerProdutoVendedor = (id: string) => {
-    setTodosOsProdutos(todosOsProdutos.filter(p => p.id !== id));
-    notify("Produto removido do cardápio.");
+    if (confirm("Remover este item do cardápio?")) {
+      setTodosOsProdutos(todosOsProdutos.filter(p => p.id !== id));
+      notify("Produto removido.");
+    }
   };
 
   const gerenciarLojaAdmin = (id: number, acao: 'Aprovar' | 'Bloquear') => {
@@ -209,14 +245,14 @@ function App() {
         lojaId: 1, 
         nome,
         preco: parseFloat(preco.replace(',', '.')),
-        descricao: "Produto adicionado pelo lojista."
+        descricao: "Produto adicionado via Painel do Vendedor."
       };
       setTodosOsProdutos([...todosOsProdutos, novoProduto]);
       notify("Novo item adicionado!");
     }
   };
 
-  // --- LÓGICA DE DERIVAÇÃO DE DADOS ---
+  // --- 7. LÓGICA DE DERIVAÇÃO DE DADOS (MEMO) ---
   const lojasFiltradas = useMemo(() => {
     return todasAsLojas.filter(l => 
       l.status === 'Ativa' && 
@@ -241,6 +277,7 @@ function App() {
     }
   };
 
+  // --- 8. RENDERIZAÇÃO DA TELA DE AUTENTICAÇÃO ---
   if (!estaLogado) {
     return (
       <AuthScreen 
@@ -259,6 +296,7 @@ function App() {
     );
   }
 
+  // --- 9. RENDERIZAÇÃO DA INTERFACE PRINCIPAL ---
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 pb-40 font-sans selection:bg-orange-200">
       
@@ -270,12 +308,12 @@ function App() {
         </div>
       )}
 
-      {/* HEADER  */}
+      {/* HEADER REFINADO */}
       <header className="relative bg-linear-to-br from-orange-600 to-orange-500 p-8 text-white shadow-xl">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">Olá, {usuarioNomeCompleto.split(' ')[0]}!</p>
-            <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none">PedeAí</h1>
+            <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest leading-none">Olá, {usuarioNomeCompleto.split(' ')[0]}!</p>
+            <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none mt-1">PedeAí</h1>
           </div>
           <div className="flex items-center gap-1.5 bg-white/20 px-4 py-2 rounded-full text-[10px] font-bold">
             <MapPin size={12} /> Cidades Pequenas
@@ -286,6 +324,7 @@ function App() {
       <main className="mx-auto max-w-xl p-5">
         
         {visao === 'Cliente' && (
+          /* --- ÁREA DO CLIENTE --- */
           abaAtiva === 'Inicio' ? (
             estaFinalizando ? (
               /* TELA DE CHECKOUT */
@@ -307,7 +346,7 @@ function App() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold text-zinc-400 uppercase ml-2">Forma de Pagamento</label>
                       <select 
-                        className="w-full rounded-3xl bg-zinc-50 p-5 font-bold outline-none ring-orange-100 focus:ring-4 appearance-none" 
+                        className="w-full rounded-3xl bg-zinc-50 p-5 font-bold outline-none appearance-none" 
                         value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)}
                       >
                         <option value="Dinheiro">Dinheiro na entrega</option>
@@ -316,9 +355,9 @@ function App() {
                       </select>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between border-t-2 border-zinc-50 pt-6">
-                    <span className="text-xs font-bold text-zinc-400 uppercase">Total</span>
-                    <p className="text-3xl font-black italic text-green-600 tracking-tighter">R$ {carrinho.reduce((acc, item) => acc + item.preco, 0).toFixed(2)}</p>
+                  <div className="flex items-center justify-between border-t-2 border-zinc-50 pt-6 font-black">
+                    <span className="text-xs font-bold text-zinc-400 uppercase">Total do Pedido</span>
+                    <p className="text-3xl italic text-green-600 tracking-tighter">R$ {carrinho.reduce((acc, item) => acc + item.preco, 0).toFixed(2)}</p>
                   </div>
                   <button onClick={realizarPedidoFinal} className="w-full rounded-3xl bg-orange-600 p-6 text-xl font-black text-white shadow-lg active:scale-95 transition-all">Confirmar Agora!</button>
                 </div>
@@ -366,7 +405,7 @@ function App() {
             ) : (
               /* VISUALIZAÇÃO DO CARDÁPIO */
               <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
-                <button onClick={() => setLojaSelecionada(null)} className="flex items-center gap-2 font-bold text-orange-600 text-sm"><ArrowLeft size={16} /> Ver outras lojas</button>
+                <button onClick={() => setLojaSelecionada(null)} className="flex items-center gap-2 font-bold text-orange-600 text-sm"><ArrowLeft size={16} /> Voltar</button>
                 <div className="flex items-center gap-6">
                    <div className="rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm">{getStoreIcon(lojaSelecionada.imagem)}</div>
                    <div>
@@ -392,16 +431,13 @@ function App() {
               </div>
             )
           ) : abaAtiva === 'Pedidos' ? (
-            /* LISTA DE PEDIDOS */
+            /* LISTA DE PEDIDOS DO CLIENTE */
             <div className="space-y-8 animate-in fade-in">
               <h2 className="text-2xl font-black text-zinc-800 tracking-tight">Meus pedidos</h2>
               {todosOsPedidos.length === 0 ? (
                 <div className="py-24 text-center">
-                  <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-zinc-100 mb-6">
-                    <ClipboardList size={40} className="text-zinc-300" />
-                  </div>
-                  <p className="text-lg font-black text-zinc-800 uppercase">Nenhum pedido</p>
-                  <p className="text-xs text-zinc-400 mt-1 uppercase">Escolha algo gostoso agora!</p>
+                  <ClipboardList size={40} className="mx-auto text-zinc-200 mb-4" />
+                  <p className="text-lg font-black text-zinc-800 uppercase">Nenhum pedido realizado</p>
                 </div>
               ) : (
                 todosOsPedidos.map((p: Pedido) => (
@@ -413,103 +449,83 @@ function App() {
                       </div>
                       <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase ${p.status === 'Entregue' ? 'bg-zinc-100 text-zinc-500' : 'bg-orange-100 text-orange-600 animate-pulse'}`}>{p.status}</span>
                     </div>
-                    <div className="bg-zinc-50 rounded-2xl p-4 text-xs font-medium text-zinc-500 border border-zinc-100">{p.itens.map(i => i.nome).join(', ')}</div>
-                    <div className="mt-4 pt-4 border-t border-zinc-50 flex justify-between items-center">
-                       <p className="text-2xl font-black text-zinc-800 italic tracking-tighter">R$ {p.total.toFixed(2)}</p>
-                       <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{p.pagamento}</p>
+                    <div className="bg-zinc-50 rounded-2xl p-4 text-xs font-medium text-zinc-500 border border-zinc-100">
+                      {p.itens.map(i => i.nome).join(', ')}
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-zinc-50 flex justify-between items-center font-black">
+                       <p className="text-2xl italic tracking-tighter">R$ {p.total.toFixed(2)}</p>
+                       <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{p.pagamento}</p>
                     </div>
                   </div>
                 ))
               )}
             </div>
           ) : (
-                              /* --- VISÃO DO PERFIL PROFISSIONAL (ESTILO IFOOD/SISTEMA) --- */
-<div className="animate-in fade-in duration-500">
-  
-  {/* Cabeçalho de Identificação - Limpo e Direto */}
-  <div className="flex items-center gap-6 py-10 px-2 border-b border-zinc-100 bg-white -mx-5 px-5">
-    <div className="h-24 w-24 rounded-full bg-orange-100 flex items-center justify-center border-4 border-white shadow-sm overflow-hidden">
-      <User size={48} className="text-orange-600" />
-    </div>
-    <div>
-      <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">
-        {usuarioNomeCompleto}
-      </h2>
-      <p className="text-zinc-400 font-bold text-sm mt-1">@{usuarioUsername}</p>
-      <p className="text-zinc-300 text-[10px] font-bold tracking-widest mt-2">{usuarioEmail || 'cliente@pedeai.com'}</p>
-    </div>
-  </div>
+            /* PERFIL PROFISSIONAL DO CLIENTE */
+            <div className="animate-in fade-in duration-500">
+              <div className="flex items-center gap-6 py-10 border-b border-zinc-100 bg-white -mx-5 px-5">
+                <div className="h-24 w-24 rounded-full bg-orange-100 flex items-center justify-center border-4 border-white shadow-sm overflow-hidden">
+                  <User size={48} className="text-orange-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">{usuarioNomeCompleto}</h2>
+                  <p className="text-zinc-400 font-bold text-sm mt-1">@{usuarioUsername}</p>
+                  <p className="text-zinc-300 text-[10px] font-bold tracking-widest mt-2">{usuarioEmail}</p>
+                </div>
+              </div>
 
-  {/* Menu de Opções Estilo "Configurações" */}
-  <div className="mt-8 space-y-1">
-    <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">Minha Atividade</h3>
-
-    <button className="w-full flex items-center justify-between p-5 bg-white border-b border-zinc-50 hover:bg-zinc-50 transition-colors group">
-      <div className="flex items-center gap-4">
-        <div className="p-2 bg-zinc-100 rounded-xl group-hover:bg-orange-100 transition-colors">
-          <MapPin size={20} className="text-zinc-500 group-hover:text-orange-600" />
-        </div>
-        <span className="font-bold text-zinc-700">Meus Endereços</span>
-      </div>
-      <ChevronRight size={18} className="text-zinc-300" />
-    </button>
-
-    <button className="w-full flex items-center justify-between p-5 bg-white border-b border-zinc-50 hover:bg-zinc-50 transition-colors group">
-      <div className="flex items-center gap-4">
-        <div className="p-2 bg-zinc-100 rounded-xl group-hover:bg-orange-100 transition-colors">
-          <ClipboardList size={20} className="text-zinc-500 group-hover:text-orange-600" />
-        </div>
-        <span className="font-bold text-zinc-700">Histórico de Pedidos</span>
-      </div>
-      <ChevronRight size={18} className="text-zinc-300" />
-    </button>
-
-    <button className="w-full flex items-center justify-between p-5 bg-white border-b border-zinc-50 hover:bg-zinc-50 transition-colors group">
-      <div className="flex items-center gap-4">
-        <div className="p-2 bg-zinc-100 rounded-xl group-hover:bg-orange-100 transition-colors">
-          <ShoppingBag size={20} className="text-zinc-500 group-hover:text-orange-600" />
-        </div>
-        <span className="font-bold text-zinc-700">Cupons Disponíveis</span>
-      </div>
-      <ChevronRight size={18} className="text-zinc-300" />
-    </button>
-
-    {/* Botão de Sair com Destaque de Perigo */}
-    <div className="pt-10">
-      <button 
-        onClick={handleLogout} 
-        className="w-full flex items-center justify-between p-5 bg-white border-t border-b border-zinc-50 hover:bg-red-50 transition-colors group"
-      >
-        <div className="flex items-center gap-4">
-          <div className="p-2 bg-red-50 rounded-xl group-hover:bg-red-100 transition-colors">
-            <ArrowLeft size={20} className="text-red-500" />
-          </div>
-          <span className="font-bold text-red-500">Sair da Conta</span>
-        </div>
-      </button>
-    </div>
-  </div>
-</div>
+              <div className="mt-8 space-y-1">
+                <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">Minha Atividade</h3>
+                <button className="w-full flex items-center justify-between p-5 bg-white border-b border-zinc-50 hover:bg-zinc-50 group transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-zinc-100 rounded-xl group-hover:bg-orange-100 transition-colors">
+                      <MapPin size={20} className="text-zinc-500 group-hover:text-orange-600" />
+                    </div>
+                    <span className="font-bold text-zinc-700">Meus Endereços</span>
+                  </div>
+                  <ChevronRight size={18} className="text-zinc-300" />
+                </button>
+                <button className="w-full flex items-center justify-between p-5 bg-white border-b border-zinc-50 hover:bg-zinc-50 group transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-zinc-100 rounded-xl group-hover:bg-orange-100 transition-colors">
+                      <ClipboardList size={20} className="text-zinc-500 group-hover:text-orange-600" />
+                    </div>
+                    <span className="font-bold text-zinc-700">Histórico de Pedidos</span>
+                  </div>
+                  <ChevronRight size={18} className="text-zinc-300" />
+                </button>
+                <button onClick={handleLogout} className="w-full flex items-center justify-between p-5 bg-white border-t border-b border-zinc-50 hover:bg-red-50 group mt-4 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-red-50 rounded-xl group-hover:bg-red-100 transition-colors">
+                      <LogOut size={20} className="text-red-500" />
+                    </div>
+                    <span className="font-bold text-red-500">Sair da Conta</span>
+                  </div>
+                </button>
+              </div>
+            </div>
           )
         )}
 
         {visao === 'Vendedor' && (
-          /* ÁREA DO VENDEDOR */
+          /* --- ÁREA DO VENDEDOR --- */
           <div className="space-y-8 animate-in slide-in-from-bottom">
             <div className="flex bg-zinc-200 p-2 rounded-[30px] shadow-inner">
               <button onClick={() => setAbaVendedor('Pedidos')} className={`flex-1 py-5 rounded-[22px] font-black text-xs ${abaVendedor === 'Pedidos' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}>PAINEL VENDAS</button>
               <button onClick={() => setAbaVendedor('Cardapio')} className={`flex-1 py-5 rounded-[22px] font-black text-xs ${abaVendedor === 'Cardapio' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}>MEU CARDÁPIO</button>
             </div>
             {abaVendedor === 'Pedidos' ? (
-              todosOsPedidos.length === 0 ? <p className="py-20 text-center font-bold text-zinc-300 uppercase">Sem novos pedidos.</p> :
+              todosOsPedidos.length === 0 ? <p className="py-20 text-center font-bold text-zinc-300 uppercase">Aguardando novos pedidos...</p> :
               todosOsPedidos.map((p: Pedido) => (
                 <div key={p.id} className="bg-white p-8 rounded-[45px] border-l-12 border-orange-500 shadow-sm space-y-6">
                   <div className="flex justify-between items-center">
-                    <h3 className="text-xl font-black">{p.clienteNome}</h3>
-                    <span className="text-[10px] font-black text-zinc-400 uppercase">{p.status}</span>
+                    <h3 className="text-xl font-black text-zinc-800">{p.clienteNome}</h3>
+                    <span className="text-[10px] font-black text-zinc-400 uppercase bg-zinc-50 px-3 py-1 rounded-full">{p.status}</span>
                   </div>
-                  <div className="bg-zinc-50 p-5 rounded-3xl font-bold italic text-zinc-500 text-sm border border-zinc-100">{p.itens.map((i, idx) => <p key={idx}>• {i.nome}</p>)}</div>
-                  <p className="flex items-center gap-2 text-xs font-bold text-zinc-400 uppercase"><MapPin size={14} /> {p.endereco}</p>
+                  <div className="bg-zinc-50 p-5 rounded-3xl font-bold italic text-zinc-500 text-sm border border-zinc-100">
+                    {p.itens.map((i, idx) => <p key={idx}>• {i.nome}</p>)}
+                  </div>
+                  <p className="flex items-center gap-2 text-xs font-bold text-zinc-400 px-2 uppercase"><MapPin size={14} /> {p.endereco}</p>
                   <div className="flex gap-2">
                     <button onClick={() => mudarStatusPedidoVendedor(p.id, 'Preparando')} className="flex-1 bg-green-600 text-white p-4 rounded-2xl font-black text-[10px] uppercase">Aceitar</button>
                     <button onClick={() => mudarStatusPedidoVendedor(p.id, 'Entregue')} className="flex-1 bg-zinc-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase">Concluir</button>
@@ -522,12 +538,12 @@ function App() {
                 <div className="space-y-4">
                   <h3 className="text-[11px] font-black text-zinc-400 uppercase ml-2 tracking-widest">Produtos Atuais</h3>
                   {todosOsProdutos.filter(p => p.lojaId === 1).map((p: Produto) => (
-                    <div key={p.id} className="bg-white p-6 rounded-[35px] border border-zinc-100 flex justify-between items-center shadow-sm hover:border-orange-200 transition-all">
+                    <div key={p.id} className="bg-white p-6 rounded-[35px] border border-zinc-100 flex justify-between items-center shadow-sm">
                       <div>
                         <h4 className="font-black text-zinc-800">{p.nome}</h4>
                         <p className="font-black text-green-600 text-sm italic">R$ {p.preco.toFixed(2)}</p>
                       </div>
-                      <button onClick={() => removerProdutoVendedor(p.id)} className="h-12 w-12 flex items-center justify-center rounded-2xl bg-red-50 text-red-500 transition-all hover:bg-red-500 hover:text-white"><Trash2 size={20} /></button>
+                      <button onClick={() => removerProdutoVendedor(p.id)} className="h-12 w-12 flex items-center justify-center rounded-2xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20} /></button>
                     </div>
                   ))}
                 </div>
@@ -537,17 +553,17 @@ function App() {
         )}
 
         {visao === 'Admin' && (
-          /* ÁREA DO ADMINISTRADOR */
+          /* --- ÁREA DO ADMINISTRADOR --- */
           <div className="space-y-10 animate-in slide-in-from-top">
             <h2 className="text-center text-2xl font-black text-zinc-800 uppercase italic tracking-tighter">PedeAí Admin Platform</h2>
             <div className="grid grid-cols-2 gap-6">
               <div className="bg-white p-10 rounded-[50px] shadow-sm text-center border border-zinc-100">
-                <p className="text-[10px] font-black text-zinc-400 uppercase mb-3">Faturamento Global</p>
-                <p className="text-3xl font-black text-green-600 tracking-tighter">R$ {todosOsPedidos.reduce((s, p) => s + p.total, 0).toFixed(2)}</p>
+                <p className="text-[10px] font-black text-zinc-400 uppercase mb-3 tracking-widest">Faturamento Global</p>
+                <p className="text-3xl font-black text-green-600 italic tracking-tighter leading-none">R$ {todosOsPedidos.reduce((s, p) => s + p.total, 0).toFixed(2)}</p>
               </div>
               <div className="bg-white p-10 rounded-[50px] shadow-sm text-center border border-zinc-100">
-                <p className="text-[10px] font-black text-zinc-400 uppercase mb-3">Parceiros Ativos</p>
-                <p className="text-3xl font-black text-orange-600">{todasAsLojas.filter(l => l.status === 'Ativa').length}</p>
+                <p className="text-[10px] font-black text-zinc-400 uppercase mb-3 tracking-widest">Lojas Ativas</p>
+                <p className="text-3xl font-black text-orange-600 leading-none">{todasAsLojas.filter(l => l.status === 'Ativa').length}</p>
               </div>
             </div>
             <div className="space-y-5">
@@ -562,11 +578,12 @@ function App() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    {loja.status === 'Ativa' ? (
-                       <button onClick={() => gerenciarLojaAdmin(loja.id, 'Bloquear')} className="px-5 py-3 rounded-2xl bg-red-50 text-red-500 font-black text-[9px] uppercase"><Lock size={12} /></button>
-                    ) : (
-                       <button onClick={() => gerenciarLojaAdmin(loja.id, 'Aprovar')} className="px-6 py-3 rounded-2xl bg-zinc-900 text-white font-black text-[9px] uppercase tracking-widest">Ativar</button>
-                    )}
+                    <button 
+                      onClick={() => gerenciarLojaAdmin(loja.id, loja.status === 'Ativa' ? 'Bloquear' : 'Aprovar')} 
+                      className={`px-6 py-3 rounded-2xl font-black text-[9px] uppercase tracking-widest ${loja.status === 'Ativa' ? 'bg-red-50 text-red-500' : 'bg-zinc-900 text-white'}`}
+                    >
+                      {loja.status === 'Ativa' ? <Lock size={12} /> : 'Ativar'}
+                    </button>
                   </div>
                 </div>
               ))}
@@ -575,7 +592,7 @@ function App() {
         )}
       </main>
 
-      {/* MENU INFERIOR PROFISSIONAL (LUCIDE ICONS) */}
+      {/* MENU INFERIOR FIXO PROFISSIONAL */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-6 flex justify-around rounded-t-[45px] shadow-2xl">
         <button 
           onClick={() => { setAbaAtiva('Inicio'); setLojaSelecionada(null); setEstaFinalizando(false); }} 
