@@ -175,7 +175,7 @@ function App() {
 
   const cardapioParaExibir = todosOsProdutos.filter(p => p.lojaId === lojaSelecionada?.id);
 
-  // --- RENDERIZAÇÃO DA TELA DE LOGIN/CADASTRO (CORREÇÃO TS2739) ---
+  // --- RENDERIZAÇÃO DA TELA DE LOGIN/CADASTRO ---
   if (!estaLogado) {
     return (
       <AuthScreen 
@@ -193,7 +193,6 @@ function App() {
         setUsuarioEmail={setUsuarioEmail}
         usuarioSenha={usuarioSenha}
         setUsuarioSenha={setUsuarioSenha}
-        // PROPS ADICIONADAS PARA CORRIGIR O ERRO DA IMAGEM
         usuarioSenhaConfirm={usuarioSenhaConfirm}
         setUsuarioSenhaConfirm={setUsuarioSenhaConfirm}
         tipoUsuario={tipoUsuario}
@@ -211,18 +210,18 @@ function App() {
     <div className="min-h-screen bg-zinc-50 text-zinc-900 pb-40 font-sans selection:bg-orange-200">
       
       {/* SELETOR DE MODOS (Exclusivo para Testes em Desenvolvimento) */}
-      <div className="bg-zinc-950 text-white text-[9px] p-2 flex justify-center gap-6 sticky top-0 z-50 shadow-2xl">
-        <button onClick={() => setVisao('Cliente')} className={visao === 'Cliente' ? 'text-orange-400 font-black border-b-2 border-orange-400 pb-1' : 'opacity-30'}>VISÃO CLIENTE</button>
-        <button onClick={() => setVisao('Vendedor')} className={visao === 'Vendedor' ? 'text-orange-400 font-black border-b-2 border-orange-400' : 'opacity-30'}>VISÃO VENDEDOR</button>
-        <button onClick={() => setVisao('Admin')} className={visao === 'Admin' ? 'text-orange-400 font-black border-b-2 border-orange-400' : 'opacity-30'}>VISÃO ADMIN</button>
+      <div className="sticky top-0 z-50 flex justify-center gap-6 bg-zinc-950 p-2 text-[9px] text-white shadow-2xl">
+        <button onClick={() => setVisao('Cliente')} className={visao === 'Cliente' ? 'border-b-2 border-orange-400 pb-1 font-black text-orange-400' : 'opacity-30'}>VISÃO CLIENTE</button>
+        <button onClick={() => setVisao('Vendedor')} className={visao === 'Vendedor' ? 'border-b-2 border-orange-400 font-black text-orange-400' : 'opacity-30'}>VISÃO VENDEDOR</button>
+        <button onClick={() => setVisao('Admin')} className={visao === 'Admin' ? 'border-b-2 border-orange-400 font-black text-orange-400' : 'opacity-30'}>VISÃO ADMIN</button>
       </div>
 
-      <header className="bg-orange-600 text-white p-8 text-center shadow-xl relative overflow-hidden leading-tight">
+      <header className="relative overflow-hidden bg-orange-600 p-8 text-center text-white shadow-xl leading-tight">
         <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none">PedeAí</h1>
-        <p className="text-[10px] font-bold opacity-80 uppercase tracking-[0.4em] mt-1">PedeAí, pediu chegou</p>
+        <p className="mt-1 text-[10px] font-bold tracking-[0.4em] uppercase opacity-80">PedeAí, pediu chegou</p>
       </header>
 
-      <main className="max-w-xl mx-auto p-5">
+      <main className="mx-auto max-w-xl p-5">
         
         {visao === 'Cliente' && (
           /* --- ÁREA DO CLIENTE --- */
@@ -230,27 +229,27 @@ function App() {
             estaFinalizando ? (
               /* TELA DE CHECKOUT (FINALIZAÇÃO) */
               <div className="space-y-6 animate-in slide-in-from-right duration-400">
-                <button onClick={() => setEstaFinalizando(false)} className="text-orange-600 font-black flex items-center gap-2 group">
-                  <span className="group-hover:-translate-x-1 transition-transform">←</span> Voltar para a sacola
+                <button onClick={() => setEstaFinalizando(false)} className="group flex items-center gap-2 font-black text-orange-600">
+                  <span className="transition-transform group-hover:-translate-x-1">←</span> Voltar para a sacola
                 </button>
-                <div className="bg-white p-10 rounded-[40px] shadow-sm border border-zinc-100 space-y-6">
-                  <h2 className="text-xl font-black text-zinc-800 tracking-tight text-center uppercase leading-none">Finalizar compra</h2>
+                <div className="space-y-6 rounded-[40px] border border-zinc-100 bg-white p-10 shadow-sm">
+                  <h2 className="text-center text-xl font-black tracking-tight text-zinc-800 uppercase leading-none">Finalizar compra</h2>
                   
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-3 font-black">Endereço de Entrega</label>
+                    <label className="ml-3 text-[10px] font-black tracking-widest text-zinc-400 uppercase">Endereço de Entrega</label>
                     <input 
                       type="text" 
                       placeholder="Rua, número e bairro" 
-                      className="w-full border-none p-5 rounded-3xl bg-zinc-50 outline-none focus:ring-4 ring-orange-100 font-medium" 
+                      className="w-full rounded-3xl bg-zinc-50 p-5 font-medium outline-none ring-orange-100 focus:ring-4" 
                       value={enderecoEntrega} 
                       onChange={(e) => setEnderecoEntrega(e.target.value)} 
                     />
                   </div>
 
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-zinc-400 uppercase ml-3 font-black">Pagamento</label>
+                    <label className="ml-3 text-[10px] font-black text-zinc-400 uppercase">Pagamento</label>
                     <select 
-                      className="w-full border-none p-5 rounded-3xl bg-zinc-50 outline-none focus:ring-4 ring-orange-100 font-bold appearance-none" 
+                      className="w-full appearance-none rounded-3xl bg-zinc-50 p-5 font-bold outline-none ring-orange-100 focus:ring-4" 
                       value={formaPagamento} 
                       onChange={(e) => setFormaPagamento(e.target.value)}
                     >
@@ -260,29 +259,29 @@ function App() {
                     </select>
                   </div>
 
-                  <div className="pt-6 border-t-2 border-zinc-50 flex justify-between items-center text-right font-black">
-                    <span className="text-zinc-400 font-bold uppercase text-[10px]">Total:</span>
-                    <p className="text-3xl font-black text-green-600 tracking-tighter italic">R$ {carrinho.reduce((acc, item) => acc + item.preco, 0).toFixed(2)}</p>
+                  <div className="flex items-center justify-between border-t-2 border-zinc-50 pt-6 text-right font-black">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase">Total:</span>
+                    <p className="text-3xl italic tracking-tighter text-green-600">R$ {carrinho.reduce((acc, item) => acc + item.preco, 0).toFixed(2)}</p>
                   </div>
 
-                  <button onClick={realizarPedidoFinal} className="w-full bg-orange-600 text-white p-6 rounded-3xl font-black text-xl shadow-lg active:scale-95 transition-all">Confirmar Agora!</button>
+                  <button onClick={realizarPedidoFinal} className="w-full rounded-3xl bg-orange-600 p-6 text-xl font-black text-white shadow-lg transition-all active:scale-95">Confirmar Agora!</button>
                 </div>
               </div>
             ) : !lojaSelecionada ? (
               /* LISTAGEM DE ESTABELECIMENTOS */
               <div className="space-y-8">
-                <h2 className="font-black text-zinc-400 text-[10px] uppercase tracking-widest ml-2 tracking-[0.2em]">Onde vamos pedir hoje?</h2>
+                <h2 className="ml-2 text-[10px] font-black tracking-[0.2em] text-zinc-400 uppercase">Onde vamos pedir hoje?</h2>
                 <div className="grid grid-cols-1 gap-4">
                   {todasAsLojas.filter(l => l.status === 'Ativa').map(loja => (
                     <div 
                       key={loja.id} 
                       onClick={() => setLojaSelecionada(loja)} 
-                      className="flex items-center bg-white p-7 rounded-[35px] shadow-sm border border-zinc-100 cursor-pointer active:scale-95 transition-all hover:shadow-lg group"
+                      className="group flex cursor-pointer items-center rounded-[35px] border border-zinc-100 bg-white p-7 shadow-sm transition-all hover:shadow-lg active:scale-95"
                     >
-                      <div className="w-20 h-20 bg-orange-50 rounded-3xl flex items-center justify-center text-5xl shadow-inner group-hover:scale-110 transition-transform">{loja.imagem}</div>
+                      <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-orange-50 text-5xl shadow-inner transition-transform group-hover:scale-110">{loja.imagem}</div>
                       <div className="ml-6">
-                        <h3 className="font-black text-base text-zinc-800 tracking-tight leading-tight">{loja.nome}</h3>
-                        <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tighter mt-1">{loja.categoria} • ENTREGA EM 30 MIN</p>
+                        <h3 className="text-base font-black tracking-tight text-zinc-800 leading-tight">{loja.nome}</h3>
+                        <p className="mt-1 text-[10px] font-bold tracking-tighter text-zinc-400 uppercase">{loja.categoria} • ENTREGA EM 30 MIN</p>
                       </div>
                     </div>
                   ))}
@@ -291,22 +290,22 @@ function App() {
             ) : (
               /* VISUALIZAÇÃO DO CARDÁPIO */
               <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
-                <button onClick={() => setLojaSelecionada(null)} className="text-orange-600 font-black flex items-center gap-2"><span>←</span> Outros estabelecimentos</button>
+                <button onClick={() => setLojaSelecionada(null)} className="flex items-center gap-2 font-black text-orange-600"><span>←</span> Outros estabelecimentos</button>
                 <div className="flex items-center gap-6">
-                   <div className="text-6xl bg-white p-4 rounded-3xl shadow-sm border border-zinc-100 leading-none">{lojaSelecionada.imagem}</div>
-                   <h2 className="text-3xl font-black text-zinc-800 tracking-tighter leading-tight">{lojaSelecionada.nome}</h2>
+                   <div className="rounded-3xl border border-zinc-100 bg-white p-4 text-6xl shadow-sm leading-none">{lojaSelecionada.imagem}</div>
+                   <h2 className="text-3xl font-black tracking-tighter text-zinc-800 leading-tight">{lojaSelecionada.nome}</h2>
                 </div>
                 <div className="space-y-4">
                   {cardapioParaExibir.map(item => (
-                    <div key={item.id} className="bg-white p-5 rounded-[30px] shadow-sm border border-zinc-50 flex justify-between items-center gap-5 transition-all hover:shadow-md">
+                    <div key={item.id} className="flex items-center justify-between gap-5 rounded-[30px] border border-zinc-50 bg-white p-5 shadow-sm transition-all hover:shadow-md">
                       <div className="flex-1">
-                        <h4 className="font-black text-zinc-800 text-lg tracking-tight leading-tight">{item.nome}</h4>
-                        <p className="text-zinc-400 text-xs font-medium my-1 leading-snug">{item.descricao}</p>
-                        <p className="text-green-600 font-black text-lg tracking-tighter mt-1">R$ {item.preco.toFixed(2)}</p>
+                        <h4 className="text-lg font-black tracking-tight text-zinc-800 leading-tight">{item.nome}</h4>
+                        <p className="my-1 text-xs font-medium text-zinc-400 leading-snug">{item.descricao}</p>
+                        <p className="mt-1 text-lg font-black tracking-tighter text-green-600">R$ {item.preco.toFixed(2)}</p>
                       </div>
                       <button 
                         onClick={() => adicionarProdutoAoCarrinho(item)} 
-                        className="bg-orange-600 text-white w-14 h-14 rounded-2xl font-black shadow-lg active:scale-90 transition-all flex items-center justify-center text-3xl leading-none"
+                        className="flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-600 text-3xl font-black text-white shadow-lg transition-all active:scale-90 leading-none"
                       >
                         +
                       </button>
@@ -318,31 +317,31 @@ function App() {
           ) : abaAtiva === 'Pedidos' ? (
             /* LISTA DE PEDIDOS REALIZADOS */
             <div className="space-y-8 animate-in fade-in duration-700">
-              <h2 className="text-2xl font-black text-zinc-800 ml-2 tracking-tight uppercase leading-tight">Meus Pedidos</h2>
+              <h2 className="ml-2 text-2xl font-black tracking-tight text-zinc-800 uppercase leading-tight">Meus Pedidos</h2>
               {todosOsPedidos.length === 0 ? (
-                <div className="text-center py-24 text-zinc-300">
-                  <p className="text-6xl mb-4 opacity-50 leading-none">🥡</p>
-                  <p className="font-black text-xl tracking-tight uppercase">Nenhum pedido ainda.</p>
-                  <button onClick={() => setAbaAtiva('Inicio')} className="text-orange-600 font-black mt-4 text-lg border-b-2 border-orange-100 transition-all uppercase tracking-widest">Bora pedir?</button>
+                <div className="py-24 text-center text-zinc-300">
+                  <p className="mb-4 text-6xl opacity-50 leading-none">🥡</p>
+                  <p className="text-xl font-black tracking-tight uppercase">Nenhum pedido ainda.</p>
+                  <button onClick={() => setAbaAtiva('Inicio')} className="mt-4 border-b-2 border-orange-100 text-lg font-black tracking-widest text-orange-600 transition-all uppercase">Bora pedir?</button>
                 </div>
               ) : (
                 todosOsPedidos.map(p => (
-                  <div key={p.id} className="bg-white p-8 rounded-[45px] shadow-sm border border-zinc-100 space-y-4 transition-all hover:shadow-md">
-                    <div className="flex justify-between items-start">
+                  <div key={p.id} className="space-y-4 rounded-[45px] border border-zinc-100 bg-white p-8 shadow-sm transition-all hover:shadow-md">
+                    <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="font-black text-xl text-zinc-800 tracking-tighter leading-tight">{p.lojaNome}</h3>
-                        <p className="text-[10px] text-zinc-400 font-mono mt-1 font-bold tracking-widest italic">ID: {p.id.split('-')[0]}</p>
+                        <h3 className="text-xl font-black tracking-tighter text-zinc-800 leading-tight">{p.lojaNome}</h3>
+                        <p className="mt-1 font-mono text-[10px] font-bold italic tracking-widest text-zinc-400">ID: {p.id.split('-')[0]}</p>
                       </div>
-                      <span className={`text-[10px] font-black px-5 py-2.5 rounded-full shadow-inner leading-none ${p.status === 'Entregue' ? 'bg-zinc-100 text-zinc-500' : 'bg-orange-100 text-orange-600 animate-pulse'}`}>
+                      <span className={`rounded-full px-5 py-2.5 text-[10px] font-black shadow-inner leading-none ${p.status === 'Entregue' ? 'bg-zinc-100 text-zinc-500' : 'bg-orange-100 text-orange-600 animate-pulse'}`}>
                         {p.status.toUpperCase()}
                       </span>
                     </div>
-                    <div className="text-sm text-zinc-500 font-bold bg-zinc-50 p-4 rounded-3xl border border-zinc-100 italic">
+                    <div className="rounded-3xl border border-zinc-100 bg-zinc-50 p-4 text-sm font-bold italic text-zinc-500">
                       {p.itens.map(i => i.nome).join(', ')}
                     </div>
-                    <div className="flex justify-between items-center pt-2 border-t border-zinc-50">
-                       <p className="text-xl font-black text-zinc-800 tracking-tighter">R$ {p.total.toFixed(2)}</p>
-                       <p className="text-[11px] text-zinc-400 font-black uppercase tracking-widest bg-zinc-100 px-3 py-1 rounded-lg font-black">{p.pagamento}</p>
+                    <div className="flex items-center justify-between border-t border-zinc-50 pt-2">
+                       <p className="text-xl font-black tracking-tighter text-zinc-800">R$ {p.total.toFixed(2)}</p>
+                       <p className="rounded-lg bg-zinc-100 px-3 py-1 text-[11px] font-black tracking-widest text-zinc-400 uppercase">{p.pagamento}</p>
                     </div>
                   </div>
                 ))
@@ -351,22 +350,22 @@ function App() {
           ) : (
             /* VISÃO DO PERFIL DO CLIENTE */
             <div className="space-y-10 text-center animate-in fade-in duration-700">
-              <h2 className="text-2xl font-black text-zinc-800 tracking-tight text-center uppercase leading-tight">Meu Perfil</h2>
-              <div className="bg-white p-12 rounded-[55px] shadow-sm border border-zinc-100 space-y-8 text-center relative overflow-hidden transition-all hover:shadow-md">
-                <div className="w-32 h-32 bg-orange-100 rounded-[40px] flex items-center justify-center text-7xl mx-auto border-8 border-white shadow-xl shadow-orange-100 leading-none">👤</div>
-                <div>
-                  <h3 className="font-black text-3xl text-zinc-800 tracking-tighter capitalize leading-tight">
+              <h2 className="text-center text-2xl font-black tracking-tight text-zinc-800 uppercase leading-tight">Meu Perfil</h2>
+              <div className="relative overflow-hidden rounded-[55px] border border-zinc-100 bg-white p-12 text-center shadow-sm transition-all hover:shadow-md">
+                <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-[40px] border-8 border-white bg-orange-100 text-7xl shadow-xl shadow-orange-100 leading-none">👤</div>
+                <div className="mt-6">
+                  <h3 className="text-3xl font-black tracking-tighter text-zinc-800 capitalize leading-tight">
                     {usuarioNomeCompleto || 'Angelo Silvano'}
                   </h3>
-                  <p className="text-zinc-400 font-bold text-base lowercase mt-1 tracking-wide opacity-80 leading-none">
+                  <p className="mt-1 text-base font-bold tracking-wide text-zinc-400 lowercase opacity-80 leading-none">
                     @{usuarioUsername.toLowerCase() || 'angelosilvanno'}
                   </p>
-                  <p className="text-zinc-300 font-bold text-[10px] mt-2 italic uppercase tracking-widest opacity-60 leading-none">{usuarioEmail || 'contato@pedeai.com'}</p>
+                  <p className="mt-2 text-[10px] font-bold italic tracking-widest text-zinc-300 uppercase opacity-60 leading-none">{usuarioEmail || 'contato@pedeai.com'}</p>
                 </div>
-                <div className="space-y-3 pt-8 text-left border-t border-zinc-50 font-black">
-                  <button className="w-full bg-zinc-50 text-zinc-600 p-6 rounded-[25px] font-black text-sm hover:bg-zinc-100 transition-all border border-zinc-100 leading-none">Endereços Salvos</button>
-                  <button className="w-full bg-zinc-50 text-zinc-600 p-6 rounded-[25px] font-black text-sm hover:bg-zinc-100 transition-all border border-zinc-100 leading-none">Meus Favoritos</button>
-                  <button onClick={() => setEstaLogado(false)} className="w-full text-red-500 font-black p-6 border-2 border-red-50 rounded-[25px] active:bg-red-50 shadow-sm transition-all hover:bg-red-50 mt-4 uppercase text-xs tracking-widest font-black leading-none">Sair da Conta</button>
+                <div className="mt-8 space-y-3 border-t border-zinc-50 pt-8 text-left font-black">
+                  <button className="w-full rounded-[25px] border border-zinc-100 bg-zinc-50 p-6 text-sm font-black text-zinc-600 transition-all hover:bg-zinc-100 leading-none">Endereços Salvos</button>
+                  <button className="w-full rounded-[25px] border border-zinc-100 bg-zinc-50 p-6 text-sm font-black text-zinc-600 transition-all hover:bg-zinc-100 leading-none">Meus Favoritos</button>
+                  <button onClick={() => setEstaLogado(false)} className="mt-4 w-full rounded-[25px] border-2 border-red-50 p-6 text-[10px] font-black tracking-widest text-red-500 shadow-sm transition-all hover:bg-red-50 active:bg-red-50 uppercase leading-none">Sair da Conta</button>
                 </div>
               </div>
             </div>
@@ -376,38 +375,41 @@ function App() {
         {visao === 'Vendedor' && (
           /* --- ÁREA DO VENDEDOR --- */
           <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
-            <div className="flex gap-3 bg-zinc-200 p-2.5 rounded-[35px] shadow-inner">
-              <button onClick={() => setAbaVendedor('Pedidos')} className={`flex-1 p-5 rounded-[25px] font-black text-xs transition-all tracking-widest leading-none ${abaVendedor === 'Pedidos' ? 'bg-white shadow-md text-orange-600 font-black' : 'text-zinc-500 font-black'}`}>VENDAS</button>
-              <button onClick={() => setAbaVendedor('Cardapio')} className={`flex-1 p-5 rounded-[25px] font-black text-xs transition-all tracking-widest leading-none ${abaVendedor === 'Cardapio' ? 'bg-white shadow-md text-orange-600 font-black' : 'text-zinc-500 font-black'}`}>CARDÁPIO</button>
+            <div className="flex gap-3 rounded-[35px] bg-zinc-200 p-2.5 shadow-inner">
+              <button onClick={() => setAbaVendedor('Pedidos')} className={`flex-1 rounded-[25px] p-5 text-xs font-black tracking-widest transition-all leading-none ${abaVendedor === 'Pedidos' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}>VENDAS</button>
+              <button onClick={() => setAbaVendedor('Cardapio')} className={`flex-1 rounded-[25px] p-5 text-xs font-black tracking-widest transition-all leading-none ${abaVendedor === 'Cardapio' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}>CARDÁPIO</button>
             </div>
             {abaVendedor === 'Pedidos' ? (
-              todosOsPedidos.length === 0 ? <p className="text-center py-32 text-zinc-300 font-black italic uppercase tracking-widest leading-loose">Aguardando seu primeiro pedido... 🍕</p> :
+              todosOsPedidos.length === 0 ? <p className="py-32 text-center font-black italic tracking-widest text-zinc-300 uppercase leading-loose">Aguardando seu primeiro pedido... 🍕</p> :
               todosOsPedidos.map(p => (
-                <div key={p.id} className={`bg-white p-8 rounded-[45px] shadow-lg border-l-10 ${p.status === 'Entregue' ? 'border-zinc-300 opacity-60' : 'border-orange-500'} space-y-6 transition-all transform hover:scale-[1.02]`}>
-                  <div className="flex justify-between items-center leading-tight">
-                    <h3 className="font-black text-lg text-zinc-800 tracking-tighter uppercase leading-tight">{p.clienteNome}</h3>
-                    <span className="bg-zinc-100 text-zinc-500 text-[9px] font-black px-5 py-2 rounded-full uppercase tracking-widest leading-none font-black">{p.status}</span>
+                <div key={p.id} className={`transform space-y-6 rounded-[45px] border-l-10 bg-white p-8 shadow-lg transition-all hover:scale-[1.02] ${p.status === 'Entregue' ? 'border-zinc-300 opacity-60' : 'border-orange-500'}`}>
+                  <div className="flex items-center justify-between leading-tight">
+                    <h3 className="text-lg font-black tracking-tighter text-zinc-800 uppercase leading-tight">{p.clienteNome}</h3>
+                    <span className="rounded-full bg-zinc-100 px-5 py-2 text-[9px] font-black tracking-widest text-zinc-500 uppercase leading-none">{p.status}</span>
                   </div>
-                  <div className="bg-zinc-50 p-6 rounded-[30px] text-base font-black text-zinc-600 border border-zinc-100 italic space-y-2 shadow-inner font-black">
+                  <div className="space-y-2 rounded-[30px] border border-zinc-100 bg-zinc-50 p-6 text-base font-black italic text-zinc-600 shadow-inner">
                     {p.itens.map((i, idx) => <p key={idx}>• {i.nome}</p>)}
                   </div>
-                  <p className="text-xs text-zinc-400 font-bold ml-2 italic tracking-tight uppercase font-black leading-none">📍 Entrega: {p.endereco}</p>
+                  <p className="ml-2 text-xs font-black italic tracking-tight text-zinc-400 uppercase leading-none">📍 Entrega: {p.endereco}</p>
                   <div className="flex gap-4 pt-2">
-                    {p.status === 'Pendente' && <button onClick={() => mudarStatusPedidoVendedor(p.id, 'Preparando')} className="flex-1 bg-green-600 text-white p-6 rounded-[25px] font-black text-xs shadow-xl uppercase transition-all hover:bg-green-700 font-black leading-none">Aceitar</button>}
-                    {p.status === 'Preparando' && <button onClick={() => mudarStatusPedidoVendedor(p.id, 'Saiu para Entrega')} className="flex-1 bg-blue-600 text-white p-6 rounded-[25px] font-black text-xs shadow-xl uppercase transition-all hover:bg-blue-700 font-black leading-none">Despachar</button>}
-                    {p.status === 'Saiu para Entrega' && <button onClick={() => mudarStatusPedidoVendedor(p.id, 'Entregue')} className="flex-1 bg-zinc-950 text-white p-5 rounded-[25px] font-black text-xs shadow-xl uppercase transition-all hover:bg-black font-black leading-none">Concluir</button>}
+                    {p.status === 'Pendente' && <button onClick={() => mudarStatusPedidoVendedor(p.id, 'Preparando')} className="flex-1 rounded-[25px] bg-green-600 p-6 text-xs font-black text-white shadow-xl transition-all hover:bg-green-700 uppercase leading-none">Aceitar</button>}
+                    {p.status === 'Preparando' && <button onClick={() => mudarStatusPedidoVendedor(p.id, 'Saiu para Entrega')} className="flex-1 rounded-[25px] bg-blue-600 p-6 text-xs font-black text-white shadow-xl transition-all hover:bg-blue-700 uppercase leading-none">Despachar</button>}
+                    {p.status === 'Saiu para Entrega' && <button onClick={() => mudarStatusPedidoVendedor(p.id, 'Entregue')} className="flex-1 rounded-[25px] bg-zinc-950 p-5 text-xs font-black text-white shadow-xl transition-all hover:bg-black uppercase leading-none">Concluir</button>}
                   </div>
                 </div>
               ))
             ) : (
               <div className="space-y-8 font-black">
-                <button onClick={cadastrarNovoProdutoVendedor} className="w-full bg-orange-600 text-white p-8 rounded-[35px] font-black shadow-2xl text-xl hover:bg-orange-700 active:scale-95 transition-all uppercase tracking-widest font-black shadow-orange-100 leading-none">+ Novo Item</button>
+                <button onClick={cadastrarNovoProdutoVendedor} className="w-full rounded-[35px] bg-orange-600 p-8 text-xl font-black text-white shadow-2xl shadow-orange-100 transition-all hover:bg-orange-700 active:scale-95 uppercase tracking-widest leading-none">+ Novo Item</button>
                 <div className="space-y-4 px-2">
-                  <h3 className="font-black text-zinc-400 text-[10px] uppercase tracking-widest ml-2 font-black leading-none tracking-[0.2em]">Produtos Ativos</h3>
+                  <h3 className="ml-2 text-[10px] font-black tracking-[0.2em] text-zinc-400 uppercase leading-none">Produtos Ativos</h3>
                   {todosOsProdutos.filter(p => p.lojaId === 1).map(p => (
-                    <div key={p.id} className="bg-white p-6 rounded-[35px] border-2 border-zinc-100 flex justify-between items-center shadow-sm transition-all group">
-                      <div className="flex flex-col"><h4 className="font-black text-zinc-800 text-lg group-hover:text-orange-600 transition-colors tracking-tight leading-tight">{p.nome}</h4><p className="text-green-600 font-black text-sm tracking-tighter mt-1 italic font-black leading-none">R$ {p.preco.toFixed(2)}</p></div>
-                      <button onClick={() => removerProdutoVendedor(p.id)} className="text-red-500 text-[10px] font-black border-2 border-red-50 p-4 rounded-[20px] hover:bg-red-50 uppercase tracking-tighter transition-all font-black leading-none">Excluir</button>
+                    <div key={p.id} className="group flex items-center justify-between rounded-[35px] border-2 border-zinc-100 bg-white p-6 shadow-sm transition-all">
+                      <div className="flex flex-col">
+                        <h4 className="text-lg font-black tracking-tight text-zinc-800 transition-colors group-hover:text-orange-600 leading-tight">{p.nome}</h4>
+                        <p className="mt-1 text-sm font-black italic tracking-tighter text-green-600 leading-none">R$ {p.preco.toFixed(2)}</p>
+                      </div>
+                      <button onClick={() => removerProdutoVendedor(p.id)} className="rounded-[20px] border-2 border-red-50 p-4 text-[10px] font-black tracking-tighter text-red-500 transition-all hover:bg-red-50 uppercase leading-none">Excluir</button>
                     </div>
                   ))}
                 </div>
@@ -418,33 +420,33 @@ function App() {
 
         {visao === 'Admin' && (
           /* --- ÁREA DO ADMINISTRADOR --- */
-          <div className="space-y-10 animate-in slide-in-from-top duration-500 font-black">
-            <h2 className="text-2xl font-black text-zinc-800 text-center tracking-tighter uppercase font-black leading-tight">Painel PedeAí Admin</h2>
-            <div className="grid grid-cols-2 gap-6 text-center font-black">
-              <div className="bg-white p-8 rounded-[50px] shadow-sm border border-zinc-100 font-black transition-all hover:shadow-lg font-black leading-none">
-                <p className="text-[10px] text-zinc-400 uppercase mb-2 font-black tracking-widest leading-none">Vendidos</p>
-                <p className="text-2xl font-black text-green-600 tracking-tighter italic font-black font-black leading-none">R$ {todosOsPedidos.reduce((s, p) => s + p.total, 0).toFixed(2)}</p>
+          <div className="space-y-10 font-black animate-in slide-in-from-top duration-500">
+            <h2 className="text-center text-2xl font-black tracking-tighter text-zinc-800 uppercase leading-tight">Painel PedeAí Admin</h2>
+            <div className="grid grid-cols-2 gap-6 text-center">
+              <div className="rounded-[50px] border border-zinc-100 bg-white p-8 shadow-sm transition-all hover:shadow-lg leading-none">
+                <p className="mb-2 text-[10px] font-black tracking-widest text-zinc-400 uppercase">Vendidos</p>
+                <p className="text-2xl font-black italic tracking-tighter text-green-600">R$ {todosOsPedidos.reduce((s, p) => s + p.total, 0).toFixed(2)}</p>
               </div>
-              <div className="bg-white p-8 rounded-[50px] shadow-sm border border-zinc-100 font-black transition-all hover:shadow-lg font-black leading-none">
-                <p className="text-[10px] text-zinc-400 uppercase mb-2 font-black tracking-widest leading-none">Parceiros</p>
-                <p className="text-2xl font-black text-orange-600 tracking-tighter font-black leading-none">{todasAsLojas.length}</p>
+              <div className="rounded-[50px] border border-zinc-100 bg-white p-8 shadow-sm transition-all hover:shadow-lg leading-none">
+                <p className="mb-2 text-[10px] font-black tracking-widest text-zinc-400 uppercase">Parceiros</p>
+                <p className="text-2xl font-black tracking-tighter text-orange-600">{todasAsLojas.length}</p>
               </div>
             </div>
             <div className="space-y-5 px-2">
-              <h3 className="font-black text-zinc-400 text-xs uppercase ml-2 tracking-widest font-black leading-none tracking-[0.2em]">Gestão de Parceiros</h3>
+              <h3 className="ml-2 text-xs font-black tracking-[0.2em] text-zinc-400 uppercase leading-none">Gestão de Parceiros</h3>
               {todasAsLojas.map(loja => (
-                <div key={loja.id} className="bg-white p-6 rounded-[40px] shadow-sm border border-zinc-100 flex justify-between items-center transition-all hover:shadow-md">
+                <div key={loja.id} className="flex items-center justify-between rounded-[40px] border border-zinc-100 bg-white p-6 shadow-sm transition-all hover:shadow-md">
                   <div className="flex items-center gap-5 leading-none">
-                    <span className="text-4xl bg-zinc-50 p-3 rounded-2xl shadow-inner leading-none">{loja.imagem}</span>
+                    <span className="rounded-2xl bg-zinc-50 p-3 text-4xl shadow-inner leading-none">{loja.imagem}</span>
                     <div>
-                      <h4 className="font-black text-base text-zinc-800 leading-none mb-1 tracking-tight leading-tight">{loja.nome}</h4>
-                      <p className={`text-[9px] font-black uppercase tracking-wider leading-none ${loja.status === 'Ativa' ? 'text-green-500' : 'text-red-400'}`}>{loja.status}</p>
+                      <h4 className="mb-1 text-base font-black tracking-tight text-zinc-800 leading-tight">{loja.nome}</h4>
+                      <p className={`text-[9px] font-black tracking-wider uppercase leading-none ${loja.status === 'Ativa' ? 'text-green-500' : 'text-red-400'}`}>{loja.status}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2 font-black">
-                    {loja.status === 'Ativa' && <button onClick={() => gerenciarLojaAdmin(loja.id, 'Bloquear')} className="bg-red-50 text-red-500 text-[9px] px-6 py-4 rounded-[20px] font-black border-2 border-red-100 uppercase tracking-tighter transition-all hover:bg-red-500 hover:text-white shadow-sm font-black leading-none">Bloquear</button>}
-                    {loja.status === 'Bloqueada' && <button onClick={() => gerenciarLojaAdmin(loja.id, 'Aprovar')} className="bg-zinc-950 text-white text-[9px] px-6 py-4 rounded-[20px] font-black shadow-lg uppercase tracking-widest transition-all hover:bg-black font-black leading-none">Ativar</button>}
-                    {loja.status === 'Pendente' && <button onClick={() => gerenciarLojaAdmin(loja.id, 'Aprovar')} className="bg-green-600 text-white text-[9px] px-6 py-4 rounded-[20px] font-black shadow-lg uppercase tracking-widest transition-all hover:bg-green-700 font-black leading-none">Aprovar</button>}
+                  <div className="flex gap-2">
+                    {loja.status === 'Ativa' && <button onClick={() => gerenciarLojaAdmin(loja.id, 'Bloquear')} className="rounded-[20px] border-2 border-red-100 bg-red-50 px-6 py-4 text-[9px] font-black tracking-tighter text-red-500 shadow-sm transition-all hover:bg-red-500 hover:text-white uppercase leading-none">Bloquear</button>}
+                    {loja.status === 'Bloqueada' && <button onClick={() => gerenciarLojaAdmin(loja.id, 'Aprovar')} className="rounded-[20px] bg-zinc-950 px-6 py-4 text-[9px] font-black tracking-widest text-white shadow-lg transition-all hover:bg-black uppercase leading-none">Ativar</button>}
+                    {loja.status === 'Pendente' && <button onClick={() => gerenciarLojaAdmin(loja.id, 'Aprovar')} className="rounded-[20px] bg-green-600 px-6 py-4 text-[9px] font-black tracking-widest text-white shadow-lg transition-all hover:bg-green-700 uppercase leading-none">Aprovar</button>}
                   </div>
                 </div>
               ))}
@@ -455,44 +457,44 @@ function App() {
 
       {/* MENU INFERIOR FIXO PARA O CLIENTE */}
       {visao === 'Cliente' && (
-        <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-5 flex justify-around max-w-xl mx-auto z-50 rounded-t-[45px] shadow-2xl">
+        <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto flex max-w-xl justify-around rounded-t-[45px] border-t border-zinc-100 bg-white/95 p-5 shadow-2xl backdrop-blur-xl">
           <button 
             onClick={() => { setAbaAtiva('Inicio'); setLojaSelecionada(null); setEstaFinalizando(false); }} 
-            className={`flex flex-col items-center gap-1 transition-all duration-300 ${abaAtiva === 'Inicio' ? 'text-orange-600 scale-105 font-black' : 'text-zinc-300 font-black'}`}
+            className={`flex flex-col items-center gap-1 font-black transition-all duration-300 ${abaAtiva === 'Inicio' ? 'scale-105 text-orange-600' : 'text-zinc-300'}`}
           >
-            <span className="text-2xl transition-all leading-none">🏠</span><span className="text-[10px] uppercase tracking-tighter font-black leading-none">Bora</span>
+            <span className="text-2xl leading-none">🏠</span><span className="text-[10px] tracking-tighter uppercase leading-none">Bora</span>
           </button>
           <button 
             onClick={() => setAbaAtiva('Pedidos')} 
-            className={`flex flex-col items-center gap-1 transition-all duration-300 ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-105 font-black' : 'text-zinc-300 font-black'}`}
+            className={`flex flex-col items-center gap-1 font-black transition-all duration-300 ${abaAtiva === 'Pedidos' ? 'scale-105 text-orange-600' : 'text-zinc-300'}`}
           >
-            <span className="text-2xl transition-all leading-none">📋</span><span className="text-[10px] uppercase tracking-tighter font-black leading-none">Pedidos</span>
+            <span className="text-2xl leading-none">📋</span><span className="text-[10px] tracking-tighter uppercase leading-none">Pedidos</span>
           </button>
           <button 
             onClick={() => setAbaAtiva('Perfil')} 
-            className={`flex flex-col items-center gap-1 transition-all duration-300 ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-105 font-black' : 'text-zinc-300 font-black'}`}
+            className={`flex flex-col items-center gap-1 font-black transition-all duration-300 ${abaAtiva === 'Perfil' ? 'scale-105 text-orange-600' : 'text-zinc-300'}`}
           >
-            <span className="text-2xl transition-all leading-none">👤</span><span className="text-[10px] uppercase tracking-tighter font-black leading-none">Eu</span>
+            <span className="text-2xl leading-none">👤</span><span className="text-[10px] tracking-tighter uppercase leading-none">Eu</span>
           </button>
         </nav>
       )}
 
       {/* BARRA DE CARRINHO */}
       {visao === 'Cliente' && abaAtiva === 'Inicio' && !estaFinalizando && carrinho.length > 0 && (
-        <div className="fixed bottom-32 left-6 right-6 max-w-md mx-auto z-40 animate-in slide-in-from-bottom duration-600">
+        <div className="fixed bottom-32 left-6 right-6 z-40 mx-auto max-w-md animate-in slide-in-from-bottom duration-600">
           <button 
             onClick={() => setEstaFinalizando(true)} 
-            className="w-full bg-green-600 text-white p-6 rounded-[35px] shadow-2xl flex justify-between items-center active:scale-95 transition-all ring-4 ring-white shadow-green-100 font-black"
+            className="flex w-full items-center justify-between rounded-[35px] bg-green-600 p-6 font-black text-white shadow-2xl shadow-green-100 ring-4 ring-white transition-all active:scale-95"
           >
-            <div className="flex items-center gap-3 font-black">
-               <div className="bg-green-700 w-12 h-12 rounded-xl flex items-center justify-center text-lg shadow-inner border border-green-500 font-black tracking-tighter italic font-black leading-none">🛒</div>
-               <div className="text-left leading-none font-black">
-                 <span className="text-[10px] font-black tracking-widest uppercase opacity-70 leading-none">Finalizar compra</span>
-                 <p className="text-base font-black tracking-tighter mt-1 uppercase leading-none">{carrinho.length} ITENS NA SACOLA</p>
+            <div className="flex items-center gap-3">
+               <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-green-500 bg-green-700 text-lg italic tracking-tighter shadow-inner leading-none">🛒</div>
+               <div className="text-left leading-none">
+                 <span className="text-[10px] tracking-widest uppercase opacity-70">Finalizar compra</span>
+                 <p className="mt-1 text-base tracking-tighter uppercase">{carrinho.length} ITENS NA SACOLA</p>
                </div>
             </div>
-            <div className="text-right font-black">
-              <span className="text-xl  tracking-tighter italic font-black leading-none">R$ {carrinho.reduce((s, i) => s + i.preco, 0).toFixed(2)}</span>
+            <div className="text-right">
+              <span className="text-xl italic tracking-tighter leading-none">R$ {carrinho.reduce((s, i) => s + i.preco, 0).toFixed(2)}</span>
             </div>
           </button>
         </div>
