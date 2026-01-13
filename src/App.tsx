@@ -270,14 +270,7 @@ function App() {
         </div>
       )}
 
-      {/* SELETOR DE VISÕES (DEBUG) */}
-      <div className="sticky top-0 z-50 flex justify-center gap-6 bg-zinc-950 p-2 text-[9px] text-white shadow-2xl">
-        <button onClick={() => setVisao('Cliente')} className={visao === 'Cliente' ? 'border-b border-orange-400 pb-1 font-black text-orange-400' : 'opacity-30'}>VISÃO CLIENTE</button>
-        <button onClick={() => setVisao('Vendedor')} className={visao === 'Vendedor' ? 'border-b border-orange-400 font-black text-orange-400' : 'opacity-30'}>VISÃO VENDEDOR</button>
-        <button onClick={() => tipoUsuario === 'Admin' ? setVisao('Admin') : notify("Acesso negado.", 'erro')} className={visao === 'Admin' ? 'border-b border-orange-400 font-black text-orange-400' : 'opacity-30'}>VISÃO ADMIN</button>
-      </div>
-
-      {/* NOVO HEADER REFINADO */}
+      {/* HEADER  */}
       <header className="relative bg-linear-to-br from-orange-600 to-orange-500 p-8 text-white shadow-xl">
         <div className="flex items-center justify-between">
           <div>
