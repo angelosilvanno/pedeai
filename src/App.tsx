@@ -25,7 +25,7 @@ import type { Loja, Produto, Pedido } from './types'
 import { AuthScreen } from './components/AuthScreen'
 
 /**
- * --- COMPONENTE PRINCIPAL APP (VERSÃO INTEGRAL PROFISSIONAL - 500+ LINHAS) ---
+ * --- COMPONENTE PRINCIPAL APP ---
  */
 function App() {
   // --- 1. ESTADOS DE ACESSO (PERSISTÊNCIA COM LOCALSTORAGE) ---
