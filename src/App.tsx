@@ -423,23 +423,73 @@ function App() {
               )}
             </div>
           ) : (
-            /* PERFIL */
-            <div className="space-y-10 animate-in fade-in">
-              <h2 className="text-center text-2xl font-black text-zinc-800">Minha Conta</h2>
-              <div className="rounded-[55px] border border-zinc-100 bg-white p-12 text-center shadow-sm">
-                <div className="mx-auto flex h-32 w-32 items-center justify-center rounded-[45px] bg-orange-100 text-orange-600 shadow-xl border-8 border-white">
-                  <User size={60} />
-                </div>
-                <div className="mt-8">
-                  <h3 className="text-2xl font-black">{usuarioNomeCompleto}</h3>
-                  <p className="text-sm font-bold text-zinc-400">@{usuarioUsername}</p>
-                </div>
-                <div className="mt-10 space-y-4">
-                  <button className="w-full rounded-[30px] bg-zinc-50 p-6 text-sm font-black text-zinc-600 flex justify-between px-8">Endereços Salvos <ChevronRight size={18} /></button>
-                  <button onClick={handleLogout} className="w-full rounded-[30px] border-2 border-red-50 p-6 text-xs font-black text-red-500 uppercase tracking-widest">Sair da Conta</button>
-                </div>
-              </div>
-            </div>
+                              /* --- VISÃO DO PERFIL PROFISSIONAL (ESTILO IFOOD/SISTEMA) --- */
+<div className="animate-in fade-in duration-500">
+  
+  {/* Cabeçalho de Identificação - Limpo e Direto */}
+  <div className="flex items-center gap-6 py-10 px-2 border-b border-zinc-100 bg-white -mx-5 px-5">
+    <div className="h-24 w-24 rounded-full bg-orange-100 flex items-center justify-center border-4 border-white shadow-sm overflow-hidden">
+      <User size={48} className="text-orange-600" />
+    </div>
+    <div>
+      <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">
+        {usuarioNomeCompleto}
+      </h2>
+      <p className="text-zinc-400 font-bold text-sm mt-1">@{usuarioUsername}</p>
+      <p className="text-zinc-300 text-[10px] font-bold tracking-widest mt-2">{usuarioEmail || 'cliente@pedeai.com'}</p>
+    </div>
+  </div>
+
+  {/* Menu de Opções Estilo "Configurações" */}
+  <div className="mt-8 space-y-1">
+    <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">Minha Atividade</h3>
+
+    <button className="w-full flex items-center justify-between p-5 bg-white border-b border-zinc-50 hover:bg-zinc-50 transition-colors group">
+      <div className="flex items-center gap-4">
+        <div className="p-2 bg-zinc-100 rounded-xl group-hover:bg-orange-100 transition-colors">
+          <MapPin size={20} className="text-zinc-500 group-hover:text-orange-600" />
+        </div>
+        <span className="font-bold text-zinc-700">Meus Endereços</span>
+      </div>
+      <ChevronRight size={18} className="text-zinc-300" />
+    </button>
+
+    <button className="w-full flex items-center justify-between p-5 bg-white border-b border-zinc-50 hover:bg-zinc-50 transition-colors group">
+      <div className="flex items-center gap-4">
+        <div className="p-2 bg-zinc-100 rounded-xl group-hover:bg-orange-100 transition-colors">
+          <ClipboardList size={20} className="text-zinc-500 group-hover:text-orange-600" />
+        </div>
+        <span className="font-bold text-zinc-700">Histórico de Pedidos</span>
+      </div>
+      <ChevronRight size={18} className="text-zinc-300" />
+    </button>
+
+    <button className="w-full flex items-center justify-between p-5 bg-white border-b border-zinc-50 hover:bg-zinc-50 transition-colors group">
+      <div className="flex items-center gap-4">
+        <div className="p-2 bg-zinc-100 rounded-xl group-hover:bg-orange-100 transition-colors">
+          <ShoppingBag size={20} className="text-zinc-500 group-hover:text-orange-600" />
+        </div>
+        <span className="font-bold text-zinc-700">Cupons Disponíveis</span>
+      </div>
+      <ChevronRight size={18} className="text-zinc-300" />
+    </button>
+
+    {/* Botão de Sair com Destaque de Perigo */}
+    <div className="pt-10">
+      <button 
+        onClick={handleLogout} 
+        className="w-full flex items-center justify-between p-5 bg-white border-t border-b border-zinc-50 hover:bg-red-50 transition-colors group"
+      >
+        <div className="flex items-center gap-4">
+          <div className="p-2 bg-red-50 rounded-xl group-hover:bg-red-100 transition-colors">
+            <ArrowLeft size={20} className="text-red-500" />
+          </div>
+          <span className="font-bold text-red-500">Sair da Conta</span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
           )
         )}
 
@@ -532,7 +582,7 @@ function App() {
           className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Inicio' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}
         >
           <Home size={24} />
-          <span className="text-[10px] font-black uppercase tracking-tighter">Bora</span>
+          <span className="text-[10px] font-black uppercase tracking-tighter">Inicio</span>
         </button>
         <button 
           onClick={() => setAbaAtiva('Pedidos')} 
@@ -546,7 +596,7 @@ function App() {
           className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}
         >
           <User size={24} />
-          <span className="text-[10px] font-black uppercase tracking-tighter">Eu</span>
+          <span className="text-[10px] font-black uppercase tracking-tighter">Perfil</span>
         </button>
       </nav>
 
