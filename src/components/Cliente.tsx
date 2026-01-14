@@ -16,7 +16,7 @@ interface ClienteProps {
   getStoreIcon: (iconName: string) => React.ReactNode;
 }
 
-export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos, setTodosOsPedidos, usuarioNomeCompleto, usuarioUsername, usuarioEmail, handleLogout, notify, getStoreIcon }: ClienteProps) {
+export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos, setTodosOsPedidos, usuarioTelefone, usuarioNomeCompleto, usuarioUsername, usuarioEmail, handleLogout, notify, getStoreIcon }: ClienteProps) {
   const [abaAtiva, setAbaAtiva] = useState<'Inicio' | 'Pedidos' | 'Perfil'>('Inicio');
   const [busca, setBusca] = useState('');
   const [lojaSelecionada, setLojaSelecionada] = useState<Loja | null>(null);
@@ -71,7 +71,7 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
           <div className="space-y-8">
             <div className="relative">
               <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300" />
-              <input type="text" placeholder="O que vamos pedir hoje?" className="w-full rounded-[30px] border border-zinc-100 bg-white py-6 pl-16 pr-8 font-bold shadow-sm outline-none focus:ring-4 ring-orange-50" value={busca} onChange={(e) => setBusca(e.target.value)} />
+              <input type="text" placeholder="O que vamos pedir hoje?" className="w-full rounded-[30px] border border-zinc-100 bg-white py-6 pl-16 pr-8 font-bold shadow-sm outline-none transition-all focus:ring-4 ring-orange-50" value={busca} onChange={(e) => setBusca(e.target.value)} />
             </div>
             <div className="grid gap-5">
               {lojasFiltradas.map(loja => (
@@ -96,7 +96,7 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
             </div>
             <div className="space-y-4">
               {cardapioParaExibir.map(item => (
-                <div key={item.id} className="flex items-center justify-between gap-5 rounded-[35px] border border-zinc-100 bg-white p-6 shadow-sm">
+                <div key={item.id} className="flex items-center justify-between gap-5 rounded-[35px] border border-zinc-100 bg-white p-6 shadow-sm hover:shadow-md transition-all">
                   <div className="flex-1"><h4 className="text-lg font-black text-zinc-800 tracking-tight">{item.nome}</h4><p className="my-1 text-xs text-zinc-400">{item.descricao}</p><p className="text-lg font-black text-green-600">R$ {item.preco.toFixed(2)}</p></div>
                   <button onClick={() => { setCarrinho([...carrinho, item]); notify(`${item.nome} na sacola!`); }} className="flex h-12 w-12 rounded-2xl bg-orange-600 text-white items-center justify-center shadow-lg active:scale-90 transition-all"><Plus size={24} /></button>
                 </div>
@@ -119,23 +119,76 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
         </div>
       ) : (
         <div className="animate-in fade-in duration-500">
-          <div className="flex items-center gap-6 py-10 border-b border-zinc-100 bg-white -mx-5 px-5">
+          <div className="relative flex items-center gap-6 py-10 border-b border-zinc-100 bg-white -mx-5 px-5">
             <div className="h-24 w-24 rounded-full bg-orange-100 flex items-center justify-center border-4 border-white shadow-sm overflow-hidden"><User size={48} className="text-orange-600" /></div>
-            <div><h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">{usuarioNomeCompleto}</h2><p className="text-zinc-400 font-bold text-sm mt-1">@{usuarioUsername}</p><p className="text-zinc-300 text-[10px] font-bold tracking-widest mt-2">{usuarioEmail}</p></div>
+            <div className="flex-1">
+              <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">{usuarioNomeCompleto}</h2>
+              <p className="text-zinc-400 font-bold text-sm mt-1">@{usuarioUsername}</p>
+              <div className="mt-2 space-y-0.5">
+                <p className="text-zinc-300 text-[10px] font-bold tracking-widest">{usuarioEmail}</p>
+                <p className="text-orange-400 text-[10px] font-black tracking-widest uppercase">{usuarioTelefone}</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleLogout} 
+              className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90"
+              title="Sair da Conta"
+            >
+              <LogOut size={22} />
+            </button>
           </div>
-          <div className="mt-8 space-y-1">
-            <button className="w-full flex items-center justify-between p-5 bg-white border-b hover:bg-zinc-50 transition-colors group"><div className="flex items-center gap-4"><div className="p-2 bg-zinc-100 rounded-xl group-hover:bg-orange-100 transition-colors"><MapPin size={20} className="text-zinc-500" /></div><span className="font-bold text-zinc-700">Meus Endereços</span></div><ChevronRight size={18} /></button>
-            <button onClick={handleLogout} className="w-full flex items-center justify-between p-5 bg-white border-t border-b hover:bg-red-50 mt-4 transition-colors"><div className="flex items-center gap-4"><div className="p-2 bg-red-50 rounded-xl"><LogOut size={20} className="text-red-500" /></div><span className="font-bold text-red-500">Sair da Conta</span></div></button>
+
+          <div className="mt-8 space-y-4 px-2">
+            <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2">Minha Atividade</h3>
+
+            <button className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-orange-50 rounded-2xl group-hover:bg-orange-100 transition-colors">
+                  <MapPin size={22} className="text-orange-600" />
+                </div>
+                <div className="text-left">
+                  <span className="block font-black text-zinc-800 text-sm">Meus Endereços</span>
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase">Gerenciar locais de entrega</span>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-zinc-300" />
+            </button>
+
+            <button className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
+                  <ClipboardList size={22} className="text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <span className="block font-black text-zinc-800 text-sm">Histórico de Pedidos</span>
+                  <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">Ver compras anteriores</span>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-zinc-300" />
+            </button>
           </div>
         </div>
       )}
+
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-6 flex justify-around rounded-t-[45px] shadow-2xl">
         <button onClick={() => { setAbaAtiva('Inicio'); setLojaSelecionada(null); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Inicio' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><Home size={24} /><span className="text-[10px] font-black uppercase tracking-tighter">Inicio</span></button>
-        <button onClick={() => setAbaAtiva('Pedidos')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><ClipboardList size={24} /><span className="text-[10px] font-black uppercase tracking-tighter">Pedidos</span></button>
-        <button onClick={() => setAbaAtiva('Perfil')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><User size={24} /><span className="text-[10px] font-black uppercase tracking-tighter">Perfil</span></button>
+        <button onClick={() => setAbaAtiva('Pedidos')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><ClipboardList size={24} />
+        <span className="text-[10px] font-black uppercase tracking-tighter">Pedidos</span></button>
+        <button onClick={() => setAbaAtiva('Perfil')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><User size={24} />
+        <span className="text-[10px] font-black uppercase tracking-tighter">Perfil</span></button>
       </nav>
+
       {abaAtiva === 'Inicio' && carrinho.length > 0 && !estaFinalizando && (
-        <div className="fixed bottom-32 left-6 right-6 z-40 mx-auto max-w-md animate-in slide-in-from-bottom"><button onClick={() => setEstaFinalizando(true)} className="w-full bg-zinc-900 text-white p-7 rounded-[35px] font-black shadow-2xl flex justify-between items-center ring-4 ring-white active:scale-95 transition-all"><div className="flex items-center gap-4"><div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center"><ShoppingBag size={24} /></div><p className="text-base uppercase">{carrinho.length} itens na sacola</p></div><span className="text-2xl font-black italic text-orange-400">R$ {carrinho.reduce((s, i) => s + i.preco, 0).toFixed(2)}</span></button></div>
+        <div className="fixed bottom-32 left-6 right-6 z-40 mx-auto max-w-md animate-in slide-in-from-bottom duration-500">
+          <button onClick={() => setEstaFinalizando(true)} className="w-full bg-zinc-900 text-white p-7 rounded-[35px] font-black shadow-2xl flex justify-between items-center ring-4 ring-white active:scale-95 transition-all">
+            <div className="flex items-center gap-4">
+               <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center"><ShoppingBag size={24} />
+               </div>
+               <p className="text-base uppercase">{carrinho.length} itens na sacola</p>
+            </div>
+            <span className="text-2xl font-black italic text-orange-400">R$ {carrinho.reduce((s, i) => s + i.preco, 0).toFixed(2)}</span>
+          </button>
+        </div>
       )}
     </>
   );
