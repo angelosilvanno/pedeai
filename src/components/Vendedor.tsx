@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, MapPin, Clock, Package, ShoppingBag, CheckCircle } from 'lucide-react'
+import { Plus, Trash2, MapPin, Clock, Package, ShoppingBag, CheckCircle, User, LogOut } from 'lucide-react'
 import type { Pedido, Produto } from '../types'
 
 interface VendedorProps {
@@ -8,14 +8,44 @@ interface VendedorProps {
   todosOsProdutos: Produto[];
   setTodosOsProdutos: React.Dispatch<React.SetStateAction<Produto[]>>;
   notify: (msg: string, tipo?: 'sucesso' | 'erro') => void;
+  handleLogout: () => void;
+  usuarioNomeCompleto: string;
+  usuarioEmail: string;
 }
 
-export default function Vendedor({ todosOsPedidos, setTodosOsPedidos, todosOsProdutos, setTodosOsProdutos, notify }: VendedorProps) {
+export default function Vendedor({ 
+  todosOsPedidos, 
+  setTodosOsPedidos, 
+  todosOsProdutos, 
+  setTodosOsProdutos, 
+  notify, 
+  handleLogout, 
+  usuarioNomeCompleto, 
+  usuarioEmail 
+}: VendedorProps) {
   const [abaVendedor, setAbaVendedor] = useState<'Pedidos' | 'Cardapio'>('Pedidos');
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
-      {/* SELETOR DE ABAS ESTILO CAPSULA */}
+      
+      <div className="flex items-center gap-6 py-6 border-b border-zinc-100 bg-white -mx-5 px-5 mb-4">
+        <div className="h-16 w-16 rounded-2xl bg-orange-100 flex items-center justify-center border-4 border-white shadow-sm overflow-hidden text-orange-600">
+          <User size={32} />
+        </div>
+        <div className="flex-1">
+          <h2 className="text-xl font-black text-zinc-800 tracking-tight leading-none">{usuarioNomeCompleto}</h2>
+          <p className="text-zinc-400 font-bold text-xs mt-1 uppercase tracking-widest">Painel do Lojista</p>
+          <p className="text-zinc-300 text-[10px] font-bold mt-1 lowercase">{usuarioEmail}</p>
+        </div>
+        <button 
+          onClick={handleLogout} 
+          className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90"
+          title="Sair da Conta"
+        >
+          <LogOut size={22} />
+        </button>
+      </div>
+
       <div className="flex bg-zinc-200/50 p-1.5 rounded-[30px] shadow-inner border border-zinc-200">
         <button 
           onClick={() => setAbaVendedor('Pedidos')} 
@@ -54,7 +84,7 @@ export default function Vendedor({ todosOsPedidos, setTodosOsPedidos, todosOsPro
                   <span className="px-3 py-1 bg-orange-50 text-orange-600 text-[9px] font-black rounded-full uppercase">{p.status}</span>
                 </div>
 
-                <div className="bg-zinc-50 p-5 rounded-3xl space-y-2 border border-zinc-100">
+                <div className="bg-zinc-50 p-5 rounded-3xl space-y-2 border border-zinc-100 leading-relaxed">
                   {p.itens.map((item, idx) => (
                     <div key={idx} className="flex justify-between items-center text-sm font-bold text-zinc-600">
                       <span>• {item.nome}</span>
@@ -95,7 +125,7 @@ export default function Vendedor({ todosOsPedidos, setTodosOsPedidos, todosOsPro
               const nome = prompt("Nome do produto:");
               const preco = prompt("Preço (Ex: 29.90):");
               if (nome && preco) {
-                setTodosOsProdutos([{id: Math.random().toString(), lojaId: 1, nome, preco: parseFloat(preco), descricao: "Item do cardápio"}, ...todosOsProdutos]);
+                setTodosOsProdutos([{id: Math.random().toString(), lojaId: 1, nome, preco: parseFloat(preco.replace(',', '.')), descricao: "Item do cardápio"}, ...todosOsProdutos]);
                 notify("Produto adicionado!");
               }
             }}
@@ -109,12 +139,12 @@ export default function Vendedor({ todosOsPedidos, setTodosOsPedidos, todosOsPro
             {todosOsProdutos.map(p => (
               <div key={p.id} className="bg-white p-5 rounded-[30px] border border-zinc-100 flex justify-between items-center shadow-sm group hover:border-orange-200 transition-all">
                 <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 bg-orange-50 rounded-2xl flex items-center justify-center">
-                    <Package size={20} className="text-orange-600" />
+                  <div className="h-12 w-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600">
+                    <Package size={20} />
                   </div>
                   <div>
-                    <h4 className="font-black text-zinc-800 text-sm">{p.nome}</h4>
-                    <p className="font-black text-green-600 text-xs italic">R$ {p.preco.toFixed(2)}</p>
+                    <h4 className="font-black text-zinc-800 text-sm leading-none">{p.nome}</h4>
+                    <p className="font-black text-green-600 text-xs italic mt-1">R$ {p.preco.toFixed(2)}</p>
                   </div>
                 </div>
                 <button 

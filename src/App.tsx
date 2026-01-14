@@ -18,7 +18,6 @@ import Admin from './components/Admin'
 type Perfil = 'Cliente' | 'Vendedor' | 'Admin';
 
 export default function App() {
-  // --- 1. ESTADOS DE ACESSO E PERFIL ---
   const [estaLogado, setEstaLogado] = useState(() => localStorage.getItem('@PedeAi:estaLogado') === 'true');
   const [usuarioNomeCompleto, setUsuarioNomeCompleto] = useState(() => localStorage.getItem('@PedeAi:nome') || '');
   const [usuarioUsername, setUsuarioUsername] = useState(() => localStorage.getItem('@PedeAi:username') || '');
@@ -33,10 +32,8 @@ export default function App() {
     return (localStorage.getItem('@PedeAi:tipo') as Perfil) || 'Cliente';
   });
 
-  // --- 2. ESTADOS DE LOCALIZAÇÃO REAL ---
   const [cidadeUsuario, setCidadeUsuario] = useState('Localizando...');
 
-  // --- 3. ESTADOS DO FORMULÁRIO (UX LIMPA) ---
   const [telaAuth, setTelaAuth] = useState<'Login' | 'Cadastro'>('Login');
   const [formNome, setFormNome] = useState('');
   const [formUsername, setFormUsername] = useState('');
@@ -46,7 +43,6 @@ export default function App() {
   const [formSenhaConfirm, setFormSenhaConfirm] = useState('');
   const [formNomeLoja, setFormNomeLoja] = useState('');
 
-  // --- 4. ESTADOS DE DADOS DO SISTEMA ---
   const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([]);
   const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>(() => {
     const salvo = localStorage.getItem('@PedeAi:produtos');
@@ -63,7 +59,6 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // --- 5. LOGICA DE LOCALIZAÇÃO (IP API) ---
   useEffect(() => {
     const buscarLocalizacaoReal = async () => {
       try {
@@ -82,7 +77,6 @@ export default function App() {
     buscarLocalizacaoReal();
   }, []);
 
-  // --- 6. LOGICA DE API DE LOJAS E PERSISTÊNCIA ---
   useEffect(() => {
     if (estaLogado) {
       fetch('http://localhost:3000/api/lojas')
@@ -100,7 +94,6 @@ export default function App() {
   useEffect(() => { localStorage.setItem('@PedeAi:produtos', JSON.stringify(todosOsProdutos)); }, [todosOsProdutos]);
   useEffect(() => { localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos)); }, [todosOsPedidos]);
 
-  // --- 7. HANDLERS DE AUTENTICAÇÃO ---
   const handleLogin = () => {
     const identificacao = formUsername || formEmail;
     if (!identificacao || !formSenha) {
@@ -164,7 +157,6 @@ export default function App() {
     }
   };
 
-  // --- 8. RENDERIZAÇÃO DA INTERFACE ---
   if (!estaLogado) {
     return (
       <AuthScreen 
@@ -229,6 +221,9 @@ export default function App() {
             todosOsProdutos={todosOsProdutos}
             setTodosOsProdutos={setTodosOsProdutos}
             notify={notify}
+            handleLogout={handleLogout}
+            usuarioNomeCompleto={usuarioNomeCompleto}
+            usuarioEmail={usuarioEmail}
           />
         )}
         {visao === 'Admin' && (
