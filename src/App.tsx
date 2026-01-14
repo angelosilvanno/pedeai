@@ -17,16 +17,12 @@ import Admin from './components/Admin'
 
 type Perfil = 'Cliente' | 'Vendedor' | 'Admin';
 
-/**
- * --- COMPONENTE PRINCIPAL APP ---
- * Versão Integral: Erro de digitação corrigido, Sem cortes, UX de Cadastro Limpo.
- */
 export default function App() {
-  // --- 1. DADOS DO PERFIL SALVO (PERSISTÊNCIA) ---
   const [estaLogado, setEstaLogado] = useState(() => localStorage.getItem('@PedeAi:estaLogado') === 'true');
   const [usuarioNomeCompleto, setUsuarioNomeCompleto] = useState(() => localStorage.getItem('@PedeAi:nome') || '');
   const [usuarioUsername, setUsuarioUsername] = useState(() => localStorage.getItem('@PedeAi:username') || '');
   const [usuarioEmail, setUsuarioEmail] = useState(() => localStorage.getItem('@PedeAi:email') || '');
+  const [usuarioTelefone, setUsuarioTelefone] = useState(() => localStorage.getItem('@PedeAi:telefone') || '');
   
   const [tipoUsuario, setTipoUsuario] = useState<Perfil>(() => {
     return (localStorage.getItem('@PedeAi:tipo') as Perfil) || 'Cliente';
@@ -36,16 +32,15 @@ export default function App() {
     return (localStorage.getItem('@PedeAi:tipo') as Perfil) || 'Cliente';
   });
 
-  // --- 2. DADOS DO FORMULÁRIO (COMEÇAM SEMPRE VAZIOS PARA PRIVACIDADE) ---
   const [telaAuth, setTelaAuth] = useState<'Login' | 'Cadastro'>('Login');
   const [formNome, setFormNome] = useState('');
   const [formUsername, setFormUsername] = useState('');
   const [formEmail, setFormEmail] = useState('');
+  const [formTelefone, setFormTelefone] = useState('');
   const [formSenha, setFormSenha] = useState('');
   const [formSenhaConfirm, setFormSenhaConfirm] = useState('');
   const [formNomeLoja, setFormNomeLoja] = useState('');
 
-  // --- 3. DADOS DO SISTEMA ---
   const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([]);
   const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>(() => {
     const salvo = localStorage.getItem('@PedeAi:produtos');
@@ -57,13 +52,11 @@ export default function App() {
   });
   const [toast, setToast] = useState<{ mensagem: string; tipo: 'sucesso' | 'erro' } | null>(null);
 
-  // --- 4. FUNÇÕES DE SUPORTE ---
   const notify = (mensagem: string, tipo: 'sucesso' | 'erro' = 'sucesso') => {
     setToast({ mensagem, tipo });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // --- 5. LOGICA DE API E PERSISTÊNCIA ---
   useEffect(() => {
     if (estaLogado) {
       fetch('http://localhost:3000/api/lojas')
@@ -81,7 +74,6 @@ export default function App() {
   useEffect(() => { localStorage.setItem('@PedeAi:produtos', JSON.stringify(todosOsProdutos)); }, [todosOsProdutos]);
   useEffect(() => { localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos)); }, [todosOsPedidos]);
 
-  // --- 6. HANDLERS DE AUTENTICAÇÃO ---
   const handleLogin = () => {
     const identificacao = formUsername || formEmail;
     if (!identificacao || !formSenha) {
@@ -96,7 +88,7 @@ export default function App() {
   };
 
   const handleCadastro = () => {
-    if (!formNome || !formUsername || !formEmail || !formSenha) {
+    if (!formNome || !formUsername || !formEmail || !formSenha || !formTelefone) {
       notify("Preencha todos os campos.", 'erro');
       return;
     }
@@ -111,22 +103,24 @@ export default function App() {
     setUsuarioNomeCompleto(nomeFormatado);
     setUsuarioUsername(userFormatado);
     setUsuarioEmail(formEmail);
+    setUsuarioTelefone(formTelefone);
     
     localStorage.setItem('@PedeAi:nome', nomeFormatado);
     localStorage.setItem('@PedeAi:username', userFormatado);
     localStorage.setItem('@PedeAi:email', formEmail);
+    localStorage.setItem('@PedeAi:telefone', formTelefone);
     localStorage.setItem('@PedeAi:tipo', tipoUsuario);
 
     setTelaAuth('Login');
     notify("Cadastro realizado! Faça login.");
-    setFormNome(''); setFormUsername(''); setFormEmail(''); setFormSenha(''); setFormSenhaConfirm('');
+    setFormNome(''); setFormUsername(''); setFormEmail(''); setFormTelefone(''); setFormSenha(''); setFormSenhaConfirm('');
   };
 
   const handleLogout = () => {
     if (confirm("Deseja realmente sair?")) {
       localStorage.removeItem('@PedeAi:estaLogado');
       setEstaLogado(false);
-      setFormNome(''); setFormUsername(''); setFormEmail('');
+      setFormNome(''); setFormUsername(''); setFormEmail(''); setFormTelefone('');
       notify("Sessão encerrada.");
     }
   };
@@ -143,7 +137,6 @@ export default function App() {
     }
   };
 
-  // --- 7. RENDERIZAÇÃO ---
   if (!estaLogado) {
     return (
       <AuthScreen 
@@ -153,6 +146,7 @@ export default function App() {
         usuarioNomeCompleto={formNome} setUsuarioNomeCompleto={setFormNome}
         usuarioUsername={formUsername} setUsuarioUsername={setFormUsername}
         usuarioEmail={formEmail} setUsuarioEmail={setFormEmail}
+        usuarioTelefone={formTelefone} setUsuarioTelefone={setFormTelefone}
         usuarioSenha={formSenha} setUsuarioSenha={setFormSenha}
         usuarioSenhaConfirm={formSenhaConfirm} setUsuarioSenhaConfirm={setFormSenhaConfirm}
         tipoUsuario={tipoUsuario} setTipoUsuario={setTipoUsuario}
@@ -194,6 +188,7 @@ export default function App() {
             usuarioNomeCompleto={usuarioNomeCompleto}
             usuarioUsername={usuarioUsername}
             usuarioEmail={usuarioEmail}
+            usuarioTelefone={usuarioTelefone} // <-- LINHA ADICIONADA PARA USAR A VARIÁVEL
             handleLogout={handleLogout}
             notify={notify}
             getStoreIcon={getStoreIcon}

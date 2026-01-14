@@ -7,6 +7,7 @@ interface ClienteProps {
   todosOsProdutos: Produto[];
   todosOsPedidos: Pedido[];
   setTodosOsPedidos: React.Dispatch<React.SetStateAction<Pedido[]>>;
+  usuarioTelefone: string;
   usuarioNomeCompleto: string;
   usuarioUsername: string;
   usuarioEmail: string;
