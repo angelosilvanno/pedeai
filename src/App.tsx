@@ -233,6 +233,9 @@ export default function App() {
             todosOsPedidos={todosOsPedidos}
             getStoreIcon={getStoreIcon}
             notify={notify}
+            handleLogout={handleLogout}
+            usuarioNomeCompleto={usuarioNomeCompleto}
+            usuarioEmail={usuarioEmail}
           />
         )}
       </main>
