@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, Trash2, MapPin } from 'lucide-react'
+import { Plus, Trash2, MapPin, Clock, Package, ShoppingBag, CheckCircle } from 'lucide-react'
 import type { Pedido, Produto } from '../types'
 
 interface VendedorProps {
@@ -14,37 +14,115 @@ export default function Vendedor({ todosOsPedidos, setTodosOsPedidos, todosOsPro
   const [abaVendedor, setAbaVendedor] = useState<'Pedidos' | 'Cardapio'>('Pedidos');
 
   return (
-    <div className="space-y-8 animate-in slide-in-from-bottom">
-      <div className="flex bg-zinc-200 p-2 rounded-[30px] shadow-inner">
-        <button onClick={() => setAbaVendedor('Pedidos')} className={`flex-1 py-5 rounded-[22px] font-black text-xs ${abaVendedor === 'Pedidos' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}>VENDAS</button>
-        <button onClick={() => setAbaVendedor('Cardapio')} className={`flex-1 py-5 rounded-[22px] font-black text-xs ${abaVendedor === 'Cardapio' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}>MEU CARDÁPIO</button>
+    <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
+      {/* SELETOR DE ABAS ESTILO CAPSULA */}
+      <div className="flex bg-zinc-200/50 p-1.5 rounded-[30px] shadow-inner border border-zinc-200">
+        <button 
+          onClick={() => setAbaVendedor('Pedidos')} 
+          className={`flex-1 py-4 rounded-[25px] font-black text-xs tracking-widest transition-all ${abaVendedor === 'Pedidos' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}
+        >
+          PAINEL VENDAS
+        </button>
+        <button 
+          onClick={() => setAbaVendedor('Cardapio')} 
+          className={`flex-1 py-4 rounded-[25px] font-black text-xs tracking-widest transition-all ${abaVendedor === 'Cardapio' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}
+        >
+          MEU CARDÁPIO
+        </button>
       </div>
+
       {abaVendedor === 'Pedidos' ? (
-        todosOsPedidos.length === 0 ? <p className="py-20 text-center font-bold text-zinc-300 uppercase">Sem novos pedidos.</p> :
-        todosOsPedidos.map(p => (
-          <div key={p.id} className="bg-white p-8 rounded-[45px] border-l-12 border-orange-500 shadow-sm space-y-6">
-            <div className="flex justify-between items-center"><h3 className="text-xl font-black text-zinc-800">{p.clienteNome}</h3><span className="text-[10px] font-black text-zinc-400 uppercase bg-zinc-50 px-3 py-1 rounded-full">{p.status}</span></div>
-            <div className="bg-zinc-50 p-5 rounded-3xl font-bold italic text-zinc-500 text-sm border border-zinc-100">{p.itens.map((i, idx) => <p key={idx}>• {i.nome}</p>)}</div>
-            <p className="flex items-center gap-2 text-xs font-bold text-zinc-400 uppercase"><MapPin size={14} /> {p.endereco}</p>
-            <div className="flex gap-2">
-              <button onClick={() => { setTodosOsPedidos(todosOsPedidos.map(p2 => p2.id === p.id ? {...p2, status: 'Preparando'} : p2)); notify("Pedido aceito!"); }} className="flex-1 bg-green-600 text-white p-4 rounded-2xl font-black text-[10px] uppercase">Aceitar</button>
-              <button onClick={() => { setTodosOsPedidos(todosOsPedidos.map(p2 => p2.id === p.id ? {...p2, status: 'Entregue'} : p2)); notify("Pedido entregue!"); }} className="flex-1 bg-zinc-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase">Concluir</button>
+        <div className="space-y-6">
+          <h3 className="px-2 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Pedidos Recebidos</h3>
+          {todosOsPedidos.length === 0 ? (
+            <div className="py-24 text-center">
+              <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100 mb-4">
+                <ShoppingBag size={32} className="text-zinc-300" />
+              </div>
+              <p className="font-black text-zinc-300 uppercase tracking-widest">Aguardando vendas...</p>
             </div>
-          </div>
-        ))
+          ) : (
+            todosOsPedidos.map(p => (
+              <div key={p.id} className="bg-white p-8 rounded-[45px] border border-zinc-100 shadow-sm space-y-6 border-l-12 border-l-orange-500">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-black text-zinc-800 text-lg leading-none">{p.clienteNome}</h4>
+                    <p className="text-[10px] font-bold text-zinc-400 mt-2 uppercase tracking-tight flex items-center gap-1">
+                      <Clock size={10} /> Recebido agora • #{p.id.split('-')[0]}
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-orange-50 text-orange-600 text-[9px] font-black rounded-full uppercase">{p.status}</span>
+                </div>
+
+                <div className="bg-zinc-50 p-5 rounded-3xl space-y-2 border border-zinc-100">
+                  {p.itens.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-sm font-bold text-zinc-600">
+                      <span>• {item.nome}</span>
+                      <span className="text-zinc-400">x1</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 px-2 text-xs font-bold text-zinc-400 uppercase">
+                  <MapPin size={14} className="text-orange-500" /> {p.endereco}
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  {p.status === 'Pendente' ? (
+                    <button 
+                      onClick={() => { setTodosOsPedidos(todosOsPedidos.map(p2 => p2.id === p.id ? {...p2, status: 'Preparando'} : p2)); notify("Pedido em preparo!"); }}
+                      className="flex-1 bg-green-600 text-white p-5 rounded-[22px] font-black text-[10px] uppercase shadow-lg shadow-green-100 active:scale-95 transition-all"
+                    >
+                      Aceitar Pedido
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => { setTodosOsPedidos(todosOsPedidos.map(p2 => p2.id === p.id ? {...p2, status: 'Entregue'} : p2)); notify("Venda concluída!"); }}
+                      className="flex-1 bg-zinc-900 text-white p-5 rounded-[22px] font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle size={14} /> Finalizar Entrega
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
       ) : (
         <div className="space-y-8">
-          <button onClick={() => {
-            const nome = prompt("Nome do novo item:");
-            const preco = prompt("Preço:");
-            if (nome && preco) { setTodosOsProdutos([{id: Math.random().toString(), lojaId: 1, nome, preco: parseFloat(preco), descricao: "Novo item"}, ...todosOsProdutos]); notify("Item adicionado!"); }
-          }} className="w-full bg-orange-600 text-white py-8 rounded-[35px] font-black uppercase shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"><Plus size={24} /> Adicionar Produto</button>
+          <button 
+            onClick={() => {
+              const nome = prompt("Nome do produto:");
+              const preco = prompt("Preço (Ex: 29.90):");
+              if (nome && preco) {
+                setTodosOsProdutos([{id: Math.random().toString(), lojaId: 1, nome, preco: parseFloat(preco), descricao: "Item do cardápio"}, ...todosOsProdutos]);
+                notify("Produto adicionado!");
+              }
+            }}
+            className="w-full bg-orange-600 text-white py-8 rounded-[35px] font-black uppercase text-sm shadow-xl shadow-orange-100 flex items-center justify-center gap-3 active:scale-95 transition-all"
+          >
+            <Plus size={20} /> Novo Item no Cardápio
+          </button>
+
           <div className="space-y-4">
-            <h3 className="text-[11px] font-black text-zinc-400 uppercase ml-2 tracking-widest">Produtos Atuais</h3>
+            <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Itens Ativos</h3>
             {todosOsProdutos.map(p => (
-              <div key={p.id} className="bg-white p-6 rounded-[35px] border border-zinc-100 flex justify-between items-center shadow-sm">
-                <div><h4 className="font-black text-zinc-800">{p.nome}</h4><p className="font-black text-green-600 text-sm italic mt-1 leading-none">R$ {p.preco.toFixed(2)}</p></div>
-                <button onClick={() => { setTodosOsProdutos(todosOsProdutos.filter(p2 => p2.id !== p.id)); notify("Removido."); }} className="h-12 w-12 flex items-center justify-center rounded-2xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20} /></button>
+              <div key={p.id} className="bg-white p-5 rounded-[30px] border border-zinc-100 flex justify-between items-center shadow-sm group hover:border-orange-200 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 bg-orange-50 rounded-2xl flex items-center justify-center">
+                    <Package size={20} className="text-orange-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-black text-zinc-800 text-sm">{p.nome}</h4>
+                    <p className="font-black text-green-600 text-xs italic">R$ {p.preco.toFixed(2)}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => { setTodosOsProdutos(todosOsProdutos.filter(p2 => p2.id !== p.id)); notify("Removido."); }}
+                  className="h-10 w-10 bg-red-50 text-red-500 rounded-xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all"
+                >
+                  <Trash2 size={18} />
+                </button>
               </div>
             ))}
           </div>
