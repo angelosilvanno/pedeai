@@ -34,7 +34,7 @@ export default function Vendedor({
         </div>
         <div className="flex-1">
           <h2 className="text-xl font-black text-zinc-800 tracking-tight leading-none">{usuarioNomeCompleto}</h2>
-          <p className="text-zinc-400 font-bold text-xs mt-1 uppercase tracking-widest">Painel do Lojista</p>
+          <p className="text-zinc-400 font-bold text-xs mt-1 uppercase tracking-widest">Vendedor</p>
           <p className="text-zinc-300 text-[10px] font-bold mt-1 lowercase">{usuarioEmail}</p>
         </div>
         <button 
