@@ -13,6 +13,8 @@ interface AuthProps {
   setUsuarioUsername: (val: string) => void;
   usuarioEmail: string;
   setUsuarioEmail: (val: string) => void;
+  usuarioTelefone: string;
+  setUsuarioTelefone: (val: string) => void;
   usuarioSenha: string;
   setUsuarioSenha: (val: string) => void;
   usuarioSenhaConfirm: string;
@@ -38,6 +40,8 @@ export function AuthScreen({
   setUsuarioUsername,
   usuarioEmail,
   setUsuarioEmail,
+  usuarioTelefone,
+  setUsuarioTelefone,
   usuarioSenha,
   setUsuarioSenha,
   usuarioSenhaConfirm,
@@ -72,6 +76,10 @@ export function AuthScreen({
     }
     if (tipoUsuario === 'Vendedor' && !nomeLoja) {
       setErro("Informe o nome do estabelecimento.");
+      return;
+    }
+    if ((tipoUsuario === 'Cliente' || tipoUsuario === 'Vendedor') && !usuarioTelefone) {
+      setErro("O telefone é obrigatório para contato.");
       return;
     }
     if (!validarEmail(usuarioEmail)) {
@@ -177,6 +185,16 @@ export function AuthScreen({
                   className="w-full p-3.5 bg-orange-50 border border-orange-100 rounded-2xl outline-none focus:ring-2 ring-orange-400 font-medium transition-all animate-in slide-in-from-top duration-300 text-sm" 
                   value={nomeLoja}
                   onChange={(e) => setNomeLoja(e.target.value)}
+                />
+              )}
+
+              {(tipoUsuario === 'Cliente' || tipoUsuario === 'Vendedor') && (
+                <input 
+                  type="tel" 
+                  placeholder="Telefone / WhatsApp" 
+                  className="w-full p-3.5 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none focus:ring-2 ring-orange-400 font-medium transition-all animate-in slide-in-from-top duration-300 text-sm" 
+                  value={usuarioTelefone}
+                  onChange={(e) => setUsuarioTelefone(e.target.value)}
                 />
               )}
 
