@@ -18,6 +18,7 @@ import Admin from './components/Admin'
 type Perfil = 'Cliente' | 'Vendedor' | 'Admin';
 
 export default function App() {
+  // --- 1. ESTADOS DE ACESSO E PERFIL (PERSISTÊNCIA) ---
   const [estaLogado, setEstaLogado] = useState(() => localStorage.getItem('@PedeAi:estaLogado') === 'true');
   const [usuarioNomeCompleto, setUsuarioNomeCompleto] = useState(() => localStorage.getItem('@PedeAi:nome') || '');
   const [usuarioUsername, setUsuarioUsername] = useState(() => localStorage.getItem('@PedeAi:username') || '');
@@ -34,6 +35,7 @@ export default function App() {
 
   const [cidadeUsuario, setCidadeUsuario] = useState('Localizando...');
 
+  // --- 2. ESTADOS DO FORMULÁRIO (UX LIMPA) ---
   const [telaAuth, setTelaAuth] = useState<'Login' | 'Cadastro'>('Login');
   const [formNome, setFormNome] = useState('');
   const [formUsername, setFormUsername] = useState('');
@@ -43,6 +45,7 @@ export default function App() {
   const [formSenhaConfirm, setFormSenhaConfirm] = useState('');
   const [formNomeLoja, setFormNomeLoja] = useState('');
 
+  // --- 3. ESTADOS DE DADOS DO SISTEMA ---
   const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([]);
   const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>(() => {
     const salvo = localStorage.getItem('@PedeAi:produtos');
@@ -59,24 +62,19 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  // --- 4. LOGICA DE LOCALIZAÇÃO ---
   useEffect(() => {
     const buscarLocalizacaoReal = async () => {
       try {
         const resposta = await fetch('https://ipapi.co/json/');
         const dados = await resposta.json();
-        if (dados.city && dados.region_code) {
-          setCidadeUsuario(`${dados.city}, ${dados.region_code}`);
-        } else {
-          setCidadeUsuario("Localização Indisponível");
-        }
-      } catch (error) {
-        console.error("Erro ao buscar localização:", error);
-        setCidadeUsuario("Brasil");
-      }
+        if (dados.city) setCidadeUsuario(`${dados.city}, ${dados.region_code}`);
+      } catch { setCidadeUsuario("Brasil"); }
     };
     buscarLocalizacaoReal();
   }, []);
 
+  // --- 5. LOGICA DE API E SINCRONIZAÇÃO ---
   useEffect(() => {
     if (estaLogado) {
       fetch('http://localhost:3000/api/lojas')
@@ -94,32 +92,45 @@ export default function App() {
   useEffect(() => { localStorage.setItem('@PedeAi:produtos', JSON.stringify(todosOsProdutos)); }, [todosOsProdutos]);
   useEffect(() => { localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos)); }, [todosOsPedidos]);
 
+  // --- 6. HANDLERS DE AUTENTICAÇÃO (CORRIGIDOS) ---
   const handleLogin = () => {
     const identificacao = formUsername || formEmail;
     if (!identificacao || !formSenha) {
       notify("Informe login e senha.", 'erro');
       return;
     }
-    const nomeF = usuarioNomeCompleto || "Usuário PedeAí";
+
+    // BUSCA O PERFIL REAL SALVO NO "BANCO" (LOCALSTORAGE)
+    const perfilSalvo = localStorage.getItem('@PedeAi:tipo') as Perfil || 'Cliente';
+    const nomeSalvo = localStorage.getItem('@PedeAi:nome') || "Usuário PedeAí";
+    const emailSalvo = localStorage.getItem('@PedeAi:email') || "";
+    const telSalvo = localStorage.getItem('@PedeAi:telefone') || "";
+    const userSalvo = localStorage.getItem('@PedeAi:username') || identificacao;
+
+    // ATUALIZA OS ESTADOS COM O QUE FOI RECUPERADO
+    setUsuarioNomeCompleto(nomeSalvo);
+    setUsuarioEmail(emailSalvo);
+    setUsuarioTelefone(telSalvo);
+    setUsuarioUsername(userSalvo);
+    setTipoUsuario(perfilSalvo);
+    
+    // DEFINE A VISÃO COM BASE NO PERFIL REAL DO USUÁRIO
+    setVisao(perfilSalvo);
+    
     localStorage.setItem('@PedeAi:estaLogado', 'true');
     setEstaLogado(true);
-    setVisao(tipoUsuario);
-    notify(`Bem-vindo, ${nomeF.split(' ')[0]}!`);
+    notify(`Bem-vindo, ${nomeSalvo.split(' ')[0]}!`);
   };
 
   const handleCadastro = () => {
-    // Validação básica obrigatória para todos
     if (!formNome || !formUsername || !formEmail || !formSenha) {
       notify("Preencha todos os campos.", 'erro');
       return;
     }
-
-    // CORREÇÃO: Telefone é obrigatório apenas para Cliente e Vendedor
     if (tipoUsuario !== 'Admin' && !formTelefone) {
-      notify("O telefone é obrigatório.", 'erro');
+      notify("Telefone obrigatório.", 'erro');
       return;
     }
-
     if (formSenha !== formSenhaConfirm) {
       notify("Senhas não coincidem!", 'erro');
       return;
@@ -137,7 +148,7 @@ export default function App() {
     localStorage.setItem('@PedeAi:username', userFormatado);
     localStorage.setItem('@PedeAi:email', formEmail);
     localStorage.setItem('@PedeAi:telefone', formTelefone);
-    localStorage.setItem('@PedeAi:tipo', tipoUsuario);
+    localStorage.setItem('@PedeAi:tipo', tipoUsuario); // SALVA O TIPO REAL AQUI
 
     setTelaAuth('Login');
     notify("Cadastro realizado! Faça login.");
@@ -165,6 +176,7 @@ export default function App() {
     }
   };
 
+  // --- 7. RENDERIZAÇÃO ---
   if (!estaLogado) {
     return (
       <AuthScreen 
