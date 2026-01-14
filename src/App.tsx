@@ -108,10 +108,18 @@ export default function App() {
   };
 
   const handleCadastro = () => {
-    if (!formNome || !formUsername || !formEmail || !formSenha || !formTelefone) {
+    // Validação básica obrigatória para todos
+    if (!formNome || !formUsername || !formEmail || !formSenha) {
       notify("Preencha todos os campos.", 'erro');
       return;
     }
+
+    // CORREÇÃO: Telefone é obrigatório apenas para Cliente e Vendedor
+    if (tipoUsuario !== 'Admin' && !formTelefone) {
+      notify("O telefone é obrigatório.", 'erro');
+      return;
+    }
+
     if (formSenha !== formSenhaConfirm) {
       notify("Senhas não coincidem!", 'erro');
       return;
