@@ -4,6 +4,8 @@ export interface Loja {
   categoria: string; 
   imagem: string; 
   status: 'Pendente' | 'Ativa' | 'Bloqueada'; 
+  abertura?: string;
+  fechamento?: string;
 }
 
 export interface Produto { 

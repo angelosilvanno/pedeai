@@ -16,7 +16,19 @@ interface ClienteProps {
   getStoreIcon: (iconName: string) => React.ReactNode;
 }
 
-export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos, setTodosOsPedidos, usuarioTelefone, usuarioNomeCompleto, usuarioUsername, usuarioEmail, handleLogout, notify, getStoreIcon }: ClienteProps) {
+export default function Cliente({ 
+  todasAsLojas, 
+  todosOsProdutos, 
+  todosOsPedidos, 
+  setTodosOsPedidos, 
+  usuarioTelefone,
+  usuarioNomeCompleto, 
+  usuarioUsername, 
+  usuarioEmail, 
+  handleLogout, 
+  notify, 
+  getStoreIcon 
+}: ClienteProps) {
   const [abaAtiva, setAbaAtiva] = useState<'Inicio' | 'Pedidos' | 'Perfil'>('Inicio');
   const [busca, setBusca] = useState('');
   const [lojaSelecionada, setLojaSelecionada] = useState<Loja | null>(null);
@@ -24,6 +36,16 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
   const [estaFinalizando, setEstaFinalizando] = useState(false);
   const [enderecoEntrega, setEnderecoEntrega] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Dinheiro');
+
+  const estaAberto = (abertura: string, fechamento: string) => {
+    const agora = new Date();
+    const horaAtual = agora.getHours() * 60 + agora.getMinutes();
+    const [hA, mA] = abertura.split(':').map(Number);
+    const [hF, mF] = fechamento.split(':').map(Number);
+    const minutosAbertura = hA * 60 + mA;
+    const minutosFechamento = hF * 60 + mF;
+    return horaAtual >= minutosAbertura && horaAtual <= minutosFechamento;
+  };
 
   const lojasFiltradas = useMemo(() => todasAsLojas.filter(l => l.status === 'Ativa' && l.nome.toLowerCase().includes(busca.toLowerCase())), [busca, todasAsLojas]);
   const cardapioParaExibir = useMemo(() => todosOsProdutos.filter(p => p.lojaId === lojaSelecionada?.id), [lojaSelecionada, todosOsProdutos]);
@@ -61,7 +83,7 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
               <select className="w-full rounded-3xl bg-zinc-50 p-5 font-bold outline-none" value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)}>
                 <option value="Dinheiro">Dinheiro</option>
                 <option value="Pix">Pix</option>
-                <option value="Cartão">Cartão de Credito</option>
+                <option value="Cartão">Cartão de Crédito</option>
               </select>
               <div className="flex justify-between border-t-2 pt-6"><span className="font-bold text-zinc-400">Total</span><p className="text-3xl font-black text-green-600">R$ {carrinho.reduce((a, i) => a + i.preco, 0).toFixed(2)}</p></div>
               <button onClick={realizarPedidoFinal} className="w-full rounded-3xl bg-orange-600 p-6 text-xl font-black text-white shadow-lg active:scale-95 transition-all">Confirmar Agora!</button>
@@ -74,21 +96,29 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
               <input type="text" placeholder="O que vamos pedir hoje?" className="w-full rounded-[30px] border border-zinc-100 bg-white py-6 pl-16 pr-8 font-bold shadow-sm outline-none transition-all focus:ring-4 ring-orange-50" value={busca} onChange={(e) => setBusca(e.target.value)} />
             </div>
             <div className="grid gap-5">
-              {lojasFiltradas.map(loja => (
-                <div key={loja.id} onClick={() => setLojaSelecionada(loja)} className="group flex items-center rounded-[35px] border border-zinc-100 bg-white p-6 shadow-sm hover:shadow-xl transition-all cursor-pointer">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-orange-50">{getStoreIcon(loja.imagem)}</div>
-                  <div className="ml-6 flex-1">
-                    <h3 className="text-lg font-black text-zinc-800">{loja.nome}</h3>
-                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{loja.categoria}</p>
-                    <div className="flex items-center gap-3 mt-3"><span className="text-[9px] font-black text-green-600 bg-green-50 px-2 py-0.5 rounded-md uppercase">Aberto</span><span className="text-[9px] font-bold text-zinc-400 flex items-center gap-1"><Clock size={10} /> 30-45 MIN</span></div>
+              {lojasFiltradas.map(loja => {
+                const aberto = estaAberto(loja.abertura || "00:00", loja.fechamento || "23:59");
+                return (
+                  <div key={loja.id} onClick={() => setLojaSelecionada(loja)} className="group flex items-center rounded-[35px] border border-zinc-100 bg-white p-6 shadow-sm hover:shadow-xl transition-all cursor-pointer">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-orange-50">{getStoreIcon(loja.imagem)}</div>
+                    <div className="ml-6 flex-1">
+                      <h3 className="text-lg font-black text-zinc-800">{loja.nome}</h3>
+                      <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{loja.categoria}</p>
+                      <div className="flex items-center gap-3 mt-3">
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-md uppercase ${aberto ? 'text-green-600 bg-green-50' : 'text-zinc-400 bg-zinc-100'}`}>
+                          {aberto ? 'Aberto' : 'Fechado'}
+                        </span>
+                        <span className="text-[9px] font-bold text-zinc-400 flex items-center gap-1"><Clock size={10} /> {loja.abertura} - {loja.fechamento}</span>
+                      </div>
+                    </div>
+                    <ChevronRight size={18} className="text-zinc-200" />
                   </div>
-                  <ChevronRight size={18} className="text-zinc-200" />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ) : (
-          <div className="space-y-8 animate-in slide-in-from-bottom">
+          <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
             <button onClick={() => setLojaSelecionada(null)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar</button>
             <div className="flex items-center gap-6">
                <div className="rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm">{getStoreIcon(lojaSelecionada.imagem)}</div>
@@ -129,18 +159,11 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
                 <p className="text-orange-400 text-[10px] font-black tracking-widest uppercase">{usuarioTelefone}</p>
               </div>
             </div>
-            <button 
-              onClick={handleLogout} 
-              className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90"
-              title="Sair da Conta"
-            >
-              <LogOut size={22} />
-            </button>
+            <button onClick={handleLogout} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90" title="Sair da Conta"><LogOut size={22} /></button>
           </div>
 
           <div className="mt-8 space-y-4 px-2">
             <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2">Minha Atividade</h3>
-
             <button className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-orange-50 rounded-2xl group-hover:bg-orange-100 transition-colors">
@@ -153,7 +176,6 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
               </div>
               <ChevronRight size={18} className="text-zinc-300" />
             </button>
-
             <button className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
@@ -172,18 +194,15 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-6 flex justify-around rounded-t-[45px] shadow-2xl">
         <button onClick={() => { setAbaAtiva('Inicio'); setLojaSelecionada(null); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Inicio' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><Home size={24} /><span className="text-[10px] font-black uppercase tracking-tighter">Inicio</span></button>
-        <button onClick={() => setAbaAtiva('Pedidos')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><ClipboardList size={24} />
-        <span className="text-[10px] font-black uppercase tracking-tighter">Pedidos</span></button>
-        <button onClick={() => setAbaAtiva('Perfil')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><User size={24} />
-        <span className="text-[10px] font-black uppercase tracking-tighter">Perfil</span></button>
+        <button onClick={() => setAbaAtiva('Pedidos')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><ClipboardList size={24} /><span className="text-[10px] font-black uppercase tracking-tighter">Pedidos</span></button>
+        <button onClick={() => setAbaAtiva('Perfil')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><User size={24} /><span className="text-[10px] font-black uppercase tracking-tighter">Perfil</span></button>
       </nav>
 
       {abaAtiva === 'Inicio' && carrinho.length > 0 && !estaFinalizando && (
         <div className="fixed bottom-32 left-6 right-6 z-40 mx-auto max-w-md animate-in slide-in-from-bottom duration-500">
           <button onClick={() => setEstaFinalizando(true)} className="w-full bg-zinc-900 text-white p-7 rounded-[35px] font-black shadow-2xl flex justify-between items-center ring-4 ring-white active:scale-95 transition-all">
             <div className="flex items-center gap-4">
-               <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center"><ShoppingBag size={24} />
-               </div>
+               <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center"><ShoppingBag size={24} /></div>
                <p className="text-base uppercase">{carrinho.length} itens na sacola</p>
             </div>
             <span className="text-2xl font-black italic text-orange-400">R$ {carrinho.reduce((s, i) => s + i.preco, 0).toFixed(2)}</span>

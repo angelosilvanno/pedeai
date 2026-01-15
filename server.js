@@ -10,7 +10,6 @@ app.use(express.json());
 
 const ARQUIVO_DB = './banco.json';
 
-// Função para ler o que está salvo no arquivo
 const lerBanco = () => {
   if (!fs.existsSync(ARQUIVO_DB)) {
     return { usuarios: [], lojas: [], produtos: [] };
@@ -19,51 +18,36 @@ const lerBanco = () => {
   return JSON.parse(dados);
 };
 
-// Função para salvar os dados no arquivo
 const salvarBanco = (dados) => {
   fs.writeFileSync(ARQUIVO_DB, JSON.stringify(dados, null, 2));
 };
 
-// Iniciamos os dados lendo do arquivo
 let banco = lerBanco();
 
-// Se o arquivo estiver vazio, colocamos as lojas padrão
 if (banco.lojas.length === 0) {
   banco.lojas = [
-    { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
-    { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
-    { id: 3, nome: "Doçuras da Ana", categoria: "Doceria", imagem: "CakeSlice", status: 'Ativa' },
-    { id: 4, nome: "Tanaka Sushi", categoria: "Japonesa", imagem: "Fish", status: 'Ativa' },
+    { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa', abertura: "18:00", fechamento: "23:59" },
+    { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa', abertura: "11:00", fechamento: "23:00" },
+    { id: 3, nome: "Doçuras da Ana", categoria: "Doceria", imagem: "CakeSlice", status: 'Ativa', abertura: "09:00", fechamento: "18:00" },
+    { id: 4, nome: "Tanaka Sushi", categoria: "Japonesa", imagem: "Fish", status: 'Ativa', abertura: "18:30", fechamento: "23:30" },
   ];
   salvarBanco(banco);
 }
 
-/**
- * --- ROTAS ---
- */
-
 app.post('/api/cadastro', (req, res) => {
   const novoUsuario = req.body;
   const bancoAtual = lerBanco();
-
   const existe = bancoAtual.usuarios.find(u => u.email === novoUsuario.email || u.username === novoUsuario.username);
   if (existe) return res.status(400).json({ mensagem: "Usuário já cadastrado." });
-
   bancoAtual.usuarios.push(novoUsuario);
-  salvarBanco(bancoAtual); // Salva no arquivo!
-  
-  console.log(`✅ Novo ${novoUsuario.tipo} salvo no arquivo: ${novoUsuario.nome}`);
+  salvarBanco(bancoAtual);
   res.status(201).json({ mensagem: "Sucesso!" });
 });
 
 app.post('/api/login', (req, res) => {
   const { identificacao, senha } = req.body;
   const bancoAtual = lerBanco();
-
-  const usuario = bancoAtual.usuarios.find(u => 
-    (u.username === identificacao || u.email === identificacao) && u.senha === senha
-  );
-
+  const usuario = bancoAtual.usuarios.find(u => (u.username === identificacao || u.email === identificacao) && u.senha === senha);
   if (usuario) {
     const { senha, ...dadosUsuario } = usuario;
     res.json(dadosUsuario);
@@ -86,8 +70,5 @@ app.get('/api/produtos', (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log("-----------------------------------------");
-  console.log(`🚀 SERVIDOR COM MEMÓRIA ATIVO: http://localhost:${PORT}`);
-  console.log(`📂 Os dados estão sendo salvos em: ${ARQUIVO_DB}`);
-  console.log("-----------------------------------------");
+  console.log(`🚀 Servidor rodando em http://localhost:${PORT}`);
 });
