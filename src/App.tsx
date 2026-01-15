@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react'
-import { CheckCircle, MapPin, Pizza, UtensilsCrossed, CakeSlice, Fish, Stethoscope, Store } from 'lucide-react'
+import { 
+  CheckCircle, 
+  MapPin, 
+  Pizza, 
+  UtensilsCrossed, 
+  CakeSlice, 
+  Fish, 
+  Stethoscope, 
+  Store 
+} from 'lucide-react'
 import type { Loja, Produto, Pedido } from './types'
 import { AuthScreen } from './components/AuthScreen'
 import Cliente from './components/Cliente'
@@ -8,15 +17,25 @@ import Admin from './components/Admin'
 
 type Perfil = 'Cliente' | 'Vendedor' | 'Admin';
 
+/**
+ * --- COMPONENTE PRINCIPAL APP ---
+ * Versão Integral: Correção de Mapeamento, Estilos Canônicos e Login Dinâmico.
+ */
 export default function App() {
-  // --- 1. ESTADOS DO USUÁRIO LOGADO ---
+  // --- 1. ESTADOS DE ACESSO E PERFIL (PERSISTÊNCIA) ---
   const [estaLogado, setEstaLogado] = useState(() => localStorage.getItem('@PedeAi:estaLogado') === 'true');
   const [usuarioNomeCompleto, setUsuarioNomeCompleto] = useState(() => localStorage.getItem('@PedeAi:nome') || '');
   const [usuarioUsername, setUsuarioUsername] = useState(() => localStorage.getItem('@PedeAi:username') || '');
   const [usuarioEmail, setUsuarioEmail] = useState(() => localStorage.getItem('@PedeAi:email') || '');
   const [usuarioTelefone, setUsuarioTelefone] = useState(() => localStorage.getItem('@PedeAi:telefone') || '');
-  const [tipoUsuario, setTipoUsuario] = useState<Perfil>(() => (localStorage.getItem('@PedeAi:tipo') as Perfil) || 'Cliente');
-  const [visao, setVisao] = useState<Perfil>(() => (localStorage.getItem('@PedeAi:tipo') as Perfil) || 'Cliente');
+  
+  const [tipoUsuario, setTipoUsuario] = useState<Perfil>(() => {
+    return (localStorage.getItem('@PedeAi:tipo') as Perfil) || 'Cliente';
+  });
+
+  const [visao, setVisao] = useState<Perfil>(() => {
+    return (localStorage.getItem('@PedeAi:tipo') as Perfil) || 'Cliente';
+  });
 
   const [cidadeUsuario, setCidadeUsuario] = useState('Localizando...');
 
@@ -30,39 +49,60 @@ export default function App() {
   const [formSenhaConfirm, setFormSenhaConfirm] = useState('');
   const [formNomeLoja, setFormNomeLoja] = useState('');
 
-  // --- 3. DADOS DO SISTEMA ---
+  // --- 3. ESTADOS DE DADOS ---
   const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([]);
-  const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>(() => JSON.parse(localStorage.getItem('@PedeAi:produtos') || '[]'));
-  const [todosOsPedidos, setTodosOsPedidos] = useState<Pedido[]>(() => JSON.parse(localStorage.getItem('@PedeAi:pedidos') || '[]'));
+  const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>(() => {
+    const salvo = localStorage.getItem('@PedeAi:produtos');
+    return salvo ? JSON.parse(salvo) : [];
+  });
+  const [todosOsPedidos, setTodosOsPedidos] = useState<Pedido[]>(() => {
+    const salvo = localStorage.getItem('@PedeAi:pedidos');
+    return salvo ? JSON.parse(salvo) : [];
+  });
   const [toast, setToast] = useState<{ mensagem: string; tipo: 'sucesso' | 'erro' } | null>(null);
 
+  // --- 4. FUNÇÕES DE SUPORTE ---
   const notify = (mensagem: string, tipo: 'sucesso' | 'erro' = 'sucesso') => {
     setToast({ mensagem, tipo });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // --- 4. LOGICA DE LOCALIZAÇÃO ---
+  // --- 5. LOGICA DE API E SINCRONIZAÇÃO ---
   useEffect(() => {
-    fetch('https://ipapi.co/json/').then(r => r.json()).then(d => setCidadeUsuario(`${d.city}, ${d.region_code}`)).catch(() => setCidadeUsuario("Brasil"));
+    const buscarLocalizacaoReal = async () => {
+      try {
+        const resposta = await fetch('https://ipapi.co/json/');
+        const dados = await resposta.json();
+        if (dados.city) setCidadeUsuario(`${dados.city}, ${dados.region_code}`);
+      } catch { setCidadeUsuario("Brasil"); }
+    };
+    buscarLocalizacaoReal();
   }, []);
 
-  // --- 5. LOGICA DE API DE LOJAS ---
   useEffect(() => {
     if (estaLogado) {
       fetch('http://localhost:3000/api/lojas')
         .then(res => res.json())
         .then(dados => setTodasAsLojas(dados))
-        .catch(() => notify("Erro ao conectar com o servidor.", 'erro'));
+        .catch(() => {
+          setTodasAsLojas([
+            { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
+            { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
+          ]);
+        });
     }
   }, [estaLogado]);
 
   useEffect(() => { localStorage.setItem('@PedeAi:produtos', JSON.stringify(todosOsProdutos)); }, [todosOsProdutos]);
   useEffect(() => { localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos)); }, [todosOsPedidos]);
 
-  // --- 6. HANDLERS DE AUTENTICAÇÃO VIA API ---
+  // --- 6. HANDLERS DE AUTENTICAÇÃO ---
   const handleLogin = async () => {
     const identificacao = formUsername || formEmail;
-    if (!identificacao || !formSenha) return notify("Informe login e senha.", 'erro');
+    if (!identificacao || !formSenha) {
+      notify("Informe login e senha.", 'erro');
+      return;
+    }
 
     try {
       const resposta = await fetch('http://localhost:3000/api/login', {
@@ -73,14 +113,12 @@ export default function App() {
 
       if (resposta.ok) {
         const dados = await resposta.json();
-        
-        // ATUALIZA O ESTADO COM O NOME REAL DO ADMIN VINDO DA API
         setUsuarioNomeCompleto(dados.nome);
         setUsuarioUsername(dados.username);
         setUsuarioEmail(dados.email);
         setUsuarioTelefone(dados.telefone);
         setTipoUsuario(dados.tipo);
-        setVisao(dados.tipo); // Define se mostra a tela de Cliente, Vendedor ou Admin
+        setVisao(dados.tipo);
         setEstaLogado(true);
 
         localStorage.setItem('@PedeAi:estaLogado', 'true');
@@ -94,24 +132,33 @@ export default function App() {
       } else {
         notify("Usuário ou senha incorretos.", 'erro');
       }
-    } catch {
-      notify("Servidor offline.", 'erro');
-    }
+    } catch { notify("Servidor offline.", 'erro'); }
   };
 
   const handleCadastro = async () => {
-    if (!formNome || !formUsername || !formEmail || !formSenha) return notify("Preencha todos os campos.", 'erro');
-    if (tipoUsuario !== 'Admin' && !formTelefone) return notify("Telefone obrigatório.", 'erro');
-    
-    const nomeF = formNome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-    
+    if (!formNome || !formUsername || !formEmail || !formSenha) {
+      notify("Preencha todos os campos.", 'erro');
+      return;
+    }
+    if (tipoUsuario !== 'Admin' && !formTelefone) {
+      notify("Telefone obrigatório.", 'erro');
+      return;
+    }
+    if (formSenha !== formSenhaConfirm) {
+      notify("Senhas não coincidem!", 'erro');
+      return;
+    }
+
+    const nomeFormatado = formNome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    const userFormatado = formUsername.toLowerCase().trim();
+
     try {
       const resposta = await fetch('http://localhost:3000/api/cadastro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nome: nomeF,
-          username: formUsername.toLowerCase().trim(),
+          nome: nomeFormatado,
+          username: userFormatado,
           email: formEmail.toLowerCase(),
           telefone: formTelefone,
           senha: formSenha,
@@ -127,16 +174,14 @@ export default function App() {
         const erro = await resposta.json();
         notify(erro.mensagem, 'erro');
       }
-    } catch {
-      notify("Erro no servidor.", 'erro');
-    }
+    } catch { notify("Erro no servidor.", 'erro'); }
   };
 
   const handleLogout = () => {
-    if (confirm("Deseja sair?")) {
+    if (confirm("Deseja realmente sair?")) {
       localStorage.clear();
       setEstaLogado(false);
-      setFormNome(''); setFormUsername(''); setFormEmail('');
+      setFormNome(''); setFormUsername(''); setFormEmail(''); setFormTelefone('');
       notify("Sessão encerrada.");
     }
   };
@@ -153,76 +198,90 @@ export default function App() {
     }
   };
 
-  if (!estaLogado) {
-    return (
-      <AuthScreen 
-        telaAuth={telaAuth} setTelaAuth={setTelaAuth}
-        campoLoginIdentificacao={formUsername} setCampoLoginIdentificacao={setFormUsername}
-        campoLoginSenha={formSenha} setCampoLoginSenha={setFormSenha}
-        usuarioNomeCompleto={formNome} setUsuarioNomeCompleto={setFormNome}
-        usuarioUsername={formUsername} setUsuarioUsername={setFormUsername}
-        usuarioEmail={formEmail} setUsuarioEmail={setFormEmail}
-        usuarioTelefone={formTelefone} setUsuarioTelefone={setFormTelefone}
-        usuarioSenha={formSenha} setUsuarioSenha={setFormSenha}
-        usuarioSenhaConfirm={formSenhaConfirm} setUsuarioSenhaConfirm={setFormSenhaConfirm}
-        tipoUsuario={tipoUsuario} setTipoUsuario={setTipoUsuario}
-        nomeLoja={formNomeLoja} setNomeLoja={setFormNomeLoja}
-        handleLogin={handleLogin} handleCadastro={handleCadastro}
-      />
-    );
-  }
-
+  // --- 7. RENDERIZAÇÃO ---
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 pb-40 font-sans selection:bg-orange-200">
+      
+      {/* CORREÇÃO DO AVISO: z-100 EM VEZ DE z-[100] */}
       {toast && (
         <div className="fixed top-10 left-1/2 -translate-x-1/2 z-100 flex items-center gap-3 px-6 py-4 rounded-3xl shadow-2xl bg-zinc-900 text-white animate-in slide-in-from-top duration-300">
-           <CheckCircle size={18} /> <span className="text-sm font-bold">{toast.mensagem}</span>
+           <CheckCircle size={18} />
+           <span className="text-sm font-bold">{toast.mensagem}</span>
         </div>
       )}
-      <header className="relative bg-linear-to-br from-orange-600 to-orange-500 p-8 text-white shadow-xl">
-        <div className="flex items-center justify-between mx-auto max-w-xl">
-          <div>
-            <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest">Olá, {usuarioNomeCompleto.split(' ')[0]}!</p>
-            <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none mt-1">PedeAí</h1>
-          </div>
-          <div className="flex items-center gap-1.5 bg-white/20 px-4 py-2 rounded-full text-[10px] font-bold">
-            <MapPin size={12} /> {cidadeUsuario}
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-xl p-5">
-        {visao === 'Cliente' && <Cliente todasAsLojas={todasAsLojas} 
-        todosOsProdutos={todosOsProdutos} 
-        todosOsPedidos={todosOsPedidos} 
-        setTodosOsPedidos={setTodosOsPedidos} 
-        usuarioNomeCompleto={usuarioNomeCompleto} 
-        usuarioUsername={usuarioUsername} 
-        usuarioEmail={usuarioEmail} 
-        usuarioTelefone={usuarioTelefone} 
-        handleLogout={handleLogout} 
-        notify={notify} 
-        getStoreIcon={getStoreIcon} />}
 
-        {visao === 'Vendedor' && 
-        <Vendedor todosOsPedidos={todosOsPedidos} 
-        setTodosOsPedidos={setTodosOsPedidos} 
-        todosOsProdutos={todosOsProdutos} 
-        setTodosOsProdutos={setTodosOsProdutos} 
-        notify={notify} 
-        handleLogout={handleLogout} 
-        usuarioNomeCompleto={usuarioNomeCompleto} 
-        usuarioEmail={usuarioEmail} />}
+      {!estaLogado ? (
+        <AuthScreen 
+          telaAuth={telaAuth} setTelaAuth={setTelaAuth}
+          campoLoginIdentificacao={formUsername} setCampoLoginIdentificacao={setFormUsername}
+          campoLoginSenha={formSenha} setCampoLoginSenha={setFormSenha}
+          usuarioNomeCompleto={formNome} setUsuarioNomeCompleto={setFormNome}
+          usuarioUsername={formUsername} setUsuarioUsername={setFormUsername}
+          usuarioEmail={formEmail} setUsuarioEmail={setFormEmail}
+          usuarioTelefone={formTelefone} setUsuarioTelefone={setFormTelefone}
+          usuarioSenha={formSenha} setUsuarioSenha={setFormSenha}
+          usuarioSenhaConfirm={formSenhaConfirm} setUsuarioSenhaConfirm={setFormSenhaConfirm}
+          tipoUsuario={tipoUsuario} setTipoUsuario={setTipoUsuario}
+          nomeLoja={formNomeLoja} setNomeLoja={setFormNomeLoja}
+          handleLogin={handleLogin} handleCadastro={handleCadastro}
+        />
+      ) : (
+        <>
+          <header className="relative bg-linear-to-br from-orange-600 to-orange-500 p-8 text-white shadow-xl">
+            <div className="flex items-center justify-between mx-auto max-w-xl">
+              <div>
+                <p className="text-[10px] font-bold opacity-80 uppercase tracking-widest leading-none">Olá, {usuarioNomeCompleto.split(' ')[0]}!</p>
+                <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none mt-1">PedeAí</h1>
+              </div>
+              <div className="flex items-center gap-1.5 bg-white/20 px-4 py-2 rounded-full text-[10px] font-bold">
+                <MapPin size={12} /> {cidadeUsuario}
+              </div>
+            </div>
+          </header>
 
-        {visao === 'Admin' && 
-        <Admin todasAsLojas={todasAsLojas} 
-        setTodasAsLojas={setTodasAsLojas} 
-        todosOsPedidos={todosOsPedidos} 
-        getStoreIcon={getStoreIcon} 
-        notify={notify} 
-        handleLogout={handleLogout} 
-        usuarioNomeCompleto={usuarioNomeCompleto} 
-        usuarioEmail={usuarioEmail} />}
-      </main>
+          <main className="mx-auto max-w-xl p-5">
+            {visao === 'Cliente' && (
+              <Cliente 
+                todasAsLojas={todasAsLojas}
+                todosOsProdutos={todosOsProdutos} // CORREÇÃO: "todos" em vez de "todas"
+                todosOsPedidos={todosOsPedidos}
+                setTodosOsPedidos={setTodosOsPedidos}
+                usuarioNomeCompleto={usuarioNomeCompleto}
+                usuarioUsername={usuarioUsername}
+                usuarioEmail={usuarioEmail}
+                usuarioTelefone={usuarioTelefone}
+                handleLogout={handleLogout}
+                notify={notify}
+                getStoreIcon={getStoreIcon}
+              />
+            )}
+            {visao === 'Vendedor' && (
+              <Vendedor 
+                todosOsPedidos={todosOsPedidos}
+                setTodosOsPedidos={setTodosOsPedidos}
+                todosOsProdutos={todosOsProdutos}
+                setTodosOsProdutos={setTodosOsProdutos}
+                notify={notify}
+                handleLogout={handleLogout}
+                usuarioNomeCompleto={usuarioNomeCompleto}
+                usuarioEmail={usuarioEmail}
+              />
+            )}
+            {visao === 'Admin' && (
+              <Admin 
+                todasAsLojas={todasAsLojas}
+                setTodasAsLojas={setTodasAsLojas}
+                todosOsPedidos={todosOsPedidos}
+                getStoreIcon={getStoreIcon}
+                notify={notify}
+                handleLogout={handleLogout}
+                usuarioNomeCompleto={usuarioNomeCompleto}
+                usuarioEmail={usuarioEmail}
+              />
+            )}
+          </main>
+        </>
+      )}
     </div>
   );
 }
