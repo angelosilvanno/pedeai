@@ -33,8 +33,8 @@ export default function App() {
   });
 
   const [cidadeUsuario, setCidadeUsuario] = useState('Localizando...');
-
   const [telaAuth, setTelaAuth] = useState<'Login' | 'Cadastro'>('Login');
+  
   const [formNome, setFormNome] = useState('');
   const [formUsername, setFormUsername] = useState('');
   const [formEmail, setFormEmail] = useState('');
@@ -56,6 +56,11 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const alternarTelaAuth = (tela: 'Login' | 'Cadastro') => {
+    setTelaAuth(tela);
+    setFormNome(''); setFormUsername(''); setFormEmail(''); setFormTelefone(''); setFormSenha(''); setFormSenhaConfirm('');
+  };
+
   useEffect(() => {
     const buscarLocalizacaoReal = async () => {
       try {
@@ -73,15 +78,11 @@ export default function App() {
         try {
           const resLojas = await fetch('http://localhost:3000/api/lojas');
           const resProdutos = await fetch('http://localhost:3000/api/produtos');
-          
           if (resLojas.ok && resProdutos.ok) {
             setTodasAsLojas(await resLojas.json());
             setTodosOsProdutos(await resProdutos.json());
-            console.log("📡 [Front-end] Lojas e Produtos carregados com sucesso!");
           }
-        } catch (erro) {
-          console.error("❌ Erro ao conectar com o servidor:", erro);
-          notify("Servidor offline. Usando dados de reserva.", 'erro');
+        } catch {
           setTodasAsLojas([
             { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
             { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
@@ -95,21 +96,16 @@ export default function App() {
   useEffect(() => { localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos)); }, [todosOsPedidos]);
 
   const handleLogin = async () => {
-    const identificacao = formUsername || formEmail;
-    if (!identificacao || !formSenha) {
-      notify("Informe login e senha.", 'erro');
-      return;
-    }
-
+    const iden = formUsername || formEmail;
+    if (!iden || !formSenha) return notify("Informe login e senha.", 'erro');
     try {
-      const resposta = await fetch('http://localhost:3000/api/login', {
+      const res = await fetch('http://localhost:3000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identificacao, senha: formSenha })
+        body: JSON.stringify({ identificacao: iden, senha: formSenha })
       });
-
-      if (resposta.ok) {
-        const dados = await resposta.json();
+      if (res.ok) {
+        const dados = await res.json();
         setUsuarioNomeCompleto(dados.nome);
         setUsuarioUsername(dados.username);
         setUsuarioEmail(dados.email);
@@ -117,59 +113,35 @@ export default function App() {
         setTipoUsuario(dados.tipo);
         setVisao(dados.tipo);
         setEstaLogado(true);
-
         localStorage.setItem('@PedeAi:estaLogado', 'true');
         localStorage.setItem('@PedeAi:nome', dados.nome);
         localStorage.setItem('@PedeAi:username', dados.username);
         localStorage.setItem('@PedeAi:email', dados.email);
         localStorage.setItem('@PedeAi:telefone', dados.telefone);
         localStorage.setItem('@PedeAi:tipo', dados.tipo);
-
-        notify(`Bem-vindo, ${dados.nome.split(' ')[0]}!`);
-      } else {
-        notify("Usuário ou senha incorretos.", 'erro');
-      }
+        setFormSenha('');
+      } else { notify("Usuário ou senha incorretos.", 'erro'); }
     } catch { notify("Servidor offline.", 'erro'); }
   };
 
   const handleCadastro = async () => {
-    if (!formNome || !formUsername || !formEmail || !formSenha) {
-      notify("Preencha todos os campos.", 'erro');
-      return;
-    }
-    if (tipoUsuario !== 'Admin' && !formTelefone) {
-      notify("Telefone obrigatório.", 'erro');
-      return;
-    }
-    if (formSenha !== formSenhaConfirm) {
-      notify("Senhas não coincidem!", 'erro');
-      return;
-    }
-
-    const nomeFormatado = formNome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-    const userFormatado = formUsername.toLowerCase().trim();
-
+    if (!formNome || !formUsername || !formEmail || !formSenha) return notify("Preencha todos os campos.", 'erro');
+    if (tipoUsuario !== 'Admin' && !formTelefone) return notify("Telefone obrigatório.", 'erro');
+    if (formSenha !== formSenhaConfirm) return notify("Senhas não coincidem!", 'erro');
+    const nomeF = formNome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
     try {
-      const resposta = await fetch('http://localhost:3000/api/cadastro', {
+      const res = await fetch('http://localhost:3000/api/cadastro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nome: nomeFormatado,
-          username: userFormatado,
-          email: formEmail.toLowerCase(),
-          telefone: formTelefone,
-          senha: formSenha,
-          tipo: tipoUsuario
-        })
+        body: JSON.stringify({ nome: nomeF, username: formUsername.toLowerCase().trim(), email: formEmail.toLowerCase(), telefone: formTelefone, senha: formSenha, tipo: tipoUsuario })
       });
-
-      if (resposta.ok) {
-        notify("Cadastro realizado! Faça login.");
+      if (res.ok) {
+        notify("Sucesso! Faça login.");
         setTelaAuth('Login');
-        setFormNome(''); setFormUsername(''); setFormEmail(''); setFormTelefone(''); setFormSenha('');
+        setFormSenha(''); setFormSenhaConfirm('');
       } else {
-        const erro = await resposta.json();
-        notify(erro.mensagem, 'erro');
+        const dadosErro = await res.json();
+        notify(dadosErro.mensagem, 'erro');
       }
     } catch { notify("Erro no servidor.", 'erro'); }
   };
@@ -178,13 +150,7 @@ export default function App() {
     if (confirm("Deseja realmente sair?")) {
       localStorage.clear();
       setEstaLogado(false);
-      setFormNome('');
-      setFormUsername('');
-      setFormEmail('');
-      setFormTelefone('');
-      setFormSenha('');
-      setFormSenhaConfirm('');
-      setFormNomeLoja('');
+      setFormNome(''); setFormUsername(''); setFormEmail(''); setFormSenha('');
       notify("Sessão encerrada.");
     }
   };
@@ -202,10 +168,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900 pb-40 font-sans selection:bg-orange-200">
+    <div className={`min-h-screen w-full font-sans selection:bg-orange-200 transition-colors duration-500 ${!estaLogado ? 'bg-orange-600' : 'bg-zinc-50'}`}>
       
       {toast && (
-        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-100 flex items-center gap-3 px-6 py-4 rounded-3xl shadow-2xl bg-zinc-900 text-white animate-in slide-in-from-top duration-300">
+        <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-100 flex items-center gap-3 px-6 py-4 rounded-3xl shadow-2xl bg-zinc-900 text-white animate-in slide-in-from-top duration-300`}>
            <CheckCircle size={18} />
            <span className="text-sm font-bold">{toast.mensagem}</span>
         </div>
@@ -213,7 +179,7 @@ export default function App() {
 
       {!estaLogado ? (
         <AuthScreen 
-          telaAuth={telaAuth} setTelaAuth={setTelaAuth}
+          telaAuth={telaAuth} setTelaAuth={alternarTelaAuth}
           campoLoginIdentificacao={formUsername} setCampoLoginIdentificacao={setFormUsername}
           campoLoginSenha={formSenha} setCampoLoginSenha={setFormSenha}
           usuarioNomeCompleto={formNome} setUsuarioNomeCompleto={setFormNome}
@@ -227,7 +193,7 @@ export default function App() {
           handleLogin={handleLogin} handleCadastro={handleCadastro}
         />
       ) : (
-        <>
+        <div className="w-full">
           <header className="relative bg-linear-to-br from-orange-600 to-orange-500 p-8 text-white shadow-xl">
             <div className="flex items-center justify-between mx-auto max-w-xl">
               <div>
@@ -243,45 +209,31 @@ export default function App() {
           <main className="mx-auto max-w-xl p-5">
             {visao === 'Cliente' && (
               <Cliente 
-                todasAsLojas={todasAsLojas}
-                todosOsProdutos={todosOsProdutos}
-                todosOsPedidos={todosOsPedidos}
-                setTodosOsPedidos={setTodosOsPedidos}
-                usuarioNomeCompleto={usuarioNomeCompleto}
-                usuarioUsername={usuarioUsername}
-                usuarioEmail={usuarioEmail}
-                usuarioTelefone={usuarioTelefone}
-                handleLogout={handleLogout}
-                notify={notify}
-                getStoreIcon={getStoreIcon}
+                todasAsLojas={todasAsLojas} todosOsProdutos={todosOsProdutos}
+                todosOsPedidos={todosOsPedidos} setTodosOsPedidos={setTodosOsPedidos}
+                usuarioNomeCompleto={usuarioNomeCompleto} usuarioUsername={usuarioUsername}
+                usuarioEmail={usuarioEmail} usuarioTelefone={usuarioTelefone}
+                handleLogout={handleLogout} notify={notify} getStoreIcon={getStoreIcon}
               />
             )}
             {visao === 'Vendedor' && (
               <Vendedor 
-                todosOsPedidos={todosOsPedidos}
-                setTodosOsPedidos={setTodosOsPedidos}
-                todosOsProdutos={todosOsProdutos}
-                setTodosOsProdutos={setTodosOsProdutos}
-                notify={notify}
-                handleLogout={handleLogout}
-                usuarioNomeCompleto={usuarioNomeCompleto}
-                usuarioEmail={usuarioEmail}
+                todosOsPedidos={todosOsPedidos} setTodosOsPedidos={setTodosOsPedidos}
+                todosOsProdutos={todosOsProdutos} setTodosOsProdutos={setTodosOsProdutos}
+                notify={notify} handleLogout={handleLogout}
+                usuarioNomeCompleto={usuarioNomeCompleto} usuarioEmail={usuarioEmail}
               />
             )}
             {visao === 'Admin' && (
               <Admin 
-                todasAsLojas={todasAsLojas}
-                setTodasAsLojas={setTodasAsLojas}
-                todosOsPedidos={todosOsPedidos}
-                getStoreIcon={getStoreIcon}
-                notify={notify}
-                handleLogout={handleLogout}
-                usuarioNomeCompleto={usuarioNomeCompleto}
-                usuarioEmail={usuarioEmail}
+                todasAsLojas={todasAsLojas} setTodasAsLojas={setTodasAsLojas}
+                todosOsPedidos={todosOsPedidos} getStoreIcon={getStoreIcon}
+                notify={notify} handleLogout={handleLogout}
+                usuarioNomeCompleto={usuarioNomeCompleto} usuarioEmail={usuarioEmail}
               />
             )}
           </main>
-        </>
+        </div>
       )}
     </div>
   );

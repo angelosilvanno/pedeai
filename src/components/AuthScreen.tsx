@@ -55,7 +55,6 @@ export function AuthScreen({
 }: AuthProps) {
   
   const [erro, setErro] = useState<string | null>(null);
-  const emailsCadastrados = ['admin@pedeai.com', 'vendedor@teste.com', 'cliente@email.com'];
 
   const validarEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
@@ -78,16 +77,12 @@ export function AuthScreen({
       setErro("Informe o nome do estabelecimento.");
       return;
     }
-    if ((tipoUsuario === 'Cliente' || tipoUsuario === 'Vendedor') && !usuarioTelefone) {
-      setErro("O telefone é obrigatório para contato.");
+    if (tipoUsuario !== 'Admin' && !usuarioTelefone) {
+      setErro("O telefone é obrigatório.");
       return;
     }
     if (!validarEmail(usuarioEmail)) {
       setErro("O e-mail digitado é inválido.");
-      return;
-    }
-    if (emailsCadastrados.includes(usuarioEmail.toLowerCase())) {
-      setErro("Este e-mail já está cadastrado.");
       return;
     }
     if (usuarioSenha.length < 6) {
@@ -102,7 +97,8 @@ export function AuthScreen({
   };
 
   return (
-    <div className="h-screen w-screen bg-orange-600 flex flex-col items-center justify-center p-4 font-sans text-zinc-900 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+    /* CORREÇÃO: min-h-screen para o fundo preencher tudo e scrollbar-hide para sumir com a barra visual */
+    <div className="min-h-screen w-full bg-orange-600 flex flex-col items-center justify-start p-4 font-sans text-zinc-900 overflow-y-auto scrollbar-hide">
       
       <div className="max-w-md w-full bg-white rounded-[45px] shadow-2xl p-8 space-y-6 animate-in zoom-in duration-500 my-auto border border-white/20">
         <div className="text-center space-y-1">
