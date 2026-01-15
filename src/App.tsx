@@ -44,10 +44,7 @@ export default function App() {
   const [formNomeLoja, setFormNomeLoja] = useState('');
 
   const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([]);
-  const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>(() => {
-    const salvo = localStorage.getItem('@PedeAi:produtos');
-    return salvo ? JSON.parse(salvo) : [];
-  });
+  const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>([]);
   const [todosOsPedidos, setTodosOsPedidos] = useState<Pedido[]>(() => {
     const salvo = localStorage.getItem('@PedeAi:pedidos');
     return salvo ? JSON.parse(salvo) : [];
@@ -72,19 +69,29 @@ export default function App() {
 
   useEffect(() => {
     if (estaLogado) {
-      fetch('http://localhost:3000/api/lojas')
-        .then(res => res.json())
-        .then(dados => setTodasAsLojas(dados))
-        .catch(() => {
+      const carregarDadosDoServidor = async () => {
+        try {
+          const resLojas = await fetch('http://localhost:3000/api/lojas');
+          const resProdutos = await fetch('http://localhost:3000/api/produtos');
+          
+          if (resLojas.ok && resProdutos.ok) {
+            setTodasAsLojas(await resLojas.json());
+            setTodosOsProdutos(await resProdutos.json());
+            console.log("📡 [Front-end] Lojas e Produtos carregados com sucesso!");
+          }
+        } catch (erro) {
+          console.error("❌ Erro ao conectar com o servidor:", erro);
+          notify("Servidor offline. Usando dados de reserva.", 'erro');
           setTodasAsLojas([
             { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
             { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
           ]);
-        });
+        }
+      };
+      carregarDadosDoServidor();
     }
   }, [estaLogado]);
 
-  useEffect(() => { localStorage.setItem('@PedeAi:produtos', JSON.stringify(todosOsProdutos)); }, [todosOsProdutos]);
   useEffect(() => { localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos)); }, [todosOsPedidos]);
 
   const handleLogin = async () => {
@@ -171,8 +178,6 @@ export default function App() {
     if (confirm("Deseja realmente sair?")) {
       localStorage.clear();
       setEstaLogado(false);
-      
-      // RESET COMPLETO DOS FORMULÁRIOS (PRIVACIDADE)
       setFormNome('');
       setFormUsername('');
       setFormEmail('');
@@ -180,7 +185,6 @@ export default function App() {
       setFormSenha('');
       setFormSenhaConfirm('');
       setFormNomeLoja('');
-      
       notify("Sessão encerrada.");
     }
   };
