@@ -168,7 +168,8 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen w-full font-sans selection:bg-orange-200 transition-colors duration-500 ${!estaLogado ? 'bg-orange-600' : 'bg-zinc-50'}`}>
+    /* CORREÇÃO: pb-40 no contêiner pai garante que o conteúdo não fique "preso" sob o menu fixo */
+    <div className={`min-h-screen w-full font-sans selection:bg-orange-200 transition-colors duration-500 pb-40 ${!estaLogado ? 'bg-orange-600' : 'bg-zinc-50'}`}>
       
       {toast && (
         <div className={`fixed top-10 left-1/2 -translate-x-1/2 z-100 flex items-center gap-3 px-6 py-4 rounded-3xl shadow-2xl bg-zinc-900 text-white animate-in slide-in-from-top duration-300`}>
@@ -209,11 +210,17 @@ export default function App() {
           <main className="mx-auto max-w-xl p-5">
             {visao === 'Cliente' && (
               <Cliente 
-                todasAsLojas={todasAsLojas} todosOsProdutos={todosOsProdutos}
-                todosOsPedidos={todosOsPedidos} setTodosOsPedidos={setTodosOsPedidos}
-                usuarioNomeCompleto={usuarioNomeCompleto} usuarioUsername={usuarioUsername}
-                usuarioEmail={usuarioEmail} usuarioTelefone={usuarioTelefone}
-                handleLogout={handleLogout} notify={notify} getStoreIcon={getStoreIcon}
+                todasAsLojas={todasAsLojas}
+                todosOsProdutos={todosOsProdutos}
+                todosOsPedidos={todosOsPedidos}
+                setTodosOsPedidos={setTodosOsPedidos}
+                usuarioNomeCompleto={usuarioNomeCompleto}
+                usuarioUsername={usuarioUsername}
+                usuarioEmail={usuarioEmail}
+                usuarioTelefone={usuarioTelefone}
+                handleLogout={handleLogout}
+                notify={notify}
+                getStoreIcon={getStoreIcon}
               />
             )}
             {visao === 'Vendedor' && (
