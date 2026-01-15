@@ -59,9 +59,9 @@ export default function Cliente({ todasAsLojas, todosOsProdutos, todosOsPedidos,
               <h2 className="text-xl font-black">Finalizar pedido</h2>
               <input type="text" placeholder="Endereço de Entrega" className="w-full rounded-3xl bg-zinc-50 p-5 font-medium outline-none transition-all focus:ring-2 ring-orange-200" value={enderecoEntrega} onChange={(e) => setEnderecoEntrega(e.target.value)} />
               <select className="w-full rounded-3xl bg-zinc-50 p-5 font-bold outline-none" value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)}>
-                <option value="Dinheiro">Dinheiro na entrega</option>
-                <option value="Pix">Pix Instantâneo</option>
-                <option value="Cartão">Cartão na entrega</option>
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Pix">Pix</option>
+                <option value="Cartão">Cartão de Credito</option>
               </select>
               <div className="flex justify-between border-t-2 pt-6"><span className="font-bold text-zinc-400">Total</span><p className="text-3xl font-black text-green-600">R$ {carrinho.reduce((a, i) => a + i.preco, 0).toFixed(2)}</p></div>
               <button onClick={realizarPedidoFinal} className="w-full rounded-3xl bg-orange-600 p-6 text-xl font-black text-white shadow-lg active:scale-95 transition-all">Confirmar Agora!</button>
