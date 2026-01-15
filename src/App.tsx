@@ -19,7 +19,6 @@ type Perfil = 'Cliente' | 'Vendedor' | 'Admin';
 
 /**
  * --- COMPONENTE PRINCIPAL APP ---
- * Versão Integral: Correção de Mapeamento, Estilos Canônicos e Login Dinâmico.
  */
 export default function App() {
   // --- 1. ESTADOS DE ACESSO E PERFIL (PERSISTÊNCIA) ---
@@ -202,7 +201,6 @@ export default function App() {
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 pb-40 font-sans selection:bg-orange-200">
       
-      {/* CORREÇÃO DO AVISO: z-100 EM VEZ DE z-[100] */}
       {toast && (
         <div className="fixed top-10 left-1/2 -translate-x-1/2 z-100 flex items-center gap-3 px-6 py-4 rounded-3xl shadow-2xl bg-zinc-900 text-white animate-in slide-in-from-top duration-300">
            <CheckCircle size={18} />
@@ -243,7 +241,7 @@ export default function App() {
             {visao === 'Cliente' && (
               <Cliente 
                 todasAsLojas={todasAsLojas}
-                todosOsProdutos={todosOsProdutos} // CORREÇÃO: "todos" em vez de "todas"
+                todosOsProdutos={todosOsProdutos}
                 todosOsPedidos={todosOsPedidos}
                 setTodosOsPedidos={setTodosOsPedidos}
                 usuarioNomeCompleto={usuarioNomeCompleto}
