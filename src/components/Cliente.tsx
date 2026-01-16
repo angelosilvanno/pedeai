@@ -10,7 +10,8 @@ import {
   MapPin, 
   ChevronRight, 
   LogOut, 
-  Clock 
+  Clock,
+  Trash2
 } from 'lucide-react'
 import type { Loja, Produto, Pedido } from '../types'
 
@@ -48,6 +49,10 @@ export default function Cliente({
   const [estaFinalizando, setEstaFinalizando] = useState(false);
   const [enderecoEntrega, setEnderecoEntrega] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Dinheiro');
+  
+  // Novos estados para endereços
+  const [gerenciandoEnderecos, setGerenciandoEnderecos] = useState(false);
+  const [meusEnderecos, setMeusEnderecos] = useState<string[]>(['Casa', 'Trabalho']);
 
   const estaAberto = (abertura: string, fechamento: string) => {
     const agora = new Date();
@@ -83,6 +88,19 @@ export default function Cliente({
     notify("Pedido enviado!");
   };
 
+  const adicionarNovoEndereco = () => {
+    const novo = prompt("Digite o novo endereço:");
+    if (novo) {
+      setMeusEnderecos([...meusEnderecos, novo]);
+      notify("Endereço salvo!");
+    }
+  };
+
+  const removerEndereco = (index: number) => {
+    setMeusEnderecos(meusEnderecos.filter((_, i) => i !== index));
+    notify("Endereço removido.");
+  };
+
   return (
     <>
       {abaAtiva === 'Inicio' ? (
@@ -91,12 +109,31 @@ export default function Cliente({
             <button onClick={() => setEstaFinalizando(false)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar</button>
             <div className="space-y-6 rounded-[40px] border border-zinc-100 bg-white p-10 shadow-sm">
               <h2 className="text-xl font-black">Finalizar pedido</h2>
-              <input type="text" placeholder="Endereço de Entrega" className="w-full rounded-3xl bg-zinc-50 p-5 font-medium outline-none transition-all focus:ring-2 ring-orange-200" value={enderecoEntrega} onChange={(e) => setEnderecoEntrega(e.target.value)} />
-              <select className="w-full rounded-3xl bg-zinc-50 p-5 font-bold outline-none" value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)}>
-                <option value="Dinheiro">Dinheiro</option>
-                <option value="Pix">Pix</option>
-                <option value="Cartão">Cartão de Crédito</option>
-              </select>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4">Onde entregar?</label>
+                <select 
+                  className="w-full rounded-3xl bg-zinc-50 p-5 font-bold outline-none border border-zinc-100"
+                  value={enderecoEntrega}
+                  onChange={(e) => setEnderecoEntrega(e.target.value)}
+                >
+                  <option value="">Selecione um endereço...</option>
+                  {meusEnderecos.map((end, idx) => (
+                    <option key={idx} value={end}>{end}</option>
+                  ))}
+                </select>
+                <input type="text" placeholder="Ou digite um novo endereço" className="w-full rounded-3xl bg-zinc-50 p-5 font-medium outline-none transition-all focus:ring-2 ring-orange-200" value={enderecoEntrega} onChange={(e) => setEnderecoEntrega(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4">Forma de Pagamento</label>
+                <select className="w-full rounded-3xl bg-zinc-50 p-5 font-bold outline-none" value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)}>
+                  <option value="Dinheiro">Dinheiro</option>
+                  <option value="Pix">Pix</option>
+                  <option value="Cartão">Cartão de Crédito</option>
+                </select>
+              </div>
+
               <div className="flex justify-between border-t-2 pt-6"><span className="font-bold text-zinc-400">Total</span><p className="text-3xl font-black text-green-600">R$ {carrinho.reduce((a, i) => a + i.preco, 0).toFixed(2)}</p></div>
               <button onClick={realizarPedidoFinal} className="w-full rounded-3xl bg-orange-600 p-6 text-xl font-black text-white shadow-lg active:scale-95 transition-all">Confirmar Agora!</button>
             </div>
@@ -185,56 +222,88 @@ export default function Cliente({
         </div>
       ) : (
         <div className="animate-in fade-in duration-500">
-          <div className="relative flex items-center gap-6 py-10 border-b border-zinc-100 bg-white -mx-5 px-5">
-            <div className="h-24 w-24 rounded-full bg-orange-100 flex items-center justify-center border-4 border-white shadow-sm overflow-hidden"><User size={48} className="text-orange-600" /></div>
-            <div className="flex-1">
-              <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">{usuarioNomeCompleto}</h2>
-              <p className="text-zinc-400 font-bold text-sm mt-1 leading-none">@{usuarioUsername}</p>
-              <div className="mt-2 space-y-0.5 leading-none">
-                <p className="text-zinc-300 text-[10px] font-bold tracking-widest">{usuarioEmail}</p>
-                <p className="text-orange-400 text-[10px] font-black tracking-widest uppercase">{usuarioTelefone}</p>
-              </div>
+          {gerenciandoEnderecos ? (
+            <div className="space-y-8 animate-in slide-in-from-right">
+               <button onClick={() => setGerenciandoEnderecos(false)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar ao Perfil</button>
+               <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">Meus Endereços</h2>
+               
+               <button 
+                onClick={adicionarNovoEndereco}
+                className="w-full bg-orange-50 text-orange-600 p-6 rounded-[30px] font-black uppercase text-xs flex items-center justify-center gap-3 border-2 border-dashed border-orange-200 active:scale-95 transition-all"
+               >
+                 <Plus size={20} /> Adicionar Novo Local
+               </button>
+
+               <div className="space-y-4">
+                  {meusEnderecos.map((end, idx) => (
+                    <div key={idx} className="bg-white p-6 rounded-[30px] border border-zinc-100 flex items-center justify-between shadow-sm">
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-400">
+                          <MapPin size={20} />
+                        </div>
+                        <p className="font-bold text-zinc-700 text-sm">{end}</p>
+                      </div>
+                      <button onClick={() => removerEndereco(idx)} className="h-10 w-10 flex items-center justify-center text-red-400 hover:bg-red-50 rounded-xl transition-colors">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ))}
+               </div>
             </div>
-            <button onClick={handleLogout} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90" title="Sair da Conta">
-              <LogOut size={22} />
-            </button>
-          </div>
-          <div className="mt-8 space-y-4 px-2">
-            <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 leading-none">Minha Atividade</h3>
-            <button className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-orange-50 rounded-2xl group-hover:bg-orange-100 transition-colors">
-                  <MapPin size={22} className="text-orange-600" />
+          ) : (
+            <>
+              <div className="relative flex items-center gap-6 py-10 border-b border-zinc-100 bg-white -mx-5 px-5">
+                <div className="h-24 w-24 rounded-full bg-orange-100 flex items-center justify-center border-4 border-white shadow-sm overflow-hidden"><User size={48} className="text-orange-600" /></div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">{usuarioNomeCompleto}</h2>
+                  <p className="text-zinc-400 font-bold text-sm mt-1 leading-none">@{usuarioUsername}</p>
+                  <div className="mt-2 space-y-0.5 leading-none">
+                    <p className="text-zinc-300 text-[10px] font-bold tracking-widest">{usuarioEmail}</p>
+                    <p className="text-orange-400 text-[10px] font-black tracking-widest uppercase">{usuarioTelefone}</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <span className="block font-black text-zinc-800 text-sm leading-none">Meus Endereços</span>
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1 leading-none">Gerenciar locais de entrega</span>
-                </div>
+                <button onClick={handleLogout} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90" title="Sair da Conta">
+                  <LogOut size={22} />
+                </button>
               </div>
-              <ChevronRight size={18} className="text-zinc-300" />
-            </button>
-            <button className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
-                  <ClipboardList size={22} className="text-blue-600" />
-                </div>
-                <div className="text-left">
-                  <span className="block font-black text-zinc-800 text-sm leading-none">Histórico de Pedidos</span>
-                  <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1 leading-none">Ver compras anteriores</span>
-                </div>
+              <div className="mt-8 space-y-4 px-2">
+                <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 leading-none">Minha Atividade</h3>
+                <button onClick={() => setGerenciandoEnderecos(true)} className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-orange-50 rounded-2xl group-hover:bg-orange-100 transition-colors">
+                      <MapPin size={22} className="text-orange-600" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-black text-zinc-800 text-sm leading-none">Meus Endereços</span>
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1 leading-none">Gerenciar locais de entrega</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-zinc-300" />
+                </button>
+                <button onClick={() => setAbaAtiva('Pedidos')} className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
+                      <ClipboardList size={22} className="text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                      <span className="block font-black text-zinc-800 text-sm leading-none">Histórico de Pedidos</span>
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1 leading-none">Ver compras anteriores</span>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-zinc-300" />
+                </button>
               </div>
-              <ChevronRight size={18} className="text-zinc-300" />
-            </button>
-          </div>
+            </>
+          )}
         </div>
       )}
+      
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-6 flex justify-around rounded-t-[45px] shadow-2xl">
-        <button onClick={() => { setAbaAtiva('Inicio'); setLojaSelecionada(null); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Inicio' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><Home size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Inicio</span></button>
-        <button onClick={() => setAbaAtiva('Pedidos')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><ClipboardList size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Pedidos</span></button>
+        <button onClick={() => { setAbaAtiva('Inicio'); setLojaSelecionada(null); setEstaFinalizando(false); setGerenciandoEnderecos(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Inicio' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><Home size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Inicio</span></button>
+        <button onClick={() => { setAbaAtiva('Pedidos'); setGerenciandoEnderecos(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><ClipboardList size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Pedidos</span></button>
         <button onClick={() => setAbaAtiva('Perfil')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><User size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Perfil</span></button>
       </nav>
       
-      {/* BARRA DE CARRINHO REFINADA */}
       {abaAtiva === 'Inicio' && carrinho.length > 0 && !estaFinalizando && (
         <div className="fixed bottom-32 left-6 right-6 z-40 mx-auto max-w-md animate-in slide-in-from-bottom duration-500">
           <button 
