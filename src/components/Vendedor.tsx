@@ -132,9 +132,9 @@ export default function Vendedor({
                 notify("Produto adicionado!");
               }
             }}
-            className="w-full bg-orange-600 text-white py-8 rounded-[35px] font-black uppercase text-sm shadow-xl shadow-orange-100 flex items-center justify-center gap-3 active:scale-95 transition-all leading-none"
+            className="w-full bg-orange-600 text-white py-5 rounded-[25px] font-black uppercase text-sm shadow-xl shadow-orange-100 flex items-center justify-center gap-3 active:scale-95 transition-all leading-none"
           >
-            <Plus size={24} /> Adicionar Produto
+            <Plus size={20} /> Adicionar Produto
           </button>
 
           <div className="space-y-4">
