@@ -60,10 +60,7 @@ export default function App() {
   const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([]);
   const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>([]);
   
-  const [todosOsPedidos, setTodosOsPedidos] = useState<Pedido[]>(() => {
-    const salvo = localStorage.getItem('@PedeAi:pedidos');
-    return salvo ? JSON.parse(salvo) : [];
-  });
+  const [todosOsPedidos, setTodosOsPedidos] = useState<Pedido[]>([]);
 
   const [toast, setToast] = useState<{ mensagem: string; tipo: 'sucesso' | 'erro' } | null>(null);
 
@@ -106,14 +103,18 @@ export default function App() {
     if (estaLogado) {
       const carregarDadosDoServidor = async () => {
         try {
-          const resLojas = await fetch('http://localhost:3000/api/lojas');
-          const resProdutos = await fetch('http://localhost:3000/api/produtos');
+          const [resLojas, resProdutos, resPedidos] = await Promise.all([
+            fetch('http://localhost:3000/api/lojas'),
+            fetch('http://localhost:3000/api/produtos'),
+            fetch('http://localhost:3000/api/pedidos')
+          ]);
           
-          if (resLojas.ok && resProdutos.ok) {
-            setTodasAsLojas(await resLojas.json());
-            setTodosOsProdutos(await resProdutos.json());
-          }
+          if (resLojas.ok) setTodasAsLojas(await resLojas.json());
+          if (resProdutos.ok) setTodosOsProdutos(await resProdutos.json());
+          if (resPedidos.ok) setTodosOsPedidos(await resPedidos.json());
+          
         } catch {
+          // Fallback caso o servidor esteja offline
           setTodasAsLojas([
             { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
             { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
@@ -124,9 +125,23 @@ export default function App() {
     }
   }, [estaLogado]);
 
-  useEffect(() => {
-    localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos));
-  }, [todosOsPedidos]);
+  const atualizarPedidosNoServidor = async (novoPedido: Pedido) => {
+    try {
+      const resposta = await fetch('http://localhost:3000/api/pedidos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(novoPedido)
+      });
+      
+      if (resposta.ok) {
+        setTodosOsPedidos(prev => [novoPedido, ...prev]);
+      } else {
+        notify("Erro ao salvar pedido no servidor.", "erro");
+      }
+    } catch {
+      notify("Servidor offline. Pedido não sincronizado.", "erro");
+    }
+  };
 
   const handleLogin = async () => {
     const iden = formUsername || formEmail;
@@ -217,6 +232,7 @@ export default function App() {
       localStorage.clear();
       setEstaLogado(false);
       limparFormulario();
+      setTodosOsPedidos([]);
       notify("Sessão encerrada.");
     }
   };
@@ -230,14 +246,10 @@ export default function App() {
       });
 
       if (resposta.ok) {
-        const data = await resposta.json();
-        const statusFinal = data.novoStatus || novoStatus;
-        
         setTodosOsPedidos(prev => 
-          prev.map(p => p.id === pedidoId ? { ...p, status: statusFinal } : p)
+          prev.map(p => p.id === pedidoId ? { ...p, status: novoStatus } : p)
         );
-        
-        notify(`Pedido ${statusFinal === 'Entregue' ? 'finalizado' : 'atualizado'}!`);
+        notify(`Pedido ${novoStatus === 'Entregue' ? 'finalizado' : 'atualizado'}!`);
       } else {
         const erro = await resposta.json();
         notify(erro.msg || "Erro ao atualizar pedido.", 'erro');
@@ -245,6 +257,10 @@ export default function App() {
     } catch {
       notify("Conexão com o servidor falhou.", 'erro');
     }
+  };
+
+  const handleNovoPedidoCliente = (novoPedido: Pedido) => {
+    atualizarPedidosNoServidor(novoPedido);
   };
 
   const getStoreIcon = (name: string) => {
@@ -302,7 +318,13 @@ export default function App() {
             {visao === 'Cliente' && (
               <Cliente 
                 todasAsLojas={todasAsLojas} todosOsProdutos={todosOsProdutos}
-                todosOsPedidos={todosOsPedidos} setTodosOsPedidos={setTodosOsPedidos}
+                todosOsPedidos={todosOsPedidos} setTodosOsPedidos={(novo: Pedido[] | ((prev: Pedido[]) => Pedido[])) => {
+                  if (typeof novo === 'function') {
+                    const listaAtualizada = novo(todosOsPedidos);
+                    const ultimoPedido = listaAtualizada[0];
+                    handleNovoPedidoCliente(ultimoPedido);
+                  }
+                }}
                 usuarioNomeCompleto={usuarioNomeCompleto} usuarioUsername={usuarioUsername}
                 usuarioEmail={usuarioEmail} usuarioTelefone={usuarioTelefone}
                 handleLogout={handleLogout} notify={notify} getStoreIcon={getStoreIcon}

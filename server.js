@@ -111,6 +111,22 @@ app.post('/api/cadastro', (req, res) => {
     res.status(201).json({ msg: "Ok" });
 });
 
+app.post('/api/pedidos', (req, res) => {
+    const novoPedido = req.body;
+    const banco = lerBanco();
+    
+    banco.pedidos.push(novoPedido);
+    salvarBanco(banco);
+    
+    console.log(`📦 [Pedido] Novo pedido recebido: #${novoPedido.id} de @${novoPedido.clienteUsername}`);
+    res.status(201).json({ msg: "Pedido salvo com sucesso", pedido: novoPedido });
+});
+
+app.get('/api/pedidos', (req, res) => {
+    const banco = lerBanco();
+    res.json(banco.pedidos);
+});
+
 app.post('/api/pedidos/status', async (req, res) => {
     const { pedidoId, novoStatus } = req.body;
     const banco = lerBanco();
