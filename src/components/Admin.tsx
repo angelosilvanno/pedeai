@@ -8,7 +8,10 @@ import {
   LogOut, 
   ChevronRight, 
   BarChart3, 
-  Users 
+  Users,
+  Ticket,
+  Bell,
+  FileText
 } from 'lucide-react'
 import type { Loja, Pedido } from '../types'
 
@@ -39,7 +42,6 @@ export default function Admin({
   return (
     <div className="space-y-8 animate-in slide-in-from-top duration-700 pb-32">
       
-      {/* CARD DE IDENTIFICAÇÃO DO ADMINISTRADOR COM LOGOUT */}
       <div className="flex items-center gap-6 py-6 border-b border-zinc-100 bg-white -mx-5 px-5 mb-4">
         <div className="h-16 w-16 rounded-2xl bg-zinc-50 flex items-center justify-center border border-zinc-100 shadow-sm overflow-hidden text-zinc-400">
           <User size={32} />
@@ -60,15 +62,12 @@ export default function Admin({
         </button>
       </div>
 
-      {/* CONTEÚDO DINÂMICO BASEADO NA ABA DO FOOTER */}
       {abaAdmin === 'Dash' ? (
         <div className="space-y-6">
           <h3 className="px-2 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Visão Geral do Negócio</h3>
           
-          {/* GRID DE MÉTRICAS COMPACTO E PROFISSIONAL */}
           <div className="grid grid-cols-2 gap-4 px-1">
             
-            {/* CARD FATURAMENTO REDUZIDO */}
             <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100 flex flex-col items-center text-center space-y-3">
               <div className="h-12 w-12 bg-zinc-50 rounded-2xl flex items-center justify-center text-green-600 border border-zinc-100">
                 <DollarSign size={20} />
@@ -81,7 +80,7 @@ export default function Admin({
               </div>
             </div>
 
-            {/* CARD PARCEIROS REDUZIDO */}
+            {/* CARD PARCEIROS */}
             <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100 flex flex-col items-center text-center space-y-3">
               <div className="h-12 w-12 bg-zinc-50 rounded-2xl flex items-center justify-center text-orange-600 border border-zinc-100">
                 <Users size={20} />
@@ -93,19 +92,44 @@ export default function Admin({
                 </p>
               </div>
             </div>
-
           </div>
 
-          {/* ÁREA DE STATUS DO SISTEMA (OPCIONAL/ESTÉTICO) */}
-          <div className="px-1">
-            <div className="bg-zinc-900 p-6 rounded-[35px] flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-white text-[10px] font-black uppercase tracking-widest">Servidor Online</span>
-              </div>
-              <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">v1.0.4</span>
+          {/* SEÇÃO DE ATALHOS RÁPIDOS */}
+          <div className="space-y-4 px-1">
+            <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Ações Rápidas</h3>
+            <div className="grid grid-cols-3 gap-3">
+              <button 
+                onClick={() => notify("Função Novo Cupom em breve")}
+                className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-[25px] border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
+              >
+                <div className="p-2 bg-orange-50 text-orange-500 rounded-xl group-hover:bg-orange-500 group-hover:text-white transition-colors">
+                  <Ticket size={18} />
+                </div>
+                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter text-center leading-tight">Novo Cupom</span>
+              </button>
+
+              <button 
+                onClick={() => notify("Função Notificar em breve")}
+                className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-[25px] border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
+              >
+                <div className="p-2 bg-blue-50 text-blue-500 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  <Bell size={18} />
+                </div>
+                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter text-center leading-tight">Notificar Lojas</span>
+              </button>
+
+              <button 
+                onClick={() => notify("Gerando PDF...")}
+                className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-[25px] border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
+              >
+                <div className="p-2 bg-zinc-100 text-zinc-600 rounded-xl group-hover:bg-zinc-900 group-hover:text-white transition-colors">
+                  <FileText size={18} />
+                </div>
+                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter text-center leading-tight">Relatório PDF</span>
+              </button>
             </div>
           </div>
+
         </div>
       ) : (
         <div className="space-y-5 px-1">
@@ -155,7 +179,7 @@ export default function Admin({
         </div>
       )}
 
-      {/* FOOTER FIXO DO ADMIN (NAVEGAÇÃO POR MÉTRICAS E PARCEIROS) */}
+      {/* FOOTER */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-6 flex justify-around rounded-t-[45px] shadow-2xl">
         <button 
           onClick={() => setAbaAdmin('Dash')} 
