@@ -58,21 +58,6 @@ export default function Vendedor({
         </button>
       </div>
 
-      <div className="flex bg-zinc-200/50 p-1.5 rounded-[30px] shadow-inner border border-zinc-200">
-        <button 
-          onClick={() => setAbaVendedor('Pedidos')} 
-          className={`flex-1 py-4 rounded-[25px] font-black text-xs tracking-widest transition-all ${abaVendedor === 'Pedidos' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}
-        >
-          PAINEL VENDAS
-        </button>
-        <button 
-          onClick={() => setAbaVendedor('Cardapio')} 
-          className={`flex-1 py-4 rounded-[25px] font-black text-xs tracking-widest transition-all ${abaVendedor === 'Cardapio' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}
-        >
-          MEU CARDÁPIO
-        </button>
-      </div>
-
       {abaVendedor === 'Pedidos' ? (
         <div className="space-y-6">
           <h3 className="px-2 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Pedidos Recebidos</h3>
