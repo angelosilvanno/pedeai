@@ -103,24 +103,27 @@ export default function Cliente({
           </div>
         ) : !lojaSelecionada ? (
           <div className="space-y-8">
-            <div className="sticky top-27 z-30 bg-zinc-50/80 backdrop-blur-lg -mx-5 px-5 py-4 border-b border-zinc-100/50 shadow-sm">
-              <div className="relative group">
+            {/* Barra de Busca com proporções equilibradas */}
+            <div className="sticky top-27 z-30 bg-zinc-50/80 backdrop-blur-lg -mx-5 px-5 py-5 border-b border-zinc-100/50">
+              <div className="relative group max-w-xl mx-auto">
                 <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-orange-500 transition-colors" />
                 <input 
                   type="text" 
                   placeholder="O que vamos pedir hoje?" 
-                  className="w-full rounded-[30px] bg-white py-5 pl-16 pr-8 font-bold shadow-xl shadow-zinc-200/40 border border-zinc-100/50 outline-none transition-all focus:ring-4 ring-orange-100 focus:border-orange-200" 
+                  className="w-full rounded-full bg-white py-4.5 pl-14 pr-8 text-base font-bold shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 outline-none transition-all focus:ring-4 ring-orange-50 focus:border-orange-100 placeholder:text-zinc-300" 
                   value={busca} 
                   onChange={(e) => setBusca(e.target.value)} 
                 />
               </div>
             </div>
+
             <div className="grid gap-5">
               {lojasFiltradas.map(loja => {
                 const aberto = estaAberto(loja.abertura || "00:00", loja.fechamento || "23:59");
                 return (
-                  <div key={loja.id} onClick={() => setLojaSelecionada(loja)} className="group flex items-center rounded-[35px] border border-zinc-100 bg-white p-6 shadow-sm hover:shadow-xl transition-all cursor-pointer">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-orange-50">{getStoreIcon(loja.imagem)}</div>
+                  <div key={loja.id} onClick={() => setLojaSelecionada(loja)} className="group relative flex items-center rounded-[35px] border border-zinc-100 bg-white p-6 shadow-sm hover:shadow-xl transition-all cursor-pointer overflow-hidden">
+                    <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${aberto ? 'bg-green-500' : 'bg-zinc-200'}`}></div>
+                    <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-zinc-50 group-hover:bg-orange-50 transition-colors">{getStoreIcon(loja.imagem)}</div>
                     <div className="ml-6 flex-1">
                       <h3 className="text-lg font-black text-zinc-800 tracking-tight leading-none">{loja.nome}</h3>
                       <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{loja.categoria}</p>
@@ -133,7 +136,9 @@ export default function Cliente({
                         </span>
                       </div>
                     </div>
-                    <ChevronRight size={18} className="text-zinc-200" />
+                    <div className="p-2 rounded-full bg-zinc-50 text-zinc-300 group-hover:bg-orange-500 group-hover:text-white transition-all">
+                      <ChevronRight size={18} />
+                    </div>
                   </div>
                 );
               })}
@@ -143,8 +148,8 @@ export default function Cliente({
           <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
             <button onClick={() => setLojaSelecionada(null)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar</button>
             <div className="flex items-center gap-6">
-               <div className="rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm">{getStoreIcon(lojaSelecionada.imagem)}</div>
-               <h2 className="text-3xl font-black text-zinc-800 tracking-tighter leading-none">{lojaSelecionada.nome}</h2>
+                <div className="rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm">{getStoreIcon(lojaSelecionada.imagem)}</div>
+                <h2 className="text-3xl font-black text-zinc-800 tracking-tighter leading-none">{lojaSelecionada.nome}</h2>
             </div>
             <div className="space-y-4">
               {cardapioParaExibir.map(item => (
