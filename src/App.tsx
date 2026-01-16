@@ -18,11 +18,25 @@ import Admin from './components/Admin'
 type Perfil = 'Cliente' | 'Vendedor' | 'Admin';
 
 export default function App() {
-  const [estaLogado, setEstaLogado] = useState(() => localStorage.getItem('@PedeAi:estaLogado') === 'true');
-  const [usuarioNomeCompleto, setUsuarioNomeCompleto] = useState(() => localStorage.getItem('@PedeAi:nome') || '');
-  const [usuarioUsername, setUsuarioUsername] = useState(() => localStorage.getItem('@PedeAi:username') || '');
-  const [usuarioEmail, setUsuarioEmail] = useState(() => localStorage.getItem('@PedeAi:email') || '');
-  const [usuarioTelefone, setUsuarioTelefone] = useState(() => localStorage.getItem('@PedeAi:telefone') || '');
+  const [estaLogado, setEstaLogado] = useState(() => {
+    return localStorage.getItem('@PedeAi:estaLogado') === 'true';
+  });
+
+  const [usuarioNomeCompleto, setUsuarioNomeCompleto] = useState(() => {
+    return localStorage.getItem('@PedeAi:nome') || '';
+  });
+
+  const [usuarioUsername, setUsuarioUsername] = useState(() => {
+    return localStorage.getItem('@PedeAi:username') || '';
+  });
+
+  const [usuarioEmail, setUsuarioEmail] = useState(() => {
+    return localStorage.getItem('@PedeAi:email') || '';
+  });
+
+  const [usuarioTelefone, setUsuarioTelefone] = useState(() => {
+    return localStorage.getItem('@PedeAi:telefone') || '';
+  });
   
   const [tipoUsuario, setTipoUsuario] = useState<Perfil>(() => {
     return (localStorage.getItem('@PedeAi:tipo') as Perfil) || 'Cliente';
@@ -33,8 +47,8 @@ export default function App() {
   });
 
   const [cidadeUsuario, setCidadeUsuario] = useState('Localizando...');
-
   const [telaAuth, setTelaAuth] = useState<'Login' | 'Cadastro'>('Login');
+  
   const [formNome, setFormNome] = useState('');
   const [formUsername, setFormUsername] = useState('');
   const [formEmail, setFormEmail] = useState('');
@@ -45,10 +59,12 @@ export default function App() {
 
   const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([]);
   const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>([]);
+  
   const [todosOsPedidos, setTodosOsPedidos] = useState<Pedido[]>(() => {
     const salvo = localStorage.getItem('@PedeAi:pedidos');
     return salvo ? JSON.parse(salvo) : [];
   });
+
   const [toast, setToast] = useState<{ mensagem: string; tipo: 'sucesso' | 'erro' } | null>(null);
 
   const notify = (mensagem: string, tipo: 'sucesso' | 'erro' = 'sucesso') => {
@@ -56,9 +72,19 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const limparFormulario = () => {
+    setFormNome('');
+    setFormUsername('');
+    setFormEmail('');
+    setFormTelefone('');
+    setFormSenha('');
+    setFormSenhaConfirm('');
+    setFormNomeLoja('');
+  };
+
   const alternarTelaAuth = (tela: 'Login' | 'Cadastro') => {
     setTelaAuth(tela);
-    setFormNome(''); setFormUsername(''); setFormEmail(''); setFormTelefone(''); setFormSenha(''); setFormSenhaConfirm('');
+    limparFormulario();
   };
 
   useEffect(() => {
@@ -66,10 +92,8 @@ export default function App() {
       try {
         const resposta = await fetch('https://ipapi.co/json/');
         const dados = await resposta.json();
-        if (dados.city && dados.region_code) {
+        if (dados.city) {
           setCidadeUsuario(`${dados.city}, ${dados.region_code}`);
-        } else {
-          setCidadeUsuario("Localização Indisponível");
         }
       } catch {
         setCidadeUsuario("Brasil");
@@ -93,8 +117,6 @@ export default function App() {
           setTodasAsLojas([
             { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
             { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
-            { id: 3, nome: "Doçuras da Ana", categoria: "Doceria", imagem: "CakeSlice", status: 'Ativa' },
-            { id: 4, nome: "Tanaka Sushi", categoria: "Japonesa", imagem: "Fish", status: 'Ativa' },
           ]);
         }
       };
@@ -102,11 +124,13 @@ export default function App() {
     }
   }, [estaLogado]);
 
-  useEffect(() => { localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos)); }, [todosOsPedidos]);
+  useEffect(() => {
+    localStorage.setItem('@PedeAi:pedidos', JSON.stringify(todosOsPedidos));
+  }, [todosOsPedidos]);
 
   const handleLogin = async () => {
-    const identificacao = formUsername || formEmail;
-    if (!identificacao || !formSenha) {
+    const iden = formUsername || formEmail;
+    if (!iden || !formSenha) {
       notify("Informe login e senha.", 'erro');
       return;
     }
@@ -115,7 +139,7 @@ export default function App() {
       const resposta = await fetch('http://localhost:3000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identificacao, senha: formSenha })
+        body: JSON.stringify({ identificacao: iden, senha: formSenha })
       });
 
       if (resposta.ok) {
@@ -134,12 +158,15 @@ export default function App() {
         localStorage.setItem('@PedeAi:email', dados.email);
         localStorage.setItem('@PedeAi:telefone', dados.telefone);
         localStorage.setItem('@PedeAi:tipo', dados.tipo);
-
+        
+        limparFormulario();
         notify(`Bem-vindo, ${dados.nome.split(' ')[0]}!`);
       } else {
         notify("Usuário ou senha incorretos.", 'erro');
       }
-    } catch { notify("Servidor offline.", 'erro'); }
+    } catch {
+      notify("Servidor offline.", 'erro');
+    }
   };
 
   const handleCadastro = async () => {
@@ -156,16 +183,15 @@ export default function App() {
       return;
     }
 
-    const nomeFormatado = formNome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-    const userFormatado = formUsername.toLowerCase().trim();
-
+    const nomeF = formNome.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    
     try {
       const resposta = await fetch('http://localhost:3000/api/cadastro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nome: nomeFormatado,
-          username: userFormatado,
+          nome: nomeF,
+          username: formUsername.toLowerCase().trim(),
           email: formEmail.toLowerCase(),
           telefone: formTelefone,
           senha: formSenha,
@@ -174,22 +200,41 @@ export default function App() {
       });
 
       if (resposta.ok) {
-        notify("Cadastro realizado! Faça login.");
+        notify("Sucesso! Faça login.");
         setTelaAuth('Login');
-        setFormNome(''); setFormUsername(''); setFormEmail(''); setFormTelefone(''); setFormSenha('');
+        limparFormulario();
       } else {
-        const erro = await resposta.json();
-        notify(erro.mensagem, 'erro');
+        const dadosErro = await resposta.json();
+        notify(dadosErro.mensagem, 'erro');
       }
-    } catch { notify("Erro no servidor.", 'erro'); }
+    } catch {
+      notify("Erro no servidor.", 'erro');
+    }
   };
 
   const handleLogout = () => {
     if (confirm("Deseja realmente sair?")) {
       localStorage.clear();
       setEstaLogado(false);
-      setFormNome(''); setFormUsername(''); setFormEmail(''); setFormTelefone(''); setFormSenha(''); setFormSenhaConfirm(''); setFormNomeLoja('');
+      limparFormulario();
       notify("Sessão encerrada.");
+    }
+  };
+
+  const mudarStatusPedidoVendedor = async (pedidoId: string, novoStatus: Pedido['status']) => {
+    try {
+      const resposta = await fetch('http://localhost:3000/api/pedidos/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pedidoId, novoStatus })
+      });
+
+      if (resposta.ok) {
+        setTodosOsPedidos(todosOsPedidos.map(p => p.id === pedidoId ? { ...p, status: novoStatus } : p));
+        notify(`Status atualizado para: ${novoStatus}`);
+      }
+    } catch {
+      notify("Erro ao atualizar status no servidor.", 'erro');
     }
   };
 
@@ -247,41 +292,31 @@ export default function App() {
           <main className="mx-auto max-w-xl p-5">
             {visao === 'Cliente' && (
               <Cliente 
-                todasAsLojas={todasAsLojas}
-                todosOsProdutos={todosOsProdutos}
-                todosOsPedidos={todosOsPedidos}
-                setTodosOsPedidos={setTodosOsPedidos}
-                usuarioNomeCompleto={usuarioNomeCompleto}
-                usuarioUsername={usuarioUsername}
-                usuarioEmail={usuarioEmail}
-                usuarioTelefone={usuarioTelefone}
-                handleLogout={handleLogout}
-                notify={notify}
-                getStoreIcon={getStoreIcon}
+                todasAsLojas={todasAsLojas} todosOsProdutos={todosOsProdutos}
+                todosOsPedidos={todosOsPedidos} setTodosOsPedidos={setTodosOsPedidos}
+                usuarioNomeCompleto={usuarioNomeCompleto} usuarioUsername={usuarioUsername}
+                usuarioEmail={usuarioEmail} usuarioTelefone={usuarioTelefone}
+                handleLogout={handleLogout} notify={notify} getStoreIcon={getStoreIcon}
               />
             )}
             {visao === 'Vendedor' && (
               <Vendedor 
                 todosOsPedidos={todosOsPedidos}
-                setTodosOsPedidos={setTodosOsPedidos}
                 todosOsProdutos={todosOsProdutos}
                 setTodosOsProdutos={setTodosOsProdutos}
                 notify={notify}
                 handleLogout={handleLogout}
                 usuarioNomeCompleto={usuarioNomeCompleto}
                 usuarioEmail={usuarioEmail}
+                mudarStatusPedidoVendedor={mudarStatusPedidoVendedor}
               />
             )}
             {visao === 'Admin' && (
               <Admin 
-                todasAsLojas={todasAsLojas}
-                setTodasAsLojas={setTodasAsLojas}
-                todosOsPedidos={todosOsPedidos}
-                getStoreIcon={getStoreIcon}
-                notify={notify}
-                handleLogout={handleLogout}
-                usuarioNomeCompleto={usuarioNomeCompleto}
-                usuarioEmail={usuarioEmail}
+                todasAsLojas={todasAsLojas} setTodasAsLojas={setTodasAsLojas}
+                todosOsPedidos={todosOsPedidos} getStoreIcon={getStoreIcon}
+                notify={notify} handleLogout={handleLogout}
+                usuarioNomeCompleto={usuarioNomeCompleto} usuarioEmail={usuarioEmail}
               />
             )}
           </main>

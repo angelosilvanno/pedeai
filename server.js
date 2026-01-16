@@ -8,13 +8,11 @@ const { Client, LocalAuth } = pkg;
 const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
 const ARQUIVO_DB = './banco.json';
 
-// --- INICIALIZAÇÃO DO WHATSAPP ---
 console.log('⏳ [Sistema] Iniciando motor do WhatsApp...');
 
 const client = new Client({
@@ -44,11 +42,9 @@ client.on('auth_failure', (msg) => {
 
 client.initialize();
 
-// --- GESTÃO DO BANCO DE DADOS ---
 const lerBanco = () => {
     try {
         if (!fs.existsSync(ARQUIVO_DB)) {
-            console.log('📂 [Banco] Arquivo não encontrado. Criando base de dados vazia...');
             const baseVazia = { usuarios: [], lojas: [], produtos: [], pedidos: [] };
             fs.writeFileSync(ARQUIVO_DB, JSON.stringify(baseVazia, null, 2));
             return baseVazia;
@@ -63,29 +59,33 @@ const lerBanco = () => {
 const salvarBanco = (dados) => {
     try {
         fs.writeFileSync(ARQUIVO_DB, JSON.stringify(dados, null, 2));
-        console.log('💾 [Banco] Alterações salvas com sucesso no banco.json.');
+        console.log('💾 [Banco] Dados atualizados com sucesso.');
     } catch (error) {
-        console.error('❌ [Banco] Falha ao persistir dados:', error.message);
+        console.error('❌ [Banco] Falha ao salvar dados:', error.message);
     }
 };
 
-// --- SERVIÇO DE NOTIFICAÇÃO ---
 const enviarAvisoWhatsApp = async (telefone, mensagem) => {
     try {
-        const numeroLimpo = telefone.replace(/\D/g, "");
-        const chatId = `55${numeroLimpo}@c.us`; 
+        let num = telefone.replace(/\D/g, "");
+        
+        if (!num.startsWith("55")) num = "55" + num;
+
+        let numParaWhatsApp = num;
+        if (num.length === 13 && parseInt(num.substring(2, 4)) > 30) {
+            numParaWhatsApp = num.substring(0, 4) + num.substring(5);
+        }
+
+        const chatId = `${numParaWhatsApp}@c.us`;
+        
+        console.log(`📡 [WhatsApp] Tentando enviar para: ${chatId}`);
         await client.sendMessage(chatId, mensagem);
-        console.log(`📩 [Notificação] Mensagem enviada para: ${telefone}`);
+        console.log(`✅ [WhatsApp] Mensagem entregue com sucesso!`);
     } catch (error) {
-        console.error(`❌ [Notificação] Erro ao enviar para ${telefone}:`, error.message);
+        console.error(`❌ [WhatsApp] Erro no envio:`, error.message);
     }
 };
 
-/**
- * --- ROTAS DA API ---
- */
-
-// Login com log de atividade
 app.post('/api/login', (req, res) => {
     const { identificacao, senha } = req.body;
     const banco = lerBanco();
@@ -93,46 +93,39 @@ app.post('/api/login', (req, res) => {
     
     if (usuario) {
         const { senha, ...dados } = usuario;
-        console.log(`🔑 [Acesso] Login realizado: @${usuario.username}`);
+        console.log(`🔑 [Acesso] Login: @${usuario.username}`);
         res.json(dados);
     } else {
-        console.log(`⚠️ [Acesso] Tentativa de login inválida: ${identificacao}`);
         res.status(401).json({ mensagem: "Credenciais inválidas." });
     }
 });
 
-// Cadastro de novos usuários
 app.post('/api/cadastro', (req, res) => {
     const novo = req.body;
     const banco = lerBanco();
     
     if (banco.usuarios.find(u => u.email === novo.email || u.username === novo.username)) {
-        console.log(`⚠️ [Cadastro] Tentativa de duplicar usuário: ${novo.email}`);
-        return res.status(400).json({ msg: "Usuário ou E-mail já cadastrado" });
+        return res.status(400).json({ msg: "Usuário já cadastrado" });
     }
     
     banco.usuarios.push(novo);
     salvarBanco(banco);
-    console.log(`👤 [Cadastro] Novo usuário registrado: @${novo.username}`);
-    res.status(201).json({ msg: "Cadastro realizado!" });
+    console.log(`👤 [Cadastro] Novo usuário: @${novo.username}`);
+    res.status(201).json({ msg: "Ok" });
 });
 
-// ROTA MESTRA: Atualização de Status e WhatsApp
 app.post('/api/pedidos/status', async (req, res) => {
     const { pedidoId, novoStatus } = req.body;
     const banco = lerBanco();
     
     const pedido = banco.pedidos.find(p => p.id === pedidoId);
-    if (!pedido) {
-        console.log(`❓ [Pedido] ID ${pedidoId} não localizado.`);
-        return res.status(404).json({ msg: "Pedido não encontrado" });
-    }
+    if (!pedido) return res.status(404).json({ msg: "Pedido não encontrado" });
 
     const cliente = banco.usuarios.find(u => u.username === pedido.clienteUsername);
     
-    console.log(`🔄 [Pedido] Status alterado: Pedido #${pedidoId} -> ${novoStatus}`);
     pedido.status = novoStatus;
     salvarBanco(banco);
+    console.log(`🔄 [Pedido] #${pedidoId} alterado para: ${novoStatus}`);
 
     if (cliente && cliente.telefone) {
         let msgTexto = "";
@@ -151,28 +144,18 @@ app.post('/api/pedidos/status', async (req, res) => {
         if (msgTexto) {
             await enviarAvisoWhatsApp(cliente.telefone, msgTexto);
         }
-    } else {
-        console.log(`⚠️ [Notificação] Cliente @${pedido.clienteUsername} não possui telefone cadastrado.`);
     }
 
-    res.json({ msg: "Status atualizado e cliente notificado!" });
+    res.json({ msg: "Status atualizado!" });
 });
 
-app.get('/api/lojas', (req, res) => {
-    const banco = lerBanco();
-    res.json(banco.lojas);
-});
+app.get('/api/lojas', (req, res) => res.json(lerBanco().lojas));
+app.get('/api/produtos', (req, res) => res.json(lerBanco().produtos));
 
-app.get('/api/produtos', (req, res) => {
-    const banco = lerBanco();
-    res.json(banco.produtos);
-});
-
-// Inicialização do Servidor
 app.listen(PORT, () => {
     console.clear();
     console.log('---------------------------------------------------------');
     console.log(`🚀 [Servidor] PedeAí Online em: http://localhost:${PORT}`);
-    console.log('📡 [Servidor] Aguardando requisições do App...');
+    console.log('📡 Logs de rastreio ativados para monitoramento.');
     console.log('---------------------------------------------------------');
 });

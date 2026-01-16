@@ -16,31 +16,30 @@ import type { Pedido, Produto } from '../types'
 
 interface VendedorProps {
   todosOsPedidos: Pedido[];
-  setTodosOsPedidos: React.Dispatch<React.SetStateAction<Pedido[]>>;
   todosOsProdutos: Produto[];
   setTodosOsProdutos: React.Dispatch<React.SetStateAction<Produto[]>>;
   notify: (msg: string, tipo?: 'sucesso' | 'erro') => void;
   handleLogout: () => void;
   usuarioNomeCompleto: string;
   usuarioEmail: string;
+  mudarStatusPedidoVendedor: (pedidoId: string, novoStatus: Pedido['status']) => Promise<void>;
 }
 
 export default function Vendedor({ 
-  todosOsPedidos, 
-  setTodosOsPedidos, 
+  todosOsPedidos,
   todosOsProdutos, 
   setTodosOsProdutos, 
   notify, 
   handleLogout, 
   usuarioNomeCompleto, 
-  usuarioEmail 
+  usuarioEmail,
+  mudarStatusPedidoVendedor  
 }: VendedorProps) {
   const [abaVendedor, setAbaVendedor] = useState<'Pedidos' | 'Cardapio'>('Pedidos');
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom duration-500 pb-32">
       
-      {/* CARD DE IDENTIFICAÇÃO DO VENDEDOR COM LOGOUT */}
       <div className="flex items-center gap-6 py-6 border-b border-zinc-100 bg-white -mx-5 px-5 mb-4">
         <div className="h-16 w-16 rounded-2xl bg-orange-100 flex items-center justify-center border-4 border-white shadow-sm overflow-hidden text-orange-600">
           <User size={32} />
@@ -59,7 +58,21 @@ export default function Vendedor({
         </button>
       </div>
 
-      {/* CONTEÚDO DINÂMICO BASEADO NA ABA ATIVA */}
+      <div className="flex bg-zinc-200/50 p-1.5 rounded-[30px] shadow-inner border border-zinc-200">
+        <button 
+          onClick={() => setAbaVendedor('Pedidos')} 
+          className={`flex-1 py-4 rounded-[25px] font-black text-xs tracking-widest transition-all ${abaVendedor === 'Pedidos' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}
+        >
+          PAINEL VENDAS
+        </button>
+        <button 
+          onClick={() => setAbaVendedor('Cardapio')} 
+          className={`flex-1 py-4 rounded-[25px] font-black text-xs tracking-widest transition-all ${abaVendedor === 'Cardapio' ? 'bg-white text-orange-600 shadow-md' : 'text-zinc-500'}`}
+        >
+          MEU CARDÁPIO
+        </button>
+      </div>
+
       {abaVendedor === 'Pedidos' ? (
         <div className="space-y-6">
           <h3 className="px-2 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Pedidos Recebidos</h3>
@@ -99,20 +112,14 @@ export default function Vendedor({
                 <div className="flex gap-3 pt-2">
                   {p.status === 'Pendente' ? (
                     <button 
-                      onClick={() => { 
-                        setTodosOsPedidos(todosOsPedidos.map(p2 => p2.id === p.id ? {...p2, status: 'Preparando'} : p2)); 
-                        notify("Pedido em preparo!"); 
-                      }}
+                      onClick={() => mudarStatusPedidoVendedor(p.id, 'Preparando')}
                       className="flex-1 bg-green-600 text-white p-5 rounded-[22px] font-black text-[10px] uppercase shadow-lg shadow-green-100 active:scale-95 transition-all leading-none"
                     >
                       Aceitar Pedido
                     </button>
                   ) : (
                     <button 
-                      onClick={() => { 
-                        setTodosOsPedidos(todosOsPedidos.map(p2 => p2.id === p.id ? {...p2, status: 'Entregue'} : p2)); 
-                        notify("Venda concluída!"); 
-                      }}
+                      onClick={() => mudarStatusPedidoVendedor(p.id, 'Entregue')}
                       className="flex-1 bg-zinc-900 text-white p-5 rounded-[22px] font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 leading-none"
                     >
                       <CheckCircle size={14} /> Finalizar Entrega
@@ -173,7 +180,6 @@ export default function Vendedor({
         </div>
       )}
 
-      {/* FOOTER FIXO DO VENDEDOR (NAVEGAÇÃO POR ÍCONES) */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-6 flex justify-around rounded-t-[45px] shadow-2xl">
         <button 
           onClick={() => setAbaVendedor('Pedidos')} 
@@ -190,7 +196,6 @@ export default function Vendedor({
           <span className="text-[10px] font-black uppercase tracking-tighter leading-none">Cardápio</span>
         </button>
       </nav>
-
     </div>
   );
 }
