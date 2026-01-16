@@ -69,20 +69,17 @@ const enviarAvisoWhatsApp = async (telefone, mensagem) => {
     try {
         let num = telefone.replace(/\D/g, "");
         
-        if (!num.startsWith("55")) num = "55" + num;
-
-        let numParaWhatsApp = num;
-        if (num.length === 13 && parseInt(num.substring(2, 4)) > 30) {
-            numParaWhatsApp = num.substring(0, 4) + num.substring(5);
+        if (!num.startsWith("55")) {
+            num = "55" + num;
         }
 
-        const chatId = `${numParaWhatsApp}@c.us`;
+        const chatId = `${num}@c.us`;
         
-        console.log(`📡 [WhatsApp] Tentando enviar para: ${chatId}`);
+        console.log(`📡 [WhatsApp] Tentando enviar para ID: ${chatId}`);
         await client.sendMessage(chatId, mensagem);
-        console.log(`✅ [WhatsApp] Mensagem entregue com sucesso!`);
+        console.log(`✅ [WhatsApp] Mensagem entregue!`);
     } catch (error) {
-        console.error(`❌ [WhatsApp] Erro no envio:`, error.message);
+        console.error(`❌ [WhatsApp] Erro no envio para ${telefone}:`, error.message);
     }
 };
 
@@ -156,6 +153,6 @@ app.listen(PORT, () => {
     console.clear();
     console.log('---------------------------------------------------------');
     console.log(`🚀 [Servidor] PedeAí Online em: http://localhost:${PORT}`);
-    console.log('📡 Logs de rastreio ativados para monitoramento.');
+    console.log('📡 Monitorando disparos de WhatsApp...');
     console.log('---------------------------------------------------------');
 });
