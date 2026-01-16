@@ -233,14 +233,28 @@ export default function Cliente({
         <button onClick={() => setAbaAtiva('Pedidos')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><ClipboardList size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Pedidos</span></button>
         <button onClick={() => setAbaAtiva('Perfil')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><User size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Perfil</span></button>
       </nav>
+      
+      {/* BARRA DE CARRINHO REFINADA */}
       {abaAtiva === 'Inicio' && carrinho.length > 0 && !estaFinalizando && (
-        <div className="fixed bottom-32 left-6 right-6 z-40 mx-auto max-md animate-in slide-in-from-bottom duration-500">
-          <button onClick={() => setEstaFinalizando(true)} className="w-full bg-zinc-900 text-white p-7 rounded-[35px] font-black shadow-2xl flex justify-between items-center ring-4 ring-white active:scale-95 transition-all">
+        <div className="fixed bottom-32 left-6 right-6 z-40 mx-auto max-w-md animate-in slide-in-from-bottom duration-500">
+          <button 
+            onClick={() => setEstaFinalizando(true)} 
+            className="w-full bg-zinc-900 text-white p-5 rounded-[25px] font-black shadow-2xl flex justify-between items-center ring-4 ring-white active:scale-95 transition-all"
+          >
             <div className="flex items-center gap-4">
-                <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center leading-none"><ShoppingBag size={24} /></div>
-                <p className="text-base uppercase font-bold leading-none">{carrinho.length} itens na sacola</p>
+                <div className="h-10 w-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <ShoppingBag size={20} className="text-white" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[10px] text-zinc-400 uppercase leading-none">Ver sacola</p>
+                  <p className="text-sm uppercase leading-none mt-1">
+                    {carrinho.length} {carrinho.length === 1 ? 'Item' : 'Itens'} na sacola
+                  </p>
+                </div>
             </div>
-            <span className="text-2xl font-black italic text-orange-400 leading-none">R$ {carrinho.reduce((s, i) => s + i.preco, 0).toFixed(2)}</span>
+            <span className="text-xl font-black italic text-orange-400">
+              R$ {carrinho.reduce((s, i) => s + i.preco, 0).toFixed(2)}
+            </span>
           </button>
         </div>
       )}

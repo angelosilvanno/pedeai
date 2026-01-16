@@ -230,11 +230,20 @@ export default function App() {
       });
 
       if (resposta.ok) {
-        setTodosOsPedidos(todosOsPedidos.map(p => p.id === pedidoId ? { ...p, status: novoStatus } : p));
-        notify(`Status atualizado para: ${novoStatus}`);
+        const data = await resposta.json();
+        const statusFinal = data.novoStatus || novoStatus;
+        
+        setTodosOsPedidos(prev => 
+          prev.map(p => p.id === pedidoId ? { ...p, status: statusFinal } : p)
+        );
+        
+        notify(`Pedido ${statusFinal === 'Entregue' ? 'finalizado' : 'atualizado'}!`);
+      } else {
+        const erro = await resposta.json();
+        notify(erro.msg || "Erro ao atualizar pedido.", 'erro');
       }
     } catch {
-      notify("Erro ao atualizar status no servidor.", 'erro');
+      notify("Conexão com o servidor falhou.", 'erro');
     }
   };
 
@@ -313,10 +322,14 @@ export default function App() {
             )}
             {visao === 'Admin' && (
               <Admin 
-                todasAsLojas={todasAsLojas} setTodasAsLojas={setTodasAsLojas}
-                todosOsPedidos={todosOsPedidos} getStoreIcon={getStoreIcon}
-                notify={notify} handleLogout={handleLogout}
-                usuarioNomeCompleto={usuarioNomeCompleto} usuarioEmail={usuarioEmail}
+                todasAsLojas={todasAsLojas} 
+                setTodasAsLojas={setTodasAsLojas}
+                todosOsPedidos={todosOsPedidos} 
+                getStoreIcon={getStoreIcon}
+                notify={notify} 
+                handleLogout={handleLogout}
+                usuarioNomeCompleto={usuarioNomeCompleto} 
+                usuarioEmail={usuarioEmail}
               />
             )}
           </main>
