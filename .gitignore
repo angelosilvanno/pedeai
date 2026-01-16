@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 
 banco.json
+.wwebjs_auth
+.wwebjs_cache

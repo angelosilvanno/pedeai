@@ -103,8 +103,7 @@ export default function Cliente({
           </div>
         ) : !lojaSelecionada ? (
           <div className="space-y-8">
-            {/* Barra de Busca com proporções equilibradas */}
-            <div className="sticky top-27 z-30 bg-zinc-50/80 backdrop-blur-lg -mx-5 px-5 py-5 border-b border-zinc-100/50">
+            <div className="bg-zinc-50 -mx-5 px-5 py-5 border-b border-zinc-100/50">
               <div className="relative group max-w-xl mx-auto">
                 <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-orange-500 transition-colors" />
                 <input 
@@ -196,11 +195,7 @@ export default function Cliente({
                 <p className="text-orange-400 text-[10px] font-black tracking-widest uppercase">{usuarioTelefone}</p>
               </div>
             </div>
-            <button 
-              onClick={handleLogout} 
-              className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90"
-              title="Sair da Conta"
-            >
+            <button onClick={handleLogout} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90" title="Sair da Conta">
               <LogOut size={22} />
             </button>
           </div>
@@ -239,11 +234,11 @@ export default function Cliente({
         <button onClick={() => setAbaAtiva('Perfil')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><User size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Perfil</span></button>
       </nav>
       {abaAtiva === 'Inicio' && carrinho.length > 0 && !estaFinalizando && (
-        <div className="fixed bottom-32 left-6 right-6 z-40 mx-auto max-w-md animate-in slide-in-from-bottom duration-500">
+        <div className="fixed bottom-32 left-6 right-6 z-40 mx-auto max-md animate-in slide-in-from-bottom duration-500">
           <button onClick={() => setEstaFinalizando(true)} className="w-full bg-zinc-900 text-white p-7 rounded-[35px] font-black shadow-2xl flex justify-between items-center ring-4 ring-white active:scale-95 transition-all">
             <div className="flex items-center gap-4">
-               <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center leading-none"><ShoppingBag size={24} /></div>
-               <p className="text-base uppercase font-bold leading-none">{carrinho.length} itens na sacola</p>
+                <div className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center leading-none"><ShoppingBag size={24} /></div>
+                <p className="text-base uppercase font-bold leading-none">{carrinho.length} itens na sacola</p>
             </div>
             <span className="text-2xl font-black italic text-orange-400 leading-none">R$ {carrinho.reduce((s, i) => s + i.preco, 0).toFixed(2)}</span>
           </button>
