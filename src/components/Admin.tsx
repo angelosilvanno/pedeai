@@ -11,7 +11,9 @@ import {
   Users,
   Ticket,
   Bell,
-  FileText
+  Megaphone,
+  X,
+  Send
 } from 'lucide-react'
 import type { Loja, Pedido } from '../types'
 
@@ -37,7 +39,20 @@ export default function Admin({
   usuarioEmail 
 }: AdminProps) {
   const [abaAdmin, setAbaAdmin] = useState<'Dash' | 'Lojas'>('Dash');
+  const [isModalAvisoAberto, setIsModalAvisoAberto] = useState(false);
+  const [mensagemAviso, setMensagemAviso] = useState('');
+  
   const faturamentoTotal = todosOsPedidos.reduce((s, p) => s + p.total, 0);
+
+  const enviarAvisoGeral = () => {
+    if (!mensagemAviso.trim()) {
+      notify("Escreva uma mensagem antes de enviar.", "erro");
+      return;
+    }
+    notify("Aviso enviado para todos os parceiros!");
+    setMensagemAviso('');
+    setIsModalAvisoAberto(false);
+  };
 
   return (
     <div className="space-y-8 animate-in slide-in-from-top duration-700 pb-32">
@@ -80,7 +95,6 @@ export default function Admin({
               </div>
             </div>
 
-            {/* CARD PARCEIROS */}
             <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100 flex flex-col items-center text-center space-y-3">
               <div className="h-12 w-12 bg-zinc-50 rounded-2xl flex items-center justify-center text-orange-600 border border-zinc-100">
                 <Users size={20} />
@@ -94,7 +108,6 @@ export default function Admin({
             </div>
           </div>
 
-          {/* SEÇÃO DE ATALHOS RÁPIDOS */}
           <div className="space-y-4 px-1">
             <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Ações Rápidas</h3>
             <div className="grid grid-cols-3 gap-3">
@@ -119,13 +132,13 @@ export default function Admin({
               </button>
 
               <button 
-                onClick={() => notify("Gerando PDF...")}
+                onClick={() => setIsModalAvisoAberto(true)}
                 className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-[25px] border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
               >
                 <div className="p-2 bg-zinc-100 text-zinc-600 rounded-xl group-hover:bg-zinc-900 group-hover:text-white transition-colors">
-                  <FileText size={18} />
+                  <Megaphone size={18} />
                 </div>
-                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter text-center leading-tight">Relatório PDF</span>
+                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter text-center leading-tight">Aviso Geral</span>
               </button>
             </div>
           </div>
@@ -179,7 +192,36 @@ export default function Admin({
         </div>
       )}
 
-      {/* FOOTER */}
+      {isModalAvisoAberto && (
+        <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-500 border border-zinc-100">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 text-orange-600 rounded-xl">
+                  <Megaphone size={20} />
+                </div>
+                <h4 className="font-black text-zinc-800 uppercase text-xs tracking-widest">Enviar Aviso Geral</h4>
+              </div>
+              <button onClick={() => setIsModalAvisoAberto(false)} className="p-2 text-zinc-400 hover:text-zinc-800 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <textarea 
+              className="w-full h-32 p-4 bg-zinc-50 border border-zinc-100 rounded-3xl outline-none focus:ring-2 ring-orange-400 font-medium text-sm resize-none transition-all"
+              placeholder="Digite aqui o aviso que todos os parceiros verão..."
+              value={mensagemAviso}
+              onChange={(e) => setMensagemAviso(e.target.value)}
+            />
+            <button 
+              onClick={enviarAvisoGeral}
+              className="w-full mt-4 bg-orange-600 text-white p-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              Enviar para Todos <Send size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-6 flex justify-around rounded-t-[45px] shadow-2xl">
         <button 
           onClick={() => setAbaAdmin('Dash')} 
