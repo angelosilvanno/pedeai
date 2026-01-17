@@ -41,6 +41,13 @@ export default function Admin({
   const [abaAdmin, setAbaAdmin] = useState<'Dash' | 'Lojas'>('Dash');
   const [isModalAvisoAberto, setIsModalAvisoAberto] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState('');
+
+  const [isModalCupomAberto, setIsModalCupomAberto] = useState(false);
+  const [codigoCupom, setCodigoCupom] = useState('');
+  const [valorCupom, setValorCupom] = useState('');
+
+  const [isModalNotificarAberto, setIsModalNotificarAberto] = useState(false);
+  const [mensagemNotificacao, setMensagemNotificacao] = useState('');
   
   const faturamentoTotal = todosOsPedidos.reduce((s, p) => s + p.total, 0);
 
@@ -52,6 +59,27 @@ export default function Admin({
     notify("Aviso enviado para todos os parceiros!");
     setMensagemAviso('');
     setIsModalAvisoAberto(false);
+  };
+
+  const criarNovoCupom = () => {
+    if (!codigoCupom.trim() || !valorCupom) {
+      notify("Preencha todos os campos do cupom.", "erro");
+      return;
+    }
+    notify(`Cupom ${codigoCupom} ativado com sucesso!`);
+    setCodigoCupom('');
+    setValorCupom('');
+    setIsModalCupomAberto(false);
+  };
+
+  const enviarNotificacaoLojas = () => {
+    if (!mensagemNotificacao.trim()) {
+      notify("Digite o conteúdo da notificação.", "erro");
+      return;
+    }
+    notify("Notificação enviada para as lojas!");
+    setMensagemNotificacao('');
+    setIsModalNotificarAberto(false);
   };
 
   return (
@@ -82,7 +110,6 @@ export default function Admin({
           <h3 className="px-2 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Visão Geral do Negócio</h3>
           
           <div className="grid grid-cols-2 gap-4 px-1">
-            
             <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100 flex flex-col items-center text-center space-y-3">
               <div className="h-12 w-12 bg-zinc-50 rounded-2xl flex items-center justify-center text-green-600 border border-zinc-100">
                 <DollarSign size={20} />
@@ -112,8 +139,8 @@ export default function Admin({
             <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Ações Rápidas</h3>
             <div className="grid grid-cols-3 gap-3">
               <button 
-                onClick={() => notify("Função Novo Cupom em breve")}
-                className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-[25px] border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
+                onClick={() => setIsModalCupomAberto(true)}
+                className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
               >
                 <div className="p-2 bg-orange-50 text-orange-500 rounded-xl group-hover:bg-orange-500 group-hover:text-white transition-colors">
                   <Ticket size={18} />
@@ -122,8 +149,8 @@ export default function Admin({
               </button>
 
               <button 
-                onClick={() => notify("Função Notificar em breve")}
-                className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-[25px] border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
+                onClick={() => setIsModalNotificarAberto(true)}
+                className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
               >
                 <div className="p-2 bg-blue-50 text-blue-500 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-colors">
                   <Bell size={18} />
@@ -133,7 +160,7 @@ export default function Admin({
 
               <button 
                 onClick={() => setIsModalAvisoAberto(true)}
-                className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-[25px] border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
+                className="flex flex-col items-center justify-center gap-2 p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:bg-zinc-50 transition-all active:scale-95 group"
               >
                 <div className="p-2 bg-zinc-100 text-zinc-600 rounded-xl group-hover:bg-zinc-900 group-hover:text-white transition-colors">
                   <Megaphone size={18} />
@@ -189,6 +216,76 @@ export default function Admin({
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {isModalCupomAberto && (
+        <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-500 border border-zinc-100">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-orange-100 text-orange-600 rounded-xl">
+                  <Ticket size={20} />
+                </div>
+                <h4 className="font-black text-zinc-800 uppercase text-xs tracking-widest">Criar Novo Cupom</h4>
+              </div>
+              <button onClick={() => setIsModalCupomAberto(false)} className="p-2 text-zinc-400 hover:text-zinc-800 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <input 
+                type="text" 
+                className="w-full p-5 bg-zinc-50 border border-zinc-100 rounded-3xl outline-none focus:ring-2 ring-orange-400 font-bold uppercase"
+                placeholder="Código do Cupom (ex: BEMVINDO)"
+                value={codigoCupom}
+                onChange={(e) => setCodigoCupom(e.target.value)}
+              />
+              <input 
+                type="number" 
+                className="w-full p-5 bg-zinc-50 border border-zinc-100 rounded-3xl outline-none focus:ring-2 ring-orange-400 font-bold"
+                placeholder="Valor do Desconto (R$)"
+                value={valorCupom}
+                onChange={(e) => setValorCupom(e.target.value)}
+              />
+              <button 
+                onClick={criarNovoCupom}
+                className="w-full bg-orange-600 text-white p-5 rounded-3xl font-black text-sm uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+              >
+                Ativar Cupom
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isModalNotificarAberto && (
+        <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-500 border border-zinc-100">
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
+                  <Bell size={20} />
+                </div>
+                <h4 className="font-black text-zinc-800 uppercase text-xs tracking-widest">Notificar Parceiros</h4>
+              </div>
+              <button onClick={() => setIsModalNotificarAberto(false)} className="p-2 text-zinc-400 hover:text-zinc-800 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <textarea 
+              className="w-full h-32 p-5 bg-zinc-50 border border-zinc-100 rounded-3xl outline-none focus:ring-2 ring-blue-400 font-medium text-sm resize-none"
+              placeholder="Digite a notificação interna para os lojistas..."
+              value={mensagemNotificacao}
+              onChange={(e) => setMensagemNotificacao(e.target.value)}
+            />
+            <button 
+              onClick={enviarNotificacaoLojas}
+              className="w-full mt-4 bg-blue-600 text-white p-5 rounded-3xl font-black text-sm uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              Enviar Notificação <Send size={16} />
+            </button>
+          </div>
         </div>
       )}
 
