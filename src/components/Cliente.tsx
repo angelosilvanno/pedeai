@@ -11,7 +11,8 @@ import {
   ChevronRight, 
   LogOut, 
   Clock,
-  Trash2
+  Trash2,
+  X
 } from 'lucide-react'
 import type { Loja, Produto, Pedido } from '../types'
 
@@ -48,10 +49,22 @@ export default function Cliente({
   const [carrinho, setCarrinho] = useState<Produto[]>([]);
   const [estaFinalizando, setEstaFinalizando] = useState(false);
   const [enderecoEntrega, setEnderecoEntrega] = useState('');
+  const [novoEndereco, setNovoEndereco] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Dinheiro');
   
   const [gerenciandoEnderecos, setGerenciandoEnderecos] = useState(false);
-  const [meusEnderecos, setMeusEnderecos] = useState<string[]>(['Casa', 'Trabalho']);
+  const [meusEnderecos, setMeusEnderecos] = useState<{id: string, titulo: string, rua: string, numero: string, bairro: string}[]>([
+    { id: '1', titulo: 'Casa', rua: '', numero: '', bairro: '' },
+    { id: '2', titulo: 'Trabalho', rua: '', numero: '', bairro: '' }
+  ]);
+
+  const [modalEndereco, setModalEndereco] = useState<{aberto: boolean, id: string, titulo: string}>({
+    aberto: false,
+    id: '',
+    titulo: ''
+  });
+  const [tempRua, setTempRua] = useState('');
+  const [tempNumero, setTempNumero] = useState('');
 
   const estaAberto = (abertura: string, fechamento: string) => {
     const agora = new Date();
@@ -65,91 +78,203 @@ export default function Cliente({
 
   const lojasFiltradas = useMemo(() => todasAsLojas.filter(l => l.status === 'Ativa' && l.nome.toLowerCase().includes(busca.toLowerCase())), [busca, todasAsLojas]);
   const cardapioParaExibir = useMemo(() => todosOsProdutos.filter(p => p.lojaId === lojaSelecionada?.id), [lojaSelecionada, todosOsProdutos]);
+  const totalCarrinho = useMemo(() => carrinho.reduce((acc, item) => acc + item.preco, 0), [carrinho]);
 
   const realizarPedidoFinal = () => {
-    if (!enderecoEntrega) return notify("Endereço obrigatório.", 'erro');
+    const enderecoFinal = novoEndereco.trim() || enderecoEntrega;
+    if (!enderecoFinal || enderecoFinal.includes("não definido")) return notify("Por favor, informe o endereço completo.", 'erro');
+    if (!lojaSelecionada) return notify("Erro: Loja não selecionada.", 'erro');
     
+    const idPedido = crypto.randomUUID();
+
     const novoPedido: Pedido = {
-      id: crypto.randomUUID(),
-      lojaNome: lojaSelecionada?.nome || 'PedeAí',
+      id: idPedido,
+      lojaNome: lojaSelecionada.nome,
       clienteNome: usuarioNomeCompleto,
       clienteUsername: usuarioUsername,
       itens: [...carrinho],
-      total: carrinho.reduce((acc, item) => acc + item.preco, 0),
-      endereco: enderecoEntrega,
+      total: totalCarrinho,
+      endereco: enderecoFinal,
       pagamento: formaPagamento,
       status: 'Pendente'
     };
 
-    // CORREÇÃO AQUI: Passando como função para o App.tsx conseguir interceptar e salvar no servidor
-    setTodosOsPedidos((prev) => [novoPedido, ...prev]);
+    setTodosOsPedidos((prev) => {
+      const jaExiste = prev.find(p => p.id === idPedido);
+      if (jaExiste) return prev;
+      return [novoPedido, ...prev];
+    });
     
     setCarrinho([]);
     setEstaFinalizando(false);
     setLojaSelecionada(null);
     setAbaAtiva('Pedidos');
-    notify("Pedido enviado!");
+    setNovoEndereco('');
+    setEnderecoEntrega('');
+    notify("Pedido enviado com sucesso!");
   };
 
-  const adicionarNovoEndereco = () => {
-    const novo = prompt("Digite o novo endereço:");
-    if (novo) {
-      setMeusEnderecos([...meusEnderecos, novo]);
-      notify("Endereço salvo!");
-    }
+  const salvarEnderecoModal = () => {
+    if (!tempRua || !tempNumero) return notify("Preencha todos os campos", "erro");
+
+    setMeusEnderecos(prev => prev.map(e => e.id === modalEndereco.id ? { ...e, rua: tempRua, numero: tempNumero } : e));
+    const enderecoCompleto = `${tempRua}, ${tempNumero} - ${modalEndereco.titulo}`;
+    setEnderecoEntrega(enderecoCompleto);
+    setNovoEndereco('');
+    
+    setModalEndereco({ aberto: false, id: '', titulo: '' });
+    setTempRua('');
+    setTempNumero('');
+    notify(`${modalEndereco.titulo} atualizado!`);
   };
 
-  const removerEndereco = (index: number) => {
-    setMeusEnderecos(meusEnderecos.filter((_, i) => i !== index));
+  const abrirModalParaNovo = () => {
+    const novoId = crypto.randomUUID();
+    setModalEndereco({ aberto: true, id: novoId, titulo: 'Novo Local' });
+    setMeusEnderecos([...meusEnderecos, { id: novoId, titulo: 'Novo Local', rua: '', numero: '', bairro: '' }]);
+  };
+
+  const removerEndereco = (id: string) => {
+    setMeusEnderecos(meusEnderecos.filter(e => e.id !== id));
     notify("Endereço removido.");
   };
 
   return (
-    <>
+    <div className="min-h-screen pb-44 bg-zinc-50">
+      
+      {modalEndereco.aberto && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-black text-zinc-800 tracking-tight">Onde é seu {modalEndereco.titulo}?</h2>
+              <button onClick={() => setModalEndereco({aberto: false, id: '', titulo: ''})} className="p-2 bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-800 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black uppercase text-zinc-400 ml-2 tracking-widest">Rua / Avenida</label>
+                <input 
+                  type="text" 
+                  value={tempRua} 
+                  onChange={(e) => setTempRua(e.target.value)}
+                  placeholder="Ex: Rua das Flores"
+                  className="w-full p-5 mt-1 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 focus:border-orange-200 outline-none font-bold text-zinc-800"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black uppercase text-zinc-400 ml-2 tracking-widest">Número</label>
+                <input 
+                  type="text" 
+                  value={tempNumero} 
+                  onChange={(e) => setTempNumero(e.target.value)}
+                  placeholder="Ex: 123 ou S/N"
+                  className="w-full p-5 mt-1 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 focus:border-orange-200 outline-none font-bold text-zinc-800"
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={salvarEnderecoModal}
+              className="w-full mt-8 py-5 bg-orange-600 text-white rounded-[25px] font-black text-lg shadow-lg shadow-orange-200 active:scale-95 transition-all"
+            >
+              Confirmar Local
+            </button>
+          </div>
+        </div>
+      )}
+
       {abaAtiva === 'Inicio' ? (
         estaFinalizando ? (
-          <div className="space-y-6 animate-in slide-in-from-right">
-            <button onClick={() => setEstaFinalizando(false)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar</button>
-            <div className="space-y-6 rounded-[40px] border border-zinc-100 bg-white p-10 shadow-sm">
-              <h2 className="text-xl font-black">Finalizar pedido</h2>
-              
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4">Onde entregar?</label>
-                <select 
-                  className="w-full rounded-3xl bg-zinc-50 p-5 font-bold outline-none border border-zinc-100"
-                  value={enderecoEntrega}
-                  onChange={(e) => setEnderecoEntrega(e.target.value)}
+          <div className="animate-in slide-in-from-right p-4 max-w-xl mx-auto space-y-4">
+            <div className="flex items-center gap-4 bg-white p-5 rounded-[30px] border border-zinc-100 shadow-sm">
+              <button onClick={() => setEstaFinalizando(false)} className="text-orange-600 p-2 hover:bg-orange-50 rounded-full transition-colors">
+                <ArrowLeft size={24} />
+              </button>
+              <h1 className="text-xl font-black text-zinc-800">Finalizar Pedido</h1>
+            </div>
+
+            <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100">
+              <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Onde entregar?</h3>
+              <div className="space-y-3">
+                {meusEnderecos.map((end) => (
+                  <button
+                    key={end.id}
+                    onClick={() => {
+                      if (!end.rua) {
+                        setModalEndereco({ aberto: true, id: end.id, titulo: end.titulo });
+                      } else {
+                        setEnderecoEntrega(`${end.rua}, ${end.numero} - ${end.titulo}`);
+                        setNovoEndereco('');
+                      }
+                    }}
+                    className={`w-full flex items-start gap-4 p-4 rounded-[25px] border-2 transition-all ${enderecoEntrega.includes(end.titulo) && !novoEndereco ? "border-orange-500 bg-orange-50" : "border-zinc-50 bg-zinc-50"}`}
+                  >
+                    <div className={`mt-1 ${enderecoEntrega.includes(end.titulo) && !novoEndereco ? "text-orange-500" : "text-zinc-300"}`}>
+                      <MapPin size={20} />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-black text-zinc-800 text-sm leading-none">{end.titulo}</p>
+                      <p className="text-xs text-zinc-500 mt-1.5 leading-tight">
+                        {end.rua ? `${end.rua}, ${end.numero}` : "Clique para definir o endereço"}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+                <div className="pt-2">
+                  <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest mb-3 ml-2">Ou estou em um local novo</p>
+                  <input
+                    type="text"
+                    placeholder="Rua, número, bairro..."
+                    value={novoEndereco}
+                    onChange={(e) => { setNovoEndereco(e.target.value); setEnderecoEntrega(''); }}
+                    className="w-full p-5 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 focus:border-orange-200 focus:bg-white outline-none text-sm font-bold transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100">
+              <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Forma de Pagamento</h3>
+              <select 
+                className="w-full p-5 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 outline-none font-black text-zinc-800"
+                value={formaPagamento}
+                onChange={(e) => setFormaPagamento(e.target.value)}
+              >
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Pix">Pix</option>
+                <option value="Cartão de Crédito">Cartão de Crédito</option>
+                <option value="Cartão de Débito">Cartão de Débito</option>
+              </select>
+            </div>
+
+            <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-black text-zinc-800">Total</span>
+                <span className="text-3xl font-black text-green-600 italic tracking-tighter">R$ {totalCarrinho.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="pt-4 pb-10">
+                <button 
+                onClick={realizarPedidoFinal}
+                disabled={(!enderecoEntrega && !novoEndereco)}
+                className={`w-full py-6 rounded-[30px] font-black text-xl shadow-xl transition-all active:scale-95 ${ (enderecoEntrega || novoEndereco) ? "bg-orange-600 text-white" : "bg-zinc-200 text-zinc-400 cursor-not-allowed"}`}
                 >
-                  <option value="">Selecione um endereço...</option>
-                  {meusEnderecos.map((end, idx) => (
-                    <option key={idx} value={end}>{end}</option>
-                  ))}
-                </select>
-                <input type="text" placeholder="Ou digite um novo endereço" className="w-full rounded-3xl bg-zinc-50 p-5 font-medium outline-none transition-all focus:ring-2 ring-orange-200" value={enderecoEntrega} onChange={(e) => setEnderecoEntrega(e.target.value)} />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-zinc-400 ml-4">Forma de Pagamento</label>
-                <select className="w-full rounded-3xl bg-zinc-50 p-5 font-bold outline-none" value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)}>
-                  <option value="Dinheiro">Dinheiro</option>
-                  <option value="Pix">Pix</option>
-                  <option value="Cartão">Cartão de Crédito</option>
-                </select>
-              </div>
-
-              <div className="flex justify-between border-t-2 pt-6"><span className="font-bold text-zinc-400">Total</span><p className="text-3xl font-black text-green-600">R$ {carrinho.reduce((a, i) => a + i.preco, 0).toFixed(2)}</p></div>
-              <button onClick={realizarPedidoFinal} className="w-full rounded-3xl bg-orange-600 p-6 text-xl font-black text-white shadow-lg active:scale-95 transition-all">Confirmar Agora!</button>
+                Confirmar Agora!
+                </button>
             </div>
           </div>
         ) : !lojaSelecionada ? (
-          <div className="space-y-8">
+          <div className="space-y-8 p-4">
             <div className="bg-zinc-50 -mx-5 px-5 py-5 border-b border-zinc-100/50">
               <div className="relative group max-w-xl mx-auto">
                 <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-orange-500 transition-colors" />
                 <input 
                   type="text" 
                   placeholder="O que vamos pedir hoje?" 
-                  className="w-full rounded-full bg-white py-4.5 pl-14 pr-8 text-base font-bold shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-zinc-100 outline-none transition-all focus:ring-4 ring-orange-50 focus:border-orange-100 placeholder:text-zinc-300" 
+                  className="w-full rounded-full bg-white py-4.5 pl-14 pr-8 text-base font-bold shadow-sm border border-zinc-100 outline-none transition-all focus:ring-4 ring-orange-50 focus:border-orange-100 placeholder:text-zinc-300" 
                   value={busca} 
                   onChange={(e) => setBusca(e.target.value)} 
                 />
@@ -184,8 +309,8 @@ export default function Cliente({
             </div>
           </div>
         ) : (
-          <div className="space-y-8 animate-in slide-in-from-bottom duration-500">
-            <button onClick={() => setLojaSelecionada(null)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar</button>
+          <div className="space-y-8 p-4 animate-in slide-in-from-bottom duration-500">
+            <button onClick={() => setLojaSelecionada(null)} className="flex items-center gap-2 font-bold text-orange-600 hover:bg-orange-50 px-4 py-2 rounded-full transition-all w-fit"><ArrowLeft size={16} /> Voltar para as lojas</button>
             <div className="flex items-center gap-6">
                 <div className="rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm">{getStoreIcon(lojaSelecionada.imagem)}</div>
                 <h2 className="text-3xl font-black text-zinc-800 tracking-tighter leading-none">{lojaSelecionada.nome}</h2>
@@ -205,50 +330,60 @@ export default function Cliente({
           </div>
         )
       ) : abaAtiva === 'Pedidos' ? (
-        <div className="space-y-8 animate-in fade-in">
+        <div className="space-y-8 p-4 animate-in fade-in">
           <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">Meus pedidos</h2>
-          {todosOsPedidos.length === 0 ? <p className="text-center py-20 font-bold opacity-30 uppercase">Nenhum pedido realizado</p> :
+          {todosOsPedidos.length === 0 ? <p className="text-center py-20 font-bold opacity-30 uppercase">Nenhum pedido realizado ainda</p> :
             todosOsPedidos.map(p => (
-              <div key={p.id} className="rounded-[40px] border border-zinc-100 bg-white p-8 shadow-sm">
+              <div key={p.id} className="rounded-[40px] border border-zinc-100 bg-white p-8 shadow-sm mb-4">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="text-xl font-black text-zinc-800 tracking-tight leading-none">{p.lojaNome}</h3>
                   <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase ${p.status === 'Entregue' ? 'bg-zinc-100 text-zinc-500' : 'bg-orange-100 text-orange-600 animate-pulse'}`}>{p.status}</span>
                 </div>
                 <div className="bg-zinc-50 rounded-2xl p-4 text-xs font-medium text-zinc-500 leading-relaxed">{p.itens.map(i => i.nome).join(', ')}</div>
-                <div className="mt-4 pt-4 border-t flex justify-between font-black items-center">
-                   <p className="text-2xl italic tracking-tighter text-zinc-800 leading-none">R$ {p.total.toFixed(2)}</p>
-                   <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{p.pagamento}</p>
+                <div className="mt-4 pt-4 border-t border-zinc-50 flex justify-between font-black items-center">
+                    <p className="text-2xl italic tracking-tighter text-zinc-800 leading-none">R$ {p.total.toFixed(2)}</p>
+                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{p.pagamento}</p>
                 </div>
               </div>
             ))
           }
         </div>
       ) : (
-        <div className="animate-in fade-in duration-500">
+        <div className="p-4 animate-in fade-in duration-500">
           {gerenciandoEnderecos ? (
             <div className="space-y-8 animate-in slide-in-from-right">
                 <button onClick={() => setGerenciandoEnderecos(false)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar ao Perfil</button>
                 <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">Meus Endereços</h2>
                 
                 <button 
-                 onClick={adicionarNovoEndereco}
+                 onClick={abrirModalParaNovo}
                  className="w-full bg-orange-50 text-orange-600 p-6 rounded-[30px] font-black uppercase text-xs flex items-center justify-center gap-3 border-2 border-dashed border-orange-200 active:scale-95 transition-all"
                 >
                   <Plus size={20} /> Adicionar Novo Local
                 </button>
 
                 <div className="space-y-4">
-                  {meusEnderecos.map((end, idx) => (
-                    <div key={idx} className="bg-white p-6 rounded-[30px] border border-zinc-100 flex items-center justify-between shadow-sm">
+                  {meusEnderecos.map((end) => (
+                    <div key={end.id} className="bg-white p-6 rounded-[30px] border border-zinc-100 flex items-center justify-between shadow-sm">
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 bg-zinc-50 rounded-xl flex items-center justify-center text-zinc-400">
                           <MapPin size={20} />
                         </div>
-                        <p className="font-bold text-zinc-700 text-sm">{end}</p>
+                        <div>
+                          <p className="font-black text-zinc-700 text-sm leading-none">{end.titulo}</p>
+                          <p className="text-[10px] text-zinc-400 mt-1 uppercase font-bold">{end.rua ? `${end.rua}, ${end.numero}` : "Endereço não definido"}</p>
+                        </div>
                       </div>
-                      <button onClick={() => removerEndereco(idx)} className="h-10 w-10 flex items-center justify-center text-red-400 hover:bg-red-50 rounded-xl transition-colors">
-                        <Trash2 size={18} />
-                      </button>
+                      <div className="flex gap-2">
+                        <button onClick={() => setModalEndereco({ aberto: true, id: end.id, titulo: end.titulo })} className="p-2 text-orange-500 hover:bg-orange-50 rounded-xl transition-colors">
+                          <Plus size={18} />
+                        </button>
+                        {end.id !== '1' && end.id !== '2' && (
+                          <button onClick={() => removerEndereco(end.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-xl transition-colors">
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -260,17 +395,19 @@ export default function Cliente({
                 <div className="flex-1">
                   <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">{usuarioNomeCompleto}</h2>
                   <p className="text-zinc-400 font-bold text-sm mt-1 leading-none">@{usuarioUsername}</p>
-                  <div className="mt-2 space-y-0.5 leading-none">
-                    <p className="text-zinc-300 text-[10px] font-bold tracking-widest">{usuarioEmail}</p>
-                    <p className="text-orange-400 text-[10px] font-black tracking-widest uppercase">{usuarioTelefone}</p>
+                  <div className="mt-3 space-y-1">
+                    <p className="text-zinc-500 text-xs font-bold">{usuarioEmail}</p>
+                    <p className="text-orange-600 text-[10px] font-black uppercase tracking-widest">{usuarioTelefone}</p>
                   </div>
                 </div>
-                <button onClick={handleLogout} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90" title="Sair da Conta">
+                <button onClick={handleLogout} className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-90">
                   <LogOut size={22} />
                 </button>
               </div>
-              <div className="mt-8 space-y-4 px-2">
-                <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-2 leading-none">Minha Atividade</h3>
+              <div className="mt-8 space-y-4">
+                <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] px-2">Configurações</h3>
+                
+                {/* Meus Endereços */}
                 <button onClick={() => setGerenciandoEnderecos(true)} className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-orange-50 rounded-2xl group-hover:bg-orange-100 transition-colors">
@@ -278,23 +415,26 @@ export default function Cliente({
                     </div>
                     <div className="text-left">
                       <span className="block font-black text-zinc-800 text-sm leading-none">Meus Endereços</span>
-                      <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1 leading-none">Gerenciar locais de entrega</span>
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Gerenciar locais salvos</span>
                     </div>
                   </div>
                   <ChevronRight size={18} className="text-zinc-300" />
                 </button>
+
+                {/* Histórico de Pedidos */}
                 <button onClick={() => setAbaAtiva('Pedidos')} className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
-                      <ClipboardList size={22} className="text-blue-600" />
+                    <div className="p-3 bg-orange-50 rounded-2xl group-hover:bg-orange-100 transition-colors">
+                      <ClipboardList size={22} className="text-orange-600" />
                     </div>
                     <div className="text-left">
-                      <span className="block font-black text-zinc-800 text-sm leading-none">Histórico de Pedidos</span>
-                      <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1 leading-none">Ver compras anteriores</span>
+                      <span className="block font-black text-zinc-800 text-sm leading-none">Ver meus pedidos</span>
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase mt-1">Histórico de pedidos anteriores</span>
                     </div>
                   </div>
                   <ChevronRight size={18} className="text-zinc-300" />
                 </button>
+
               </div>
             </>
           )}
@@ -302,9 +442,9 @@ export default function Cliente({
       )}
       
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-6 flex justify-around rounded-t-[45px] shadow-2xl">
-        <button onClick={() => { setAbaAtiva('Inicio'); setLojaSelecionada(null); setEstaFinalizando(false); setGerenciandoEnderecos(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Inicio' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><Home size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Inicio</span></button>
-        <button onClick={() => { setAbaAtiva('Pedidos'); setGerenciandoEnderecos(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><ClipboardList size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Pedidos</span></button>
-        <button onClick={() => setAbaAtiva('Perfil')} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><User size={24} /><span className="text-[10px] font-black uppercase tracking-tighter leading-none">Perfil</span></button>
+        <button onClick={() => { setAbaAtiva('Inicio'); setLojaSelecionada(null); setEstaFinalizando(false); setGerenciandoEnderecos(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Inicio' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><Home size={24} /><span className="text-[10px] font-black uppercase leading-none">Inicio</span></button>
+        <button onClick={() => { setAbaAtiva('Pedidos'); setGerenciandoEnderecos(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><ClipboardList size={24} /><span className="text-[10px] font-black uppercase leading-none">Pedidos</span></button>
+        <button onClick={() => { setAbaAtiva('Perfil'); setGerenciandoEnderecos(false); }} className={`flex flex-col items-center gap-1.5 transition-all ${abaAtiva === 'Perfil' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}><User size={24} /><span className="text-[10px] font-black uppercase leading-none">Perfil</span></button>
       </nav>
       
       {abaAtiva === 'Inicio' && carrinho.length > 0 && !estaFinalizando && (
@@ -320,16 +460,16 @@ export default function Cliente({
                 <div className="text-left">
                   <p className="text-[10px] text-zinc-400 uppercase leading-none">Ver sacola</p>
                   <p className="text-sm uppercase leading-none mt-1">
-                    {carrinho.length} {carrinho.length === 1 ? 'Item' : 'Itens'} na sacola
+                    {carrinho.length} {carrinho.length === 1 ? 'Item' : 'Itens'}
                   </p>
                 </div>
             </div>
             <span className="text-xl font-black italic text-orange-400">
-              R$ {carrinho.reduce((s, i) => s + i.preco, 0).toFixed(2)}
+              R$ {totalCarrinho.toFixed(2)}
             </span>
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 }
