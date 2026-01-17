@@ -50,7 +50,6 @@ export default function Cliente({
   const [enderecoEntrega, setEnderecoEntrega] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Dinheiro');
   
-  // Novos estados para endereços
   const [gerenciandoEnderecos, setGerenciandoEnderecos] = useState(false);
   const [meusEnderecos, setMeusEnderecos] = useState<string[]>(['Casa', 'Trabalho']);
 
@@ -69,6 +68,7 @@ export default function Cliente({
 
   const realizarPedidoFinal = () => {
     if (!enderecoEntrega) return notify("Endereço obrigatório.", 'erro');
+    
     const novoPedido: Pedido = {
       id: crypto.randomUUID(),
       lojaNome: lojaSelecionada?.nome || 'PedeAí',
@@ -80,7 +80,10 @@ export default function Cliente({
       pagamento: formaPagamento,
       status: 'Pendente'
     };
-    setTodosOsPedidos([novoPedido, ...todosOsPedidos]);
+
+    // CORREÇÃO AQUI: Passando como função para o App.tsx conseguir interceptar e salvar no servidor
+    setTodosOsPedidos((prev) => [novoPedido, ...prev]);
+    
     setCarrinho([]);
     setEstaFinalizando(false);
     setLojaSelecionada(null);
@@ -224,17 +227,17 @@ export default function Cliente({
         <div className="animate-in fade-in duration-500">
           {gerenciandoEnderecos ? (
             <div className="space-y-8 animate-in slide-in-from-right">
-               <button onClick={() => setGerenciandoEnderecos(false)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar ao Perfil</button>
-               <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">Meus Endereços</h2>
-               
-               <button 
-                onClick={adicionarNovoEndereco}
-                className="w-full bg-orange-50 text-orange-600 p-6 rounded-[30px] font-black uppercase text-xs flex items-center justify-center gap-3 border-2 border-dashed border-orange-200 active:scale-95 transition-all"
-               >
-                 <Plus size={20} /> Adicionar Novo Local
-               </button>
+                <button onClick={() => setGerenciandoEnderecos(false)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar ao Perfil</button>
+                <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">Meus Endereços</h2>
+                
+                <button 
+                 onClick={adicionarNovoEndereco}
+                 className="w-full bg-orange-50 text-orange-600 p-6 rounded-[30px] font-black uppercase text-xs flex items-center justify-center gap-3 border-2 border-dashed border-orange-200 active:scale-95 transition-all"
+                >
+                  <Plus size={20} /> Adicionar Novo Local
+                </button>
 
-               <div className="space-y-4">
+                <div className="space-y-4">
                   {meusEnderecos.map((end, idx) => (
                     <div key={idx} className="bg-white p-6 rounded-[30px] border border-zinc-100 flex items-center justify-between shadow-sm">
                       <div className="flex items-center gap-4">
@@ -248,7 +251,7 @@ export default function Cliente({
                       </button>
                     </div>
                   ))}
-               </div>
+                </div>
             </div>
           ) : (
             <>
