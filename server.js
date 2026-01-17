@@ -69,6 +69,10 @@ const enviarAvisoWhatsApp = async (telefone, mensagem) => {
     try {
         let num = telefone.replace(/\D/g, "");
         
+        if (num.length === 11 && num.startsWith("0")) {
+            num = num.substring(1);
+        }
+
         if (!num.startsWith("55")) {
             num = "55" + num;
         }
