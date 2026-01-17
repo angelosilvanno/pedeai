@@ -97,7 +97,6 @@ export function AuthScreen({
   };
 
   return (
-    /* CORREÇÃO: min-h-screen para o fundo preencher tudo e scrollbar-hide para sumir com a barra visual */
     <div className="min-h-screen w-full bg-orange-600 flex flex-col items-center justify-start p-4 font-sans text-zinc-900 overflow-y-auto scrollbar-hide">
       
       <div className="max-w-md w-full bg-white rounded-[45px] shadow-2xl p-8 space-y-6 animate-in zoom-in duration-500 my-auto border border-white/20">
