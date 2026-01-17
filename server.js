@@ -17,6 +17,10 @@ console.log('⏳ [Sistema] Iniciando motor do WhatsApp...');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
+    webVersionCache: {
+        type: 'remote',
+        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
+    },
     puppeteer: {
         handleSIGINT: false,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
