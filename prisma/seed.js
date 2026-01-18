@@ -1,5 +1,5 @@
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
+import { PrismaClient } from '@prisma/client';
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -9,7 +9,7 @@ async function main() {
   await prisma.loja.deleteMany();
   await prisma.usuario.deleteMany();
 
-  console.log('👤 Usuários...');
+  console.log('👤 Semeando Usuários...');
   const angelo = await prisma.usuario.create({
     data: {
       nome: "Angelo Silvano",
@@ -43,8 +43,7 @@ async function main() {
     }
   });
 
-  console.log('🏪 Estabelecimentos e Produtos...');
-  // Loja 1
+  console.log('🏪 Semeando Lojas e Produtos...');
   await prisma.loja.create({
     data: {
       id: 1,
@@ -64,7 +63,6 @@ async function main() {
     }
   });
 
-  // Loja 2
   await prisma.loja.create({
     data: {
       id: 2,
@@ -84,7 +82,6 @@ async function main() {
     }
   });
 
-  // Loja 3
   await prisma.loja.create({
     data: {
       id: 3,
@@ -104,7 +101,6 @@ async function main() {
     }
   });
 
-  // Loja 4
   await prisma.loja.create({
     data: {
       id: 4,
@@ -124,7 +120,7 @@ async function main() {
     }
   });
 
-  console.log('📦 Histórico de Pedidos...');
+  console.log('📦 Semeando Histórico de Pedidos...');
   await prisma.pedido.create({
     data: {
       id: "4d9d9458-ec41-4f97-a64c-58080bd716d2",
