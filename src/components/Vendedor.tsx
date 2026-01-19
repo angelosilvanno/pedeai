@@ -74,7 +74,6 @@ export default function Vendedor({
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom duration-500 pb-32">
       
-      {/* CABEÇALHO DO LOJISTA */}
       <div className="flex items-center gap-6 py-6 border-b border-zinc-100 bg-white -mx-5 px-5 mb-4">
         <div className="h-16 w-16 rounded-2xl bg-orange-100 flex items-center justify-center border-4 border-white shadow-sm overflow-hidden text-orange-600">
           <User size={32} />
@@ -120,9 +119,11 @@ export default function Vendedor({
                 >
                   <div className="flex justify-between items-start">
                     <div>
-                      <h4 className="font-black text-zinc-800 text-lg leading-none">{p.clienteNome}</h4>
+                      <h4 className="font-black text-zinc-800 text-lg leading-none">
+                        {p.clienteNome || (p as { cliente_nome?: string }).cliente_nome || 'Cliente'}
+                      </h4>
                       <p className="text-[10px] font-bold text-zinc-400 mt-2 uppercase tracking-tight flex items-center gap-1 leading-none">
-                        <Clock size={10} /> #{p.id.split('-')[0]}
+                        <Clock size={10} /> #{String(p.id).split('-')[0]}
                       </p>
                     </div>
                     <span className={`px-3 py-1 text-[9px] font-black rounded-full uppercase leading-none ${
@@ -133,7 +134,6 @@ export default function Vendedor({
                   </div>
 
                   <div className="bg-zinc-50 p-5 rounded-3xl space-y-2 border border-zinc-100">
-                    {/* CORREÇÃO DO ERRO: item agora é tipado como Produto */}
                     {itensArray.map((item: Produto, idx: number) => (
                       <div key={idx} className="flex justify-between items-center text-sm font-bold text-zinc-600 leading-none">
                         <span>• {item.nome}</span>
@@ -149,7 +149,14 @@ export default function Vendedor({
                   <div className="flex gap-3 pt-2">
                     {p.status === 'Pendente' && (
                       <button 
-                        onClick={() => mudarStatusPedidoVendedor(p.id, 'Preparando')}
+                        onClick={async () => {
+                          try {
+                            await mudarStatusPedidoVendedor(p.id, 'Preparando');
+                            notify("Pedido aceito!", "sucesso");
+                          } catch {
+                            notify("Erro ao aceitar pedido", "erro");
+                          }
+                        }}
                         className="flex-1 bg-green-600 text-white p-5 rounded-[22px] font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all leading-none"
                       >
                         Aceitar Pedido
@@ -158,7 +165,14 @@ export default function Vendedor({
 
                     {p.status === 'Preparando' && (
                       <button 
-                        onClick={() => mudarStatusPedidoVendedor(p.id, 'Entregue')}
+                        onClick={async () => {
+                          try {
+                            await mudarStatusPedidoVendedor(p.id, 'Entregue');
+                            notify("Entrega finalizada!", "sucesso");
+                          } catch {
+                            notify("Erro ao finalizar entrega", "erro");
+                          }
+                        }}
                         className="flex-1 bg-zinc-900 text-white p-5 rounded-[22px] font-black text-[10px] uppercase shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 leading-none"
                       >
                         <CheckCircle size={14} /> Finalizar Entrega
@@ -220,7 +234,6 @@ export default function Vendedor({
         </div>
       )}
 
-      {/* Modal para Novo Produto */}
       {mostrarModalProduto && (
         <div className="fixed inset-0 z-100 flex items-end sm:items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[40px] p-8 space-y-6 shadow-2xl animate-in slide-in-from-bottom-10 duration-500 border border-zinc-100">
@@ -262,7 +275,6 @@ export default function Vendedor({
         </div>
       )}
 
-      {/* Navegação Inferior */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/95 backdrop-blur-xl border-t border-zinc-100 p-6 flex justify-around rounded-t-[45px] shadow-2xl">
         <button onClick={() => setAbaVendedor('Pedidos')} className={`flex flex-col items-center gap-1.5 transition-all ${abaVendedor === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}>
           <LayoutDashboard size={24} />
