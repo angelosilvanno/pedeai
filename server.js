@@ -1,9 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import fs from 'fs';
+import pg from 'pg';
 import pkg from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
 
+const { Pool } = pg;
 const { Client, LocalAuth } = pkg;
 const app = express();
 const PORT = 3000;
@@ -11,10 +12,12 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json());
 
-const ARQUIVO_DB = './banco.json';
+// --- CONEXÃO COM O BANCO DE DADOS (SUPABASE) ---
+const pool = new Pool({
+    connectionString: "COLE_AQUI_A_SUA_URI_DO_SUPABASE",
+});
 
-console.log('⏳ [Sistema] Iniciando motor do WhatsApp...');
-
+// --- MOTOR DO WHATSAPP ---
 const client = new Client({
     authStrategy: new LocalAuth(),
     webVersionCache: {
@@ -30,153 +33,135 @@ const client = new Client({
 client.on('qr', (qr) => {
     console.clear();
     console.log('---------------------------------------------------------');
-    console.log('📱 [WhatsApp] SCANNER DE CONEXÃO');
-    console.log('Escaneie o QR Code abaixo para ativar as notificações:');
+    console.log('SISTEMA DE MENSAGENS');
+    console.log('Abra o WhatsApp no seu celular e leia o código abaixo:');
     console.log('---------------------------------------------------------');
     qrcode.generate(qr, { small: true });
 });
 
 client.on('ready', () => {
-    console.log('\n✅ [WhatsApp] STATUS: Conectado e pronto para enviar mensagens!');
-});
-
-client.on('auth_failure', (msg) => {
-    console.error('❌ [WhatsApp] Erro na autenticação:', msg);
+    console.log('\nTudo pronto! O WhatsApp está conectado.');
 });
 
 client.initialize();
 
-const lerBanco = () => {
-    try {
-        if (!fs.existsSync(ARQUIVO_DB)) {
-            const baseVazia = { usuarios: [], lojas: [], produtos: [], pedidos: [] };
-            fs.writeFileSync(ARQUIVO_DB, JSON.stringify(baseVazia, null, 2));
-            return baseVazia;
-        }
-        return JSON.parse(fs.readFileSync(ARQUIVO_DB, 'utf-8'));
-    } catch (error) {
-        console.error('❌ [Banco] Erro ao ler arquivo:', error.message);
-        return { usuarios: [], lojas: [], produtos: [], pedidos: [] };
-    }
-};
-
-const salvarBanco = (dados) => {
-    try {
-        fs.writeFileSync(ARQUIVO_DB, JSON.stringify(dados, null, 2));
-        console.log('💾 [Banco] Dados atualizados com sucesso.');
-    } catch (error) {
-        console.error('❌ [Banco] Falha ao salvar dados:', error.message);
-    }
-};
-
-const enviarAvisoWhatsApp = async (telefone, mensagem) => {
+// --- FUNÇÃO PARA ENVIAR MENSAGEM ---
+const enviarMensagem = async (telefone, texto) => {
     try {
         let num = telefone.replace(/\D/g, "");
-        
-        if (num.length === 11 && num.startsWith("0")) {
-            num = num.substring(1);
-        }
+        if (num.length === 11 && num.startsWith("0")) num = num.substring(1);
+        if (!num.startsWith("55")) num = "55" + num;
 
-        if (!num.startsWith("55")) {
-            num = "55" + num;
-        }
-
-        const chatId = `${num}@c.us`;
-        
-        console.log(`📡 [WhatsApp] Tentando enviar para ID: ${chatId}`);
-        await client.sendMessage(chatId, mensagem);
-        console.log(`✅ [WhatsApp] Mensagem entregue!`);
-    } catch (error) {
-        console.error(`❌ [WhatsApp] Erro no envio para ${telefone}:`, error.message);
+        const contatoId = `${num}@c.us`;
+        await client.sendMessage(contatoId, texto);
+        console.log('Mensagem enviada para: ' + telefone);
+    } catch (erro) {
+        console.log('Não foi possível enviar mensagem para: ' + telefone);
     }
 };
 
-app.post('/api/login', (req, res) => {
+// --- ACESSO E CADASTRO ---
+
+app.post('/api/login', async (req, res) => {
     const { identificacao, senha } = req.body;
-    const banco = lerBanco();
-    const usuario = banco.usuarios.find(u => (u.username === identificacao || u.email === identificacao) && u.senha === senha);
-    
-    if (usuario) {
-        const { senha, ...dados } = usuario;
-        console.log(`🔑 [Acesso] Login: @${usuario.username}`);
-        res.json(dados);
-    } else {
-        res.status(401).json({ mensagem: "Credenciais inválidas." });
+    try {
+        const consulta = "SELECT * FROM usuarios WHERE (username = $1 OR email = $1) AND senha = $2";
+        const resultado = await pool.query(consulta, [identificacao, senha]);
+
+        if (resultado.rows.length > 0) {
+            const usuario = resultado.rows[0];
+            console.log('Alguém entrou no sistema: ' + usuario.username);
+            res.json(usuario);
+        } else {
+            res.status(401).json({ mensagem: "Usuário ou senha não conferem." });
+        }
+    } catch (e) {
+        res.status(500).json({ mensagem: "Problema ao consultar o banco de dados." });
     }
 });
 
-app.post('/api/cadastro', (req, res) => {
-    const novo = req.body;
-    const banco = lerBanco();
-    
-    if (banco.usuarios.find(u => u.email === novo.email || u.username === novo.username)) {
-        return res.status(400).json({ msg: "Usuário já cadastrado" });
+app.post('/api/cadastro', async (req, res) => {
+    const { nome, username, email, telefone, senha, tipo, genero } = req.body;
+    try {
+        const consulta = "INSERT INTO usuarios (nome, username, email, telefone, senha, tipo, genero) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *";
+        const novo = await pool.query(consulta, [nome, username, email, telefone, senha, tipo, genero]);
+        console.log('Novo cadastro realizado: ' + username);
+        res.status(201).json(novo.rows[0]);
+    } catch (e) {
+        res.status(400).json({ mensagem: "Este nome de usuário ou e-mail já está em uso." });
     }
-    
-    banco.usuarios.push(novo);
-    salvarBanco(banco);
-    console.log(`👤 [Cadastro] Novo usuário: @${novo.username}`);
-    res.status(201).json({ msg: "Ok" });
 });
 
-app.post('/api/pedidos', (req, res) => {
-    const novoPedido = req.body;
-    const banco = lerBanco();
-    
-    banco.pedidos.push(novoPedido);
-    salvarBanco(banco);
-    
-    console.log(`📦 [Pedido] Novo pedido recebido: #${novoPedido.id} de @${novoPedido.clienteUsername}`);
-    res.status(201).json({ msg: "Pedido salvo com sucesso", pedido: novoPedido });
+// --- LOJAS E PRODUTOS ---
+
+app.get('/api/lojas', async (req, res) => {
+    try {
+        const resultado = await pool.query("SELECT * FROM lojas ORDER BY nome ASC");
+        res.json(resultado.rows);
+    } catch (e) {
+        res.status(500).json([]);
+    }
 });
 
-app.get('/api/pedidos', (req, res) => {
-    const banco = lerBanco();
-    res.json(banco.pedidos);
+app.get('/api/produtos', async (req, res) => {
+    try {
+        const resultado = await pool.query("SELECT * FROM produtos ORDER BY nome ASC");
+        res.json(resultado.rows);
+    } catch (e) {
+        res.status(500).json([]);
+    }
+});
+
+// --- PEDIDOS ---
+
+app.post('/api/pedidos', async (req, res) => {
+    const p = req.body;
+    try {
+        const consulta = "INSERT INTO pedidos (loja_nome, cliente_nome, cliente_username, total, endereco, pagamento, status, itens) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *";
+        const novo = await pool.query(consulta, [p.lojaNome, p.clienteNome, p.clienteUsername, p.total, p.endereco, p.pagamento, p.status, JSON.stringify(p.itens)]);
+        console.log('Novo pedido de ' + p.clienteNome + ' para a loja ' + p.lojaNome);
+        res.status(201).json(novo.rows[0]);
+    } catch (e) {
+        res.status(500).json({ mensagem: "Não foi possível salvar o pedido." });
+    }
+});
+
+app.get('/api/pedidos', async (req, res) => {
+    try {
+        const resultado = await pool.query("SELECT * FROM pedidos ORDER BY id DESC");
+        res.json(resultado.rows);
+    } catch (e) {
+        res.status(500).json([]);
+    }
 });
 
 app.post('/api/pedidos/status', async (req, res) => {
     const { pedidoId, novoStatus } = req.body;
-    const banco = lerBanco();
-    
-    const pedido = banco.pedidos.find(p => p.id === pedidoId);
-    if (!pedido) return res.status(404).json({ msg: "Pedido não encontrado" });
+    try {
+        const consultaStatus = "UPDATE pedidos SET status = $1 WHERE id = $2 RETURNING *";
+        const resultadoPedido = await pool.query(consultaStatus, [novoStatus, pedidoId]);
+        const pedido = resultadoPedido.rows[0];
 
-    const cliente = banco.usuarios.find(u => u.username === pedido.clienteUsername);
-    
-    pedido.status = novoStatus;
-    salvarBanco(banco);
-    console.log(`🔄 [Pedido] #${pedidoId} alterado para: ${novoStatus}`);
+        const consultaUsuario = await pool.query("SELECT telefone FROM usuarios WHERE username = $1", [pedido.cliente_username]);
+        const tel = consultaUsuario.rows[0]?.telefone;
 
-    if (cliente && cliente.telefone) {
-        let msgTexto = "";
-        switch(novoStatus) {
-            case 'Preparando':
-                msgTexto = `Olá ${pedido.clienteNome}! Seu pedido da *${pedido.lojaNome}* já está sendo preparado! 👨‍🍳`;
-                break;
-            case 'Saiu para Entrega':
-                msgTexto = `Boa notícia! Seu pedido da *${pedido.lojaNome}* saiu para entrega e chegará em breve. 🛵`;
-                break;
-            case 'Entregue':
-                msgTexto = `Pedido entregue! Esperamos que goste da sua refeição. Bom apetite! 😋`;
-                break;
+        console.log('Pedido ' + pedidoId + ' mudou para: ' + novoStatus);
+
+        if (tel) {
+            let aviso = `Olá ${pedido.cliente_nome}! Seu pedido na ${pedido.loja_nome} agora está: ${novoStatus}`;
+            await enviarMensagem(tel, aviso);
         }
-
-        if (msgTexto) {
-            await enviarAvisoWhatsApp(cliente.telefone, msgTexto);
-        }
+        res.json(pedido);
+    } catch (e) {
+        res.status(404).json({ mensagem: "Erro ao atualizar a situação do pedido." });
     }
-
-    res.json({ msg: "Status atualizado!" });
 });
-
-app.get('/api/lojas', (req, res) => res.json(lerBanco().lojas));
-app.get('/api/produtos', (req, res) => res.json(lerBanco().produtos));
 
 app.listen(PORT, () => {
     console.clear();
     console.log('---------------------------------------------------------');
-    console.log(`🚀 [Servidor] PedeAí Online em: http://localhost:${PORT}`);
-    console.log('📡 Monitorando disparos de WhatsApp...');
+    console.log('SERVIDOR DO PEDEAÍ ESTÁ NO AR');
+    console.log('Banco de dados conectado e sistema pronto.');
+    console.log('Endereço: http://localhost:' + PORT);
     console.log('---------------------------------------------------------');
 });
