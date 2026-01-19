@@ -1,3 +1,4 @@
+import 'dotenv/config'; // Adicionado para carregar as protecoes
 import express from 'express';
 import cors from 'cors';
 import pg from 'pg';
@@ -13,7 +14,8 @@ app.use(cors());
 app.use(express.json());
 
 const pool = new Pool({
-    connectionString: "postgresql://postgres.pnlhyhckkfenglqdycfm:projetopedeai26@aws-0-us-west-2.pooler.supabase.com:6543/postgres",
+    // Estrutura protegida: o sistema agora busca o link no arquivo .env
+    connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false 
     }
@@ -23,7 +25,7 @@ pool.connect((err, client, release) => {
     if (err) {
         return console.error('Erro ao conectar no banco de dados:', err.message);
     }
-    console.log('Conexão com o banco de dados pronta.');
+    console.log('Conexao com o banco de dados pronta.');
     release();
 });
 
@@ -82,7 +84,8 @@ app.post('/api/cadastro', async (req, res) => {
 
 app.get('/api/lojas', async (req, res) => {
     try {
-        const resDb = await pool.query("SELECT * FROM lojas ORDER BY id ASC");
+        const query = "SELECT id, nome, categoria, imagem, status, abertura, fechamento FROM lojas ORDER BY id ASC";
+        const resDb = await pool.query(query);
         res.json(resDb.rows);
     } catch (e) { 
         console.error("Erro ao buscar lojas:", e.message);
@@ -92,7 +95,8 @@ app.get('/api/lojas', async (req, res) => {
 
 app.get('/api/produtos', async (req, res) => {
     try {
-        const resDb = await pool.query("SELECT * FROM produtos");
+        const query = 'SELECT id, nome, preco, descricao, loja_id AS "lojaId" FROM produtos';
+        const resDb = await pool.query(query);
         res.json(resDb.rows);
     } catch (e) { 
         console.error("Erro ao buscar produtos:", e.message);

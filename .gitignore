@@ -27,3 +27,5 @@ banco.json
 .wwebjs_auth
 .wwebjs_cache
 /src/generated/prisma
+
+.env
