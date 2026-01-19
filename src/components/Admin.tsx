@@ -49,7 +49,7 @@ export default function Admin({
   const [isModalNotificarAberto, setIsModalNotificarAberto] = useState(false);
   const [mensagemNotificacao, setMensagemNotificacao] = useState('');
   
-  const faturamentoTotal = todosOsPedidos.reduce((s, p) => s + p.total, 0);
+  const faturamentoTotal = (todosOsPedidos || []).reduce((s, p) => s + (Number(p.total) || 0), 0);
 
   const enviarAvisoGeral = () => {
     if (!mensagemAviso.trim()) {
