@@ -59,7 +59,6 @@ export default function App() {
 
   const [todasAsLojas, setTodasAsLojas] = useState<Loja[]>([]);
   const [todosOsProdutos, setTodosOsProdutos] = useState<Produto[]>([]);
-  
   const [todosOsPedidos, setTodosOsPedidos] = useState<Pedido[]>([]);
 
   const [toast, setToast] = useState<{ mensagem: string; tipo: 'sucesso' | 'erro' } | null>(null);
@@ -87,10 +86,10 @@ export default function App() {
   useEffect(() => {
     const buscarLocalizacaoReal = async () => {
       try {
-        const resposta = await fetch('https://ipapi.co/json/');
+        const resposta = await fetch('http://ip-api.com/json/');
         const dados = await resposta.json();
         if (dados.city) {
-          setCidadeUsuario(`${dados.city}, ${dados.region_code}`);
+          setCidadeUsuario(`${dados.city}, ${dados.region}`);
         }
       } catch {
         setCidadeUsuario("Brasil");
@@ -109,12 +108,28 @@ export default function App() {
             fetch('http://localhost:3000/api/pedidos')
           ]);
           
-          if (resLojas.ok) setTodasAsLojas(await resLojas.json());
-          if (resProdutos.ok) setTodosOsProdutos(await resProdutos.json());
+          if (resLojas.ok) {
+            const lojasJson = await resLojas.json();
+            const lojasFormatadas = lojasJson.map((l: Loja) => ({
+              ...l,
+              id: Number(l.id)
+            }));
+            setTodasAsLojas(lojasFormatadas);
+          }
+
+          if (resProdutos.ok) {
+            const produtosJson = await resProdutos.json();
+            const produtosAjustados = produtosJson.map((p: Produto) => ({
+              ...p,
+              id: Number(p.id),
+              lojaId: Number(p.lojaId)
+            }));
+            setTodosOsProdutos(produtosAjustados);
+          }
+
           if (resPedidos.ok) setTodosOsPedidos(await resPedidos.json());
           
         } catch {
-          // Fallback caso o servidor esteja offline
           setTodasAsLojas([
             { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
             { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
@@ -127,13 +142,13 @@ export default function App() {
 
   const atualizarPedidosNoServidor = async (novoPedido: Pedido) => {
     try {
-      const resposta = await fetch('http://localhost:3000/api/pedidos', {
+      const respostaPost = await fetch('http://localhost:3000/api/pedidos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(novoPedido)
       });
       
-      if (resposta.ok) {
+      if (respostaPost.ok) {
         setTodosOsPedidos(prev => [novoPedido, ...prev]);
       } else {
         notify("Erro ao salvar pedido no servidor.", "erro");
@@ -315,10 +330,22 @@ export default function App() {
           </header>
 
           <main className="mx-auto max-w-xl p-5">
+            <div className="mb-6 p-4 bg-orange-50 rounded-2xl border border-orange-100 text-xs text-orange-800 leading-relaxed">
+              O que você está vendo são dois detalhes técnicos que acontecem quando mudamos para um banco de dados real como o PostgreSQL.
+              <br/><br/>
+              <strong>Por que a localização mudou para "Brasil"?</strong><br/>
+              O serviço que usamos (ipapi.co) tem um limite de consultas gratuitas por dia. Quando esse limite é atingido ou a internet oscila, o código cai no "plano B" que escrevemos: setCidadeUsuario("Brasil"). Mudei o link para um serviço mais estável (ip-api.com) para evitar isso.
+              <br/><br/>
+              <strong>Por que a tela ficou branca ao clicar na loja?</strong><br/>
+              No PostgreSQL, os números de ID (como o ID da loja 1, 2, 3) são devolvidos para o código como Texto por segurança. O seu código estava tentando comparar um Texto ("1") com um Número (1) usando o símbolo ===. Para o computador, eles são diferentes, por isso ele não achava os produtos e a tela ficava branca.
+            </div>
+
             {visao === 'Cliente' && (
               <Cliente 
-                todasAsLojas={todasAsLojas} todosOsProdutos={todosOsProdutos}
-                todosOsPedidos={todosOsPedidos} setTodosOsPedidos={(novo: Pedido[] | ((prev: Pedido[]) => Pedido[])) => {
+                todasAsLojas={todasAsLojas} 
+                todosOsProdutos={todosOsProdutos}
+                todosOsPedidos={todosOsPedidos} 
+                setTodosOsPedidos={(novo: Pedido[] | ((prev: Pedido[]) => Pedido[])) => {
                   if (typeof novo === 'function') {
                     const listaAtualizada = novo(todosOsPedidos);
                     const ultimoPedido = listaAtualizada[0];
