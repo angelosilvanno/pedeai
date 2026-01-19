@@ -78,7 +78,6 @@ export default function Cliente({
 
   const lojasFiltradas = useMemo(() => todasAsLojas.filter(l => l.status === 'Ativa' && l.nome.toLowerCase().includes(busca.toLowerCase())), [busca, todasAsLojas]);
   
-  // Note a alteração na linha abaixo, onde agora comparamos os IDs convertendo ambos para Texto (String), o que resolve o erro da tela branca.
   const cardapioParaExibir = useMemo(() => todosOsProdutos.filter(p => String(p.lojaId) === String(lojaSelecionada?.id)), [lojaSelecionada, todosOsProdutos]);
   
   const totalCarrinho = useMemo(() => carrinho.reduce((acc, item) => acc + item.preco, 0), [carrinho]);

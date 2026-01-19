@@ -330,15 +330,6 @@ export default function App() {
           </header>
 
           <main className="mx-auto max-w-xl p-5">
-            <div className="mb-6 p-4 bg-orange-50 rounded-2xl border border-orange-100 text-xs text-orange-800 leading-relaxed">
-              O que você está vendo são dois detalhes técnicos que acontecem quando mudamos para um banco de dados real como o PostgreSQL.
-              <br/><br/>
-              <strong>Por que a localização mudou para "Brasil"?</strong><br/>
-              O serviço que usamos (ipapi.co) tem um limite de consultas gratuitas por dia. Quando esse limite é atingido ou a internet oscila, o código cai no "plano B" que escrevemos: setCidadeUsuario("Brasil"). Mudei o link para um serviço mais estável (ip-api.com) para evitar isso.
-              <br/><br/>
-              <strong>Por que a tela ficou branca ao clicar na loja?</strong><br/>
-              No PostgreSQL, os números de ID (como o ID da loja 1, 2, 3) são devolvidos para o código como Texto por segurança. O seu código estava tentando comparar um Texto ("1") com um Número (1) usando o símbolo ===. Para o computador, eles são diferentes, por isso ele não achava os produtos e a tela ficava branca.
-            </div>
 
             {visao === 'Cliente' && (
               <Cliente 
