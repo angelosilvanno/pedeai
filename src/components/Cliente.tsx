@@ -67,24 +67,45 @@ export default function Cliente({
   const [tempNumero, setTempNumero] = useState('');
 
   const estaAberto = (abertura: string, fechamento: string) => {
-    const agora = new Date();
-    const horaAtual = agora.getHours() * 60 + agora.getMinutes();
-    const [hA, mA] = abertura.split(':').map(Number);
-    const [hF, mF] = fechamento.split(':').map(Number);
-    const minA = hA * 60 + mA;
-    const minF = hF * 60 + mF;
-    return horaAtual >= minA && horaAtual <= minF;
+    try {
+      const agora = new Date();
+      const horaAtual = agora.getHours() * 60 + agora.getMinutes();
+      const [hA, mA] = (abertura || "00:00").split(':').map(Number);
+      const [hF, mF] = (fechamento || "23:59").split(':').map(Number);
+      const minA = hA * 60 + mA;
+      const minF = hF * 60 + mF;
+      return horaAtual >= minA && horaAtual <= minF;
+    } catch {
+      return false;
+    }
   };
 
-  const lojasFiltradas = useMemo(() => todasAsLojas.filter(l => l.status === 'Ativa' && l.nome.toLowerCase().includes(busca.toLowerCase())), [busca, todasAsLojas]);
+  const lojasFiltradas = useMemo(() => {
+    return (todasAsLojas || []).filter(l => 
+      l?.status === 'Ativa' && 
+      l?.nome?.toLowerCase().includes(busca.toLowerCase())
+    );
+  }, [busca, todasAsLojas]);
   
-  const cardapioParaExibir = useMemo(() => todosOsProdutos.filter(p => String(p.lojaId) === String(lojaSelecionada?.id)), [lojaSelecionada, todosOsProdutos]);
+  const cardapioParaExibir = useMemo(() => {
+    if (!lojaSelecionada || !todosOsProdutos) return [];
+    
+    return todosOsProdutos.filter(p => {
+      const idProd = String(p.lojaId || '');
+      const idLoja = String(lojaSelecionada.id || '');
+      return idProd === idLoja && idProd !== '';
+    });
+  }, [lojaSelecionada, todosOsProdutos]);
   
-  const totalCarrinho = useMemo(() => carrinho.reduce((acc, item) => acc + item.preco, 0), [carrinho]);
+  const totalCarrinho = useMemo(() => 
+    carrinho.reduce((acc, item) => acc + (Number(item?.preco) || 0), 0)
+  , [carrinho]);
 
   const realizarPedidoFinal = () => {
     const enderecoFinal = novoEndereco.trim() || enderecoEntrega;
-    if (!enderecoFinal || enderecoFinal.includes("não definido")) return notify("Por favor, informe o endereço completo.", 'erro');
+    if (!enderecoFinal || enderecoFinal.includes("não definido")) {
+      return notify("Por favor, informe o endereço completo.", 'erro');
+    }
     if (!lojaSelecionada) return notify("Erro: Loja não selecionada.", 'erro');
     
     const idPedido = crypto.randomUUID();
@@ -101,11 +122,7 @@ export default function Cliente({
       status: 'Pendente'
     };
 
-    setTodosOsPedidos((prev) => {
-      const jaExiste = prev.find(p => p.id === idPedido);
-      if (jaExiste) return prev;
-      return [novoPedido, ...prev];
-    });
+    setTodosOsPedidos((prev) => [novoPedido, ...prev]);
     
     setCarrinho([]);
     setEstaFinalizando(false);
@@ -145,8 +162,8 @@ export default function Cliente({
     <div className="min-h-screen pb-44 bg-zinc-50">
       
       {modalEndereco.aberto && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-zinc-900/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-black text-zinc-800 tracking-tight">Onde é seu {modalEndereco.titulo}?</h2>
               <button onClick={() => setModalEndereco({aberto: false, id: '', titulo: ''})} className="p-2 bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-800 transition-colors">
@@ -189,7 +206,7 @@ export default function Cliente({
 
       {abaAtiva === 'Inicio' ? (
         estaFinalizando ? (
-          <div className="animate-in slide-in-from-right p-4 max-w-xl mx-auto space-y-4">
+          <div className="p-4 max-w-xl mx-auto space-y-4">
             <div className="flex items-center gap-4 bg-white p-5 rounded-[30px] border border-zinc-100 shadow-sm">
               <button onClick={() => setEstaFinalizando(false)} className="text-orange-600 p-2 hover:bg-orange-50 rounded-full transition-colors">
                 <ArrowLeft size={24} />
@@ -311,28 +328,37 @@ export default function Cliente({
             </div>
           </div>
         ) : (
-          <div className="space-y-8 p-4 animate-in slide-in-from-bottom duration-500">
+          <div className="space-y-8 p-4 animate-in fade-in duration-300">
             <button onClick={() => setLojaSelecionada(null)} className="flex items-center gap-2 font-bold text-orange-600 hover:bg-orange-50 px-4 py-2 rounded-full transition-all w-fit"><ArrowLeft size={16} /> Voltar para as lojas</button>
             <div className="flex items-center gap-6">
-                <div className="rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm">{getStoreIcon(lojaSelecionada.imagem)}</div>
-                <h2 className="text-3xl font-black text-zinc-800 tracking-tighter leading-none">{lojaSelecionada.nome}</h2>
+                <div className="rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm">
+                  {getStoreIcon(lojaSelecionada?.imagem || '')}
+                </div>
+                <div>
+                  <h2 className="text-3xl font-black text-zinc-800 tracking-tighter leading-none">{lojaSelecionada?.nome}</h2>
+                  <p className="text-zinc-400 text-xs font-bold uppercase tracking-widest mt-2">{lojaSelecionada?.categoria}</p>
+                </div>
             </div>
             <div className="space-y-4">
-              {cardapioParaExibir.map(item => (
-                <div key={item.id} className="flex items-center justify-between gap-5 rounded-[35px] border border-zinc-100 bg-white p-6 shadow-sm hover:shadow-md transition-all">
-                  <div className="flex-1">
-                    <h4 className="text-lg font-black text-zinc-800 tracking-tight">{item.nome}</h4>
-                    <p className="my-1 text-xs text-zinc-400 leading-relaxed">{item.descricao}</p>
-                    <p className="mt-1 text-lg font-black text-green-600 tracking-tighter">R$ {item.preco.toFixed(2)}</p>
+              {cardapioParaExibir.length === 0 ? (
+                <p className="text-center py-10 text-zinc-400 font-bold uppercase text-xs">Nenhum produto cadastrado nesta loja</p>
+              ) : (
+                cardapioParaExibir.map(item => (
+                  <div key={item.id} className="flex items-center justify-between gap-5 rounded-[35px] border border-zinc-100 bg-white p-6 shadow-sm hover:shadow-md transition-all">
+                    <div className="flex-1">
+                      <h4 className="text-lg font-black text-zinc-800 tracking-tight">{item.nome}</h4>
+                      <p className="my-1 text-xs text-zinc-400 leading-relaxed">{item.descricao}</p>
+                      <p className="mt-1 text-lg font-black text-green-600 tracking-tighter">R$ {(Number(item.preco) || 0).toFixed(2)}</p>
+                    </div>
+                    <button onClick={() => { setCarrinho([...carrinho, item]); notify(`${item.nome} na sacola!`); }} className="flex h-12 w-12 rounded-2xl bg-orange-600 text-white items-center justify-center shadow-lg active:scale-90 transition-all"><Plus size={24} /></button>
                   </div>
-                  <button onClick={() => { setCarrinho([...carrinho, item]); notify(`${item.nome} na sacola!`); }} className="flex h-12 w-12 rounded-2xl bg-orange-600 text-white items-center justify-center shadow-lg active:scale-90 transition-all"><Plus size={24} /></button>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )
       ) : abaAtiva === 'Pedidos' ? (
-        <div className="space-y-8 p-4 animate-in fade-in">
+        <div className="space-y-8 p-4">
           <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">Meus pedidos</h2>
           {todosOsPedidos.length === 0 ? <p className="text-center py-20 font-bold opacity-30 uppercase">Nenhum pedido realizado ainda</p> :
             todosOsPedidos.map(p => (
@@ -341,9 +367,9 @@ export default function Cliente({
                   <h3 className="text-xl font-black text-zinc-800 tracking-tight leading-none">{p.lojaNome}</h3>
                   <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase ${p.status === 'Entregue' ? 'bg-zinc-100 text-zinc-500' : 'bg-orange-100 text-orange-600 animate-pulse'}`}>{p.status}</span>
                 </div>
-                <div className="bg-zinc-50 rounded-2xl p-4 text-xs font-medium text-zinc-500 leading-relaxed">{p.itens.map(i => i.nome).join(', ')}</div>
+                <div className="bg-zinc-50 rounded-2xl p-4 text-xs font-medium text-zinc-500 leading-relaxed">{p.itens?.map(i => i.nome).join(', ')}</div>
                 <div className="mt-4 pt-4 border-t border-zinc-50 flex justify-between font-black items-center">
-                    <p className="text-2xl italic tracking-tighter text-zinc-800 leading-none">R$ {p.total.toFixed(2)}</p>
+                    <p className="text-2xl italic tracking-tighter text-zinc-800 leading-none">R$ {(Number(p.total) || 0).toFixed(2)}</p>
                     <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{p.pagamento}</p>
                 </div>
               </div>
@@ -351,9 +377,9 @@ export default function Cliente({
           }
         </div>
       ) : (
-        <div className="p-4 animate-in fade-in duration-500">
+        <div className="p-4">
           {gerenciandoEnderecos ? (
-            <div className="space-y-8 animate-in slide-in-from-right">
+            <div className="space-y-8">
                 <button onClick={() => setGerenciandoEnderecos(false)} className="flex items-center gap-2 font-bold text-orange-600"><ArrowLeft size={16} /> Voltar ao Perfil</button>
                 <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">Meus Endereços</h2>
                 
@@ -409,7 +435,6 @@ export default function Cliente({
               <div className="mt-8 space-y-4">
                 <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] px-2">Configurações</h3>
                 
-                {/* Meus Endereços */}
                 <button onClick={() => setGerenciandoEnderecos(true)} className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-orange-50 rounded-2xl group-hover:bg-orange-100 transition-colors">
@@ -423,7 +448,6 @@ export default function Cliente({
                   <ChevronRight size={18} className="text-zinc-300" />
                 </button>
 
-                {/* Histórico de Pedidos */}
                 <button onClick={() => setAbaAtiva('Pedidos')} className="w-full flex items-center justify-between p-4 bg-white rounded-3xl border border-zinc-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] group">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-orange-50 rounded-2xl group-hover:bg-orange-100 transition-colors">
@@ -436,7 +460,6 @@ export default function Cliente({
                   </div>
                   <ChevronRight size={18} className="text-zinc-300" />
                 </button>
-
               </div>
             </>
           )}
