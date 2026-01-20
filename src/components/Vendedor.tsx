@@ -76,9 +76,11 @@ export default function Vendedor({
     notify("Produto adicionado!", "sucesso");
   };
 
-  const pedidosFiltrados = (todosOsPedidos || []).filter(p => 
-    p.lojaNome?.toLowerCase().includes("pizzaria") || p.lojaNome === usuarioNomeCompleto
-  );
+  const pedidosFiltrados = (todosOsPedidos || []).filter(p => {
+    const nomeLojaPedido = String(p.lojaNome || (p as { loja_nome?: string }).loja_nome || '').toLowerCase();
+    const nomeVendedor = String(usuarioNomeCompleto || '').toLowerCase();
+    return nomeLojaPedido.includes("pizzaria") || nomeLojaPedido.includes("oliveira") || nomeLojaPedido === nomeVendedor;
+  });
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom duration-500 pb-32">
