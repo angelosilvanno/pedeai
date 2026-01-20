@@ -15,7 +15,9 @@ import {
   X,
   QrCode,
   CreditCard,
-  CheckCircle2
+  CheckCircle2,
+  Wallet,
+  Banknote
 } from 'lucide-react'
 import type { Loja, Produto, Pedido } from '../types'
 
@@ -107,6 +109,8 @@ export default function Cliente({
   , [carrinho]);
 
   const realizarPedidoFinal = () => {
+    if (carrinho.length === 0) return;
+
     const enderecoFinal = novoEndereco.trim() || enderecoEntrega;
     if (!enderecoFinal || enderecoFinal.includes("não definido")) {
       return notify("Por favor, informe o endereço completo.", 'erro');
@@ -141,6 +145,7 @@ export default function Cliente({
     setNovoEndereco('');
     setEnderecoEntrega('');
     setDadosCartao({ numero: '', nome: '', validade: '', cvv: '' });
+    
     notify("Pedido enviado com sucesso!");
   };
 
@@ -217,17 +222,24 @@ export default function Cliente({
 
       {abaAtiva === 'Inicio' ? (
         estaFinalizando ? (
-          <div className="p-4 max-w-xl mx-auto space-y-4">
-            <div className="flex items-center gap-4 bg-white p-5 rounded-[30px] border border-zinc-100 shadow-sm">
-              <button onClick={() => setEstaFinalizando(false)} className="text-orange-600 p-2 hover:bg-orange-50 rounded-full transition-colors">
+          <div className="p-4 max-w-xl mx-auto space-y-6 animate-in slide-in-from-right duration-500">
+            <div className="flex items-center gap-4 bg-white p-6 rounded-[35px] border border-zinc-100 shadow-sm">
+              <button onClick={() => setEstaFinalizando(false)} className="text-orange-600 p-3 hover:bg-orange-50 rounded-2xl transition-all">
                 <ArrowLeft size={24} />
               </button>
-              <h1 className="text-xl font-black text-zinc-800">Finalizar Pedido</h1>
+              <div>
+                <h1 className="text-2xl font-black text-zinc-800 tracking-tighter leading-none">Checkout</h1>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">Finalize seu pedido</p>
+              </div>
             </div>
 
-            <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100">
-              <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Onde entregar?</h3>
-              <div className="space-y-3">
+            <div className="bg-white p-8 rounded-[40px] shadow-sm border border-zinc-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-orange-50 text-orange-600 rounded-xl"><MapPin size={20} /></div>
+                <h3 className="text-zinc-800 text-sm font-black uppercase tracking-widest">Endereço de Entrega</h3>
+              </div>
+              
+              <div className="space-y-4">
                 {meusEnderecos.map((end) => (
                   <button
                     key={end.id}
@@ -239,103 +251,119 @@ export default function Cliente({
                         setNovoEndereco('');
                       }
                     }}
-                    className={`w-full flex items-start gap-4 p-4 rounded-[25px] border-2 transition-all ${enderecoEntrega.includes(end.titulo) && !novoEndereco ? "border-orange-500 bg-orange-50" : "border-zinc-50 bg-zinc-50"}`}
+                    className={`w-full flex items-center gap-4 p-5 rounded-[30px] border-2 transition-all ${enderecoEntrega.includes(end.titulo) && !novoEndereco ? "border-orange-500 bg-orange-50/50 shadow-inner" : "border-zinc-50 bg-zinc-50"}`}
                   >
-                    <div className={`mt-1 ${enderecoEntrega.includes(end.titulo) && !novoEndereco ? "text-orange-500" : "text-zinc-300"}`}>
-                      <MapPin size={20} />
+                    <div className={`p-3 rounded-2xl ${enderecoEntrega.includes(end.titulo) && !novoEndereco ? "bg-orange-500 text-white" : "bg-white text-zinc-300"}`}>
+                      <Home size={18} />
                     </div>
-                    <div className="text-left">
-                      <p className="font-black text-zinc-800 text-sm leading-none">{end.titulo}</p>
-                      <p className="text-xs text-zinc-500 mt-1.5 leading-tight">
-                        {end.rua ? `${end.rua}, ${end.numero}` : "Clique para definir o endereço"}
+                    <div className="text-left flex-1">
+                      <p className="font-black text-zinc-800 text-sm">{end.titulo}</p>
+                      <p className="text-xs text-zinc-400 font-bold mt-0.5">
+                        {end.rua ? `${end.rua}, ${end.numero}` : "Toque para definir"}
                       </p>
                     </div>
+                    {enderecoEntrega.includes(end.titulo) && !novoEndereco && <CheckCircle2 size={20} className="text-orange-500" />}
                   </button>
                 ))}
-                <div className="pt-2">
-                  <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest mb-3 ml-2">Ou estou em um local novo</p>
+                
+                <div className="relative group mt-6">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-orange-500 transition-colors">
+                    <Plus size={18} />
+                  </div>
                   <input
                     type="text"
-                    placeholder="Rua, número, bairro..."
+                    placeholder="Outro endereço para agora..."
                     value={novoEndereco}
                     onChange={(e) => { setNovoEndereco(e.target.value); setEnderecoEntrega(''); }}
-                    className="w-full p-5 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 focus:border-orange-200 focus:bg-white outline-none text-sm font-bold transition-all"
+                    className="w-full p-5 pl-14 rounded-[30px] bg-zinc-50 border-2 border-zinc-50 focus:border-orange-200 focus:bg-white outline-none text-sm font-bold transition-all"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100">
-              <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Pagamento</h3>
-              <select 
-                className="w-full p-5 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 outline-none font-black text-zinc-800 mb-4"
-                value={formaPagamento}
-                onChange={(e) => setFormaPagamento(e.target.value)}
-              >
-                <option value="Dinheiro">Dinheiro</option>
-                <option value="Pix">Pix</option>
-                <option value="Cartão de Crédito">Cartão de Crédito</option>
-                <option value="Cartão de Débito">Cartão de Débito</option>
-              </select>
+            <div className="bg-white p-8 rounded-[40px] shadow-sm border border-zinc-100">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 bg-green-50 text-green-600 rounded-xl"><Wallet size={20} /></div>
+                <h3 className="text-zinc-800 text-sm font-black uppercase tracking-widest">Método de Pagamento</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3">
+                {[
+                  { id: 'Dinheiro', icon: <Banknote size={18} /> },
+                  { id: 'Pix', icon: <QrCode size={18} /> },
+                  { id: 'Cartão de Crédito', icon: <CreditCard size={18} /> },
+                  { id: 'Cartão de Débito', icon: <CreditCard size={18} /> }
+                ].map((metodo) => (
+                  <button
+                    key={metodo.id}
+                    onClick={() => setFormaPagamento(metodo.id)}
+                    className={`flex items-center justify-between p-5 rounded-[25px] border-2 transition-all ${formaPagamento === metodo.id ? "border-green-500 bg-green-50/30" : "border-zinc-50 bg-zinc-50"}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`${formaPagamento === metodo.id ? "text-green-600" : "text-zinc-400"}`}>{metodo.icon}</div>
+                      <span className="font-black text-zinc-800 text-sm">{metodo.id}</span>
+                    </div>
+                    {formaPagamento === metodo.id && <CheckCircle2 size={18} className="text-green-600" />}
+                  </button>
+                ))}
+              </div>
 
               {formaPagamento === 'Pix' && (
-                <div className="p-6 bg-zinc-50 rounded-[30px] border-2 border-dashed border-zinc-200 flex flex-col items-center text-center animate-in zoom-in duration-300">
-                  <div className="p-4 bg-white rounded-3xl shadow-sm mb-4">
-                    <QrCode size={140} className="text-zinc-800" />
+                <div className="mt-6 p-8 bg-zinc-900 rounded-[35px] text-center animate-in zoom-in duration-300">
+                  <div className="bg-white p-4 rounded-3xl inline-block mb-4">
+                    <QrCode size={120} className="text-zinc-900" />
                   </div>
-                  <p className="text-xs font-bold text-zinc-500 leading-tight">Escaneie o QR Code ou use o Pix Copia e Cola no seu banco.</p>
-                  <button onClick={() => notify("Chave Pix copiada!")} className="mt-4 text-orange-600 text-[10px] font-black uppercase tracking-widest bg-orange-50 px-6 py-3 rounded-full">Copiar Código Pix</button>
+                  <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest mb-4">Pague agora para agilizar</p>
+                  <button onClick={() => notify("Código Pix Copiado!")} className="w-full bg-zinc-800 text-white p-4 rounded-2xl text-[10px] font-black uppercase hover:bg-zinc-700 transition-all">Copiar Chave Pix</button>
                 </div>
               )}
 
               {formaPagamento.includes('Cartão') && (
-                <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
-                  <input 
-                    type="text" 
-                    placeholder="0000 0000 0000 0000"
-                    className="w-full p-5 rounded-[20px] bg-zinc-50 border-2 border-zinc-50 outline-none font-bold text-zinc-800"
-                    value={dadosCartao.numero}
-                    onChange={(e) => setDadosCartao({...dadosCartao, numero: e.target.value})}
-                  />
-                  <div className="grid grid-cols-2 gap-3">
+                <div className="mt-6 space-y-4 animate-in slide-in-from-top-4 duration-300">
+                  <div className="relative">
+                    <CreditCard size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-300" />
                     <input 
                       type="text" 
-                      placeholder="MM/AA"
-                      className="w-full p-5 rounded-[20px] bg-zinc-50 border-2 border-zinc-50 outline-none font-bold text-zinc-800"
-                      value={dadosCartao.validade}
-                      onChange={(e) => setDadosCartao({...dadosCartao, validade: e.target.value})}
+                      placeholder="Número do Cartão"
+                      className="w-full p-5 pl-14 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 outline-none font-bold text-zinc-800"
+                      value={dadosCartao.numero}
+                      onChange={(e) => setDadosCartao({...dadosCartao, numero: e.target.value})}
                     />
-                    <input 
-                      type="text" 
-                      placeholder="CVV"
-                      className="w-full p-5 rounded-[20px] bg-zinc-50 border-2 border-zinc-50 outline-none font-bold text-zinc-800"
-                      value={dadosCartao.cvv}
-                      onChange={(e) => setDadosCartao({...dadosCartao, cvv: e.target.value})}
-                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="text" placeholder="MM/AA" className="p-5 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 outline-none font-bold text-zinc-800 text-center" value={dadosCartao.validade} onChange={(e) => setDadosCartao({...dadosCartao, validade: e.target.value})} />
+                    <input type="text" placeholder="CVV" className="p-5 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 outline-none font-bold text-zinc-800 text-center" value={dadosCartao.cvv} onChange={(e) => setDadosCartao({...dadosCartao, cvv: e.target.value})} />
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-black text-zinc-800">Total</span>
+            <div className="bg-white p-8 rounded-[40px] shadow-sm border border-zinc-100">
+              <h3 className="text-zinc-800 text-sm font-black uppercase tracking-widest mb-6">Resumo da Sacola</h3>
+              <div className="space-y-3 mb-6">
+                {carrinho.map((item, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-sm">
+                    <span className="font-bold text-zinc-500">1x {item.nome}</span>
+                    <span className="font-black text-zinc-800">R$ {Number(item.preco).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-6 border-t border-zinc-50 flex justify-between items-center">
+                <span className="text-lg font-black text-zinc-800 tracking-tighter">Total a pagar</span>
                 <span className="text-3xl font-black text-green-600 italic tracking-tighter">R$ {totalCarrinho.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="pt-4 pb-10">
-                <button 
-                onClick={realizarPedidoFinal}
-                disabled={(!enderecoEntrega && !novoEndereco)}
-                className={`w-full py-6 rounded-[30px] font-black text-xl shadow-xl transition-all active:scale-95 ${ (enderecoEntrega || novoEndereco) ? "bg-orange-600 text-white" : "bg-zinc-200 text-zinc-400 cursor-not-allowed"}`}
-                >
-                Confirmar Agora!
-                </button>
-            </div>
+            <button 
+              onClick={realizarPedidoFinal}
+              disabled={(!enderecoEntrega && !novoEndereco)}
+              className={`w-full py-7 rounded-[35px] font-black text-xl shadow-2xl transition-all active:scale-95 mb-10 ${ (enderecoEntrega || novoEndereco) ? "bg-orange-600 text-white shadow-orange-200" : "bg-zinc-200 text-zinc-400 cursor-not-allowed"}`}
+            >
+              Confirmar Pedido!
+            </button>
           </div>
         ) : !lojaSelecionada ? (
-          <div className="space-y-8 p-4">
+          <div className="space-y-8 p-4 animate-in fade-in duration-300">
             <div className="bg-zinc-50 -mx-5 px-5 py-5 border-b border-zinc-100/50">
               <div className="relative group max-w-xl mx-auto">
                 <Search size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-400 group-focus-within:text-orange-500 transition-colors" />
