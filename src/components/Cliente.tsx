@@ -414,7 +414,9 @@ export default function Cliente({
               <div key={p.id} className="rounded-[40px] border border-zinc-100 bg-white p-8 shadow-sm mb-6 border-l-12 border-l-orange-500 overflow-hidden relative">
                 <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h3 className="text-xl font-black text-zinc-800 tracking-tight leading-none mb-2">{p.lojaNome}</h3>
+                    <h3 className="text-xl font-black text-zinc-800 tracking-tight leading-none mb-2">
+                      {p.lojaNome || (p as { loja_nome?: string }).loja_nome || 'Estabelecimento'}
+                    </h3>
                     <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none">#{String(p.id).split('-')[0]}</p>
                   </div>
                   <div className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 ${p.status === 'Entregue' ? 'bg-zinc-100 text-zinc-500' : 'bg-orange-100 text-orange-600 animate-pulse'}`}>
