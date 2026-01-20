@@ -12,7 +12,10 @@ import {
   LogOut, 
   Clock,
   Trash2,
-  X
+  X,
+  QrCode,
+  CreditCard,
+  CheckCircle2
 } from 'lucide-react'
 import type { Loja, Produto, Pedido } from '../types'
 
@@ -52,6 +55,8 @@ export default function Cliente({
   const [novoEndereco, setNovoEndereco] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Dinheiro');
   
+  const [dadosCartao, setDadosCartao] = useState({ numero: '', nome: '', validade: '', cvv: '' });
+
   const [gerenciandoEnderecos, setGerenciandoEnderecos] = useState(false);
   const [meusEnderecos, setMeusEnderecos] = useState<{id: string, titulo: string, rua: string, numero: string, bairro: string}[]>([
     { id: '1', titulo: 'Casa', rua: '', numero: '', bairro: '' },
@@ -91,7 +96,7 @@ export default function Cliente({
     if (!lojaSelecionada || !todosOsProdutos) return [];
     
     return todosOsProdutos.filter(p => {
-      const idProd = String(p.lojaId || '');
+      const idProd = String(p.lojaId || (p as { loja_id?: string }).loja_id || '');
       const idLoja = String(lojaSelecionada.id || '');
       return idProd === idLoja && idProd !== '';
     });
@@ -106,6 +111,11 @@ export default function Cliente({
     if (!enderecoFinal || enderecoFinal.includes("não definido")) {
       return notify("Por favor, informe o endereço completo.", 'erro');
     }
+
+    if (formaPagamento.includes("Cartão") && (!dadosCartao.numero || !dadosCartao.cvv)) {
+      return notify("Preencha os dados do cartão.", 'erro');
+    }
+
     if (!lojaSelecionada) return notify("Erro: Loja não selecionada.", 'erro');
     
     const idPedido = crypto.randomUUID();
@@ -130,6 +140,7 @@ export default function Cliente({
     setAbaAtiva('Pedidos');
     setNovoEndereco('');
     setEnderecoEntrega('');
+    setDadosCartao({ numero: '', nome: '', validade: '', cvv: '' });
     notify("Pedido enviado com sucesso!");
   };
 
@@ -255,9 +266,9 @@ export default function Cliente({
             </div>
 
             <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100">
-              <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Forma de Pagamento</h3>
+              <h3 className="text-zinc-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">Pagamento</h3>
               <select 
-                className="w-full p-5 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 outline-none font-black text-zinc-800"
+                className="w-full p-5 rounded-[25px] bg-zinc-50 border-2 border-zinc-50 outline-none font-black text-zinc-800 mb-4"
                 value={formaPagamento}
                 onChange={(e) => setFormaPagamento(e.target.value)}
               >
@@ -266,6 +277,44 @@ export default function Cliente({
                 <option value="Cartão de Crédito">Cartão de Crédito</option>
                 <option value="Cartão de Débito">Cartão de Débito</option>
               </select>
+
+              {formaPagamento === 'Pix' && (
+                <div className="p-6 bg-zinc-50 rounded-[30px] border-2 border-dashed border-zinc-200 flex flex-col items-center text-center animate-in zoom-in duration-300">
+                  <div className="p-4 bg-white rounded-3xl shadow-sm mb-4">
+                    <QrCode size={140} className="text-zinc-800" />
+                  </div>
+                  <p className="text-xs font-bold text-zinc-500 leading-tight">Escaneie o QR Code ou use o Pix Copia e Cola no seu banco.</p>
+                  <button onClick={() => notify("Chave Pix copiada!")} className="mt-4 text-orange-600 text-[10px] font-black uppercase tracking-widest bg-orange-50 px-6 py-3 rounded-full">Copiar Código Pix</button>
+                </div>
+              )}
+
+              {formaPagamento.includes('Cartão') && (
+                <div className="space-y-3 animate-in slide-in-from-top-2 duration-300">
+                  <input 
+                    type="text" 
+                    placeholder="0000 0000 0000 0000"
+                    className="w-full p-5 rounded-[20px] bg-zinc-50 border-2 border-zinc-50 outline-none font-bold text-zinc-800"
+                    value={dadosCartao.numero}
+                    onChange={(e) => setDadosCartao({...dadosCartao, numero: e.target.value})}
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input 
+                      type="text" 
+                      placeholder="MM/AA"
+                      className="w-full p-5 rounded-[20px] bg-zinc-50 border-2 border-zinc-50 outline-none font-bold text-zinc-800"
+                      value={dadosCartao.validade}
+                      onChange={(e) => setDadosCartao({...dadosCartao, validade: e.target.value})}
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="CVV"
+                      className="w-full p-5 rounded-[20px] bg-zinc-50 border-2 border-zinc-50 outline-none font-bold text-zinc-800"
+                      value={dadosCartao.cvv}
+                      onChange={(e) => setDadosCartao({...dadosCartao, cvv: e.target.value})}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-white p-6 rounded-[35px] shadow-sm border border-zinc-100">
@@ -362,15 +411,33 @@ export default function Cliente({
           <h2 className="text-2xl font-black text-zinc-800 tracking-tight leading-none">Meus pedidos</h2>
           {todosOsPedidos.length === 0 ? <p className="text-center py-20 font-bold opacity-30 uppercase">Nenhum pedido realizado ainda</p> :
             todosOsPedidos.map(p => (
-              <div key={p.id} className="rounded-[40px] border border-zinc-100 bg-white p-8 shadow-sm mb-4">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-black text-zinc-800 tracking-tight leading-none">{p.lojaNome}</h3>
-                  <span className={`px-4 py-2 rounded-full text-[10px] font-black uppercase ${p.status === 'Entregue' ? 'bg-zinc-100 text-zinc-500' : 'bg-orange-100 text-orange-600 animate-pulse'}`}>{p.status}</span>
+              <div key={p.id} className="rounded-[40px] border border-zinc-100 bg-white p-8 shadow-sm mb-6 border-l-12 border-l-orange-500 overflow-hidden relative">
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <h3 className="text-xl font-black text-zinc-800 tracking-tight leading-none mb-2">{p.lojaNome}</h3>
+                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none">#{String(p.id).split('-')[0]}</p>
+                  </div>
+                  <div className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase flex items-center gap-2 ${p.status === 'Entregue' ? 'bg-zinc-100 text-zinc-500' : 'bg-orange-100 text-orange-600 animate-pulse'}`}>
+                    {p.status === 'Entregue' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                    {p.status}
+                  </div>
                 </div>
-                <div className="bg-zinc-50 rounded-2xl p-4 text-xs font-medium text-zinc-500 leading-relaxed">{p.itens?.map(i => i.nome).join(', ')}</div>
-                <div className="mt-4 pt-4 border-t border-zinc-50 flex justify-between font-black items-center">
-                    <p className="text-2xl italic tracking-tighter text-zinc-800 leading-none">R$ {(Number(p.total) || 0).toFixed(2)}</p>
-                    <p className="text-[10px] text-zinc-400 uppercase tracking-widest">{p.pagamento}</p>
+                <div className="bg-zinc-50 rounded-3xl p-5 border border-zinc-100">
+                  <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest mb-3">Itens do Pedido</p>
+                  <p className="text-sm font-bold text-zinc-600 leading-relaxed">{p.itens?.map(i => i.nome).join(', ')}</p>
+                </div>
+                <div className="mt-6 pt-6 border-t border-zinc-50 flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] text-zinc-400 uppercase font-black tracking-widest mb-1">Total Pago</p>
+                      <p className="text-3xl italic font-black tracking-tighter text-zinc-800 leading-none">R$ {(Number(p.total) || 0).toFixed(2)}</p>
+                    </div>
+                    <div className="text-right">
+                       <div className="flex items-center gap-2 justify-end text-zinc-400 mb-1">
+                          <CreditCard size={12} />
+                          <p className="text-[10px] uppercase font-black tracking-widest leading-none">{p.pagamento}</p>
+                       </div>
+                       <p className="text-[9px] text-zinc-300 font-bold max-w-37.5 leading-tight truncate">{p.endereco}</p>
+                    </div>
                 </div>
               </div>
             ))
