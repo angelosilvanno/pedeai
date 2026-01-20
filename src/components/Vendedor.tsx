@@ -4,16 +4,20 @@ import {
   Trash2, 
   MapPin, 
   Clock, 
-  Package, 
   ShoppingBag, 
   CheckCircle, 
   User, 
   LogOut, 
   LayoutDashboard, 
   Utensils,
-  X
+  X,
+  Droplets
 } from 'lucide-react'
 import type { Pedido, Produto } from '../types'
+
+interface ProdutoComCategoria extends Produto {
+  categoria?: string;
+}
 
 interface VendedorProps {
   todosOsPedidos: Pedido[];
@@ -38,7 +42,7 @@ export default function Vendedor({
 }: VendedorProps) {
   const [abaVendedor, setAbaVendedor] = useState<'Pedidos' | 'Cardapio'>('Pedidos');
   const [mostrarModalProduto, setMostrarModalProduto] = useState(false);
-  const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '' });
+  const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '', categoria: 'Pizza' });
 
   const confirmarSaida = () => {
     handleLogout();
@@ -57,19 +61,24 @@ export default function Vendedor({
       return;
     }
 
-    const itemFormatado: Produto = {
+    const itemFormatado: ProdutoComCategoria = {
       id: crypto.randomUUID(), 
       lojaId: 1, 
       nome: novoProduto.nome, 
       preco: precoNum, 
-      descricao: "Item do cardápio"
+      descricao: novoProduto.categoria === 'Bebida' ? "Refrigerante gelado" : "Pizza artesanal",
+      categoria: novoProduto.categoria
     };
 
-    setTodosOsProdutos([itemFormatado, ...todosOsProdutos]);
-    setNovoProduto({ nome: '', preco: '' });
+    setTodosOsProdutos([itemFormatado as Produto, ...todosOsProdutos]);
+    setNovoProduto({ nome: '', preco: '', categoria: 'Pizza' });
     setMostrarModalProduto(false);
     notify("Produto adicionado!", "sucesso");
   };
+
+  const pedidosFiltrados = (todosOsPedidos || []).filter(p => 
+    p.lojaNome?.toLowerCase().includes("pizzaria") || p.lojaNome === usuarioNomeCompleto
+  );
 
   return (
     <div className="space-y-8 animate-in slide-in-from-bottom duration-500 pb-32">
@@ -93,19 +102,19 @@ export default function Vendedor({
 
       {abaVendedor === 'Pedidos' ? (
         <div className="space-y-6">
-          <h3 className="px-2 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Pedidos Recebidos</h3>
+          <h3 className="px-2 text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Pedidos da Pizzaria</h3>
           
-          {(!todosOsPedidos || todosOsPedidos.length === 0) ? (
+          {(!pedidosFiltrados || pedidosFiltrados.length === 0) ? (
             <div className="py-24 text-center">
               <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-zinc-100 mb-4">
                 <ShoppingBag size={32} className="text-zinc-300" />
               </div>
-              <p className="font-black text-zinc-300 uppercase tracking-widest leading-none">Sem pedidos no momento</p>
+              <p className="font-black text-zinc-300 uppercase tracking-widest leading-none">Sem pedidos de pizza agora</p>
             </div>
           ) : (
-            todosOsPedidos.map(p => {
-              const itensArray: Produto[] = Array.isArray(p.itens) 
-                ? p.itens 
+            pedidosFiltrados.map(p => {
+              const itensArray: ProdutoComCategoria[] = Array.isArray(p.itens) 
+                ? (p.itens as ProdutoComCategoria[])
                 : typeof p.itens === 'string' 
                   ? JSON.parse(p.itens) 
                   : [];
@@ -134,9 +143,12 @@ export default function Vendedor({
                   </div>
 
                   <div className="bg-zinc-50 p-5 rounded-3xl space-y-2 border border-zinc-100">
-                    {itensArray.map((item: Produto, idx: number) => (
+                    {itensArray.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm font-bold text-zinc-600 leading-none">
-                        <span>• {item.nome}</span>
+                        <span className="flex items-center gap-2">
+                          {item.categoria === 'Bebida' ? <Droplets size={12} className="text-blue-500" /> : '•'} 
+                          {item.nome}
+                        </span>
                         <span className="text-zinc-400">x1</span>
                       </div>
                     ))}
@@ -152,7 +164,7 @@ export default function Vendedor({
                         onClick={async () => {
                           try {
                             await mudarStatusPedidoVendedor(p.id, 'Preparando');
-                            notify("Pedido aceito!", "sucesso");
+                            notify("Iniciando preparo da pizza!", "sucesso");
                           } catch {
                             notify("Erro ao aceitar pedido", "erro");
                           }
@@ -168,7 +180,7 @@ export default function Vendedor({
                         onClick={async () => {
                           try {
                             await mudarStatusPedidoVendedor(p.id, 'Entregue');
-                            notify("Entrega finalizada!", "sucesso");
+                            notify("Saiu para entrega!", "sucesso");
                           } catch {
                             notify("Erro ao finalizar entrega", "erro");
                           }
@@ -196,39 +208,42 @@ export default function Vendedor({
             onClick={() => setMostrarModalProduto(true)}
             className="w-full bg-orange-600 text-white py-4.5 rounded-2xl font-black uppercase text-xs shadow-lg shadow-orange-200/50 flex items-center justify-center gap-3 active:scale-95 transition-all leading-none"
           >
-            <Plus size={20} /> Adicionar Produto
+            <Plus size={20} /> Adicionar Item
           </button>
 
           <div className="space-y-4">
-            <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase ml-2 tracking-widest leading-none">Produtos Atuais</h3>
+            <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase ml-2 tracking-widest leading-none">Cardápio da Pizzaria</h3>
             
             {(!todosOsProdutos || todosOsProdutos.length === 0) ? (
-               <p className="text-center py-10 text-zinc-300 font-bold uppercase">Nenhum produto cadastrado</p>
+               <p className="text-center py-10 text-zinc-300 font-bold uppercase">Nenhum item cadastrado</p>
             ) : (
-              todosOsProdutos.map((p: Produto) => (
-                <div key={p.id} className="bg-white p-6 rounded-[35px] border border-zinc-100 flex justify-between items-center shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600 leading-none">
-                      <Package size={20} />
+              todosOsProdutos.map((p) => {
+                const pc = p as ProdutoComCategoria;
+                return (
+                  <div key={pc.id} className="bg-white p-6 rounded-[35px] border border-zinc-100 flex justify-between items-center shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600 leading-none">
+                        {pc.categoria === 'Bebida' ? <Droplets size={20} /> : <Utensils size={20} />}
+                      </div>
+                      <div>
+                        <h4 className="font-black text-zinc-800 text-sm leading-none">{pc.nome}</h4>
+                        <p className="font-black text-green-600 text-xs italic mt-1 leading-none">
+                          R$ {Number(pc.preco || 0).toFixed(2)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-black text-zinc-800 text-sm leading-none">{p.nome}</h4>
-                      <p className="font-black text-green-600 text-xs italic mt-1 leading-none">
-                        R$ {Number(p.preco || 0).toFixed(2)}
-                      </p>
-                    </div>
+                    <button 
+                      onClick={() => { 
+                        setTodosOsProdutos(prev => prev.filter(p2 => p2.id !== pc.id)); 
+                        notify("Item removido.", "sucesso"); 
+                      }}
+                      className="h-12 w-12 flex items-center justify-center rounded-2xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-90 leading-none"
+                    >
+                      <Trash2 size={20} />
+                    </button>
                   </div>
-                  <button 
-                    onClick={() => { 
-                      setTodosOsProdutos(prev => prev.filter(p2 => p2.id !== p.id)); 
-                      notify("Removido.", "sucesso"); 
-                    }}
-                    className="h-12 w-12 flex items-center justify-center rounded-2xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all active:scale-90 leading-none"
-                  >
-                    <Trash2 size={20} />
-                  </button>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
@@ -244,13 +259,31 @@ export default function Vendedor({
             
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-400 uppercase ml-2 leading-none">Nome do Produto</label>
+                <label className="text-[10px] font-black text-zinc-400 uppercase ml-2 leading-none">Categoria</label>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => setNovoProduto({...novoProduto, categoria: 'Pizza'})}
+                    className={`flex-1 p-3 rounded-xl font-bold text-[10px] uppercase transition-all ${novoProduto.categoria === 'Pizza' ? 'bg-orange-600 text-white' : 'bg-zinc-100 text-zinc-400'}`}
+                  >
+                    Pizza
+                  </button>
+                  <button 
+                    onClick={() => setNovoProduto({...novoProduto, categoria: 'Bebida'})}
+                    className={`flex-1 p-3 rounded-xl font-bold text-[10px] uppercase transition-all ${novoProduto.categoria === 'Bebida' ? 'bg-blue-600 text-white' : 'bg-zinc-100 text-zinc-400'}`}
+                  >
+                    Bebida
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-zinc-400 uppercase ml-2 leading-none">Nome do Item</label>
                 <input 
                   type="text"
                   value={novoProduto.nome}
                   onChange={(e) => setNovoProduto({...novoProduto, nome: e.target.value})}
                   className="w-full bg-zinc-50 border-none rounded-2xl p-4 font-bold text-zinc-700 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
-                  placeholder="Ex: Pizza de Calabresa"
+                  placeholder={novoProduto.categoria === 'Pizza' ? "Ex: Pizza de Calabresa" : "Ex: Coca-Cola 2L (Zero)"}
                 />
               </div>
               <div className="space-y-2">
@@ -267,7 +300,7 @@ export default function Vendedor({
 
             <button 
               onClick={salvarNovoProduto}
-              className="w-full bg-zinc-900 text-white py-5 rounded-[22px] font-black uppercase text-sm shadow-xl active:scale-95 transition-all leading-none"
+              className={`w-full py-5 rounded-[22px] font-black uppercase text-sm shadow-xl active:scale-95 transition-all leading-none text-white ${novoProduto.categoria === 'Bebida' ? 'bg-blue-600' : 'bg-zinc-900'}`}
             >
               Confirmar e Salvar
             </button>
