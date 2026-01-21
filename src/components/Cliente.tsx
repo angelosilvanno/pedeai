@@ -90,6 +90,24 @@ export default function Cliente({
   const [tempRua, setTempRua] = useState('');
   const [tempNumero, setTempNumero] = useState('');
 
+  const aplicarMascaraCartao = (valor: string) => {
+    return valor
+      .replace(/\D/g, '')
+      .replace(/(\d{4})(?=\d)/g, '$1 ')
+      .substring(0, 19);
+  };
+
+  const aplicarMascaraValidade = (valor: string) => {
+    return valor
+      .replace(/\D/g, '')
+      .replace(/(\d{2})(?=\d)/g, '$1/')
+      .substring(0, 5);
+  };
+
+  const aplicarMascaraCVV = (valor: string) => {
+    return valor.replace(/\D/g, '').substring(0, 4);
+  };
+
   const estaAberto = (abertura: string, fechamento: string) => {
     try {
       const agora = new Date();
@@ -339,11 +357,23 @@ export default function Cliente({
                     placeholder="Número do Cartão"
                     className="w-full p-4 rounded-2xl bg-zinc-50 border border-zinc-200 outline-none font-bold text-sm shadow-inner text-zinc-900 placeholder:text-zinc-400"
                     value={dadosCartao.numero}
-                    onChange={(e) => setDadosCartao({...dadosCartao, numero: e.target.value})}
+                    onChange={(e) => setDadosCartao({...dadosCartao, numero: aplicarMascaraCartao(e.target.value)})}
                   />
                   <div className="grid grid-cols-2 gap-3">
-                    <input type="text" placeholder="MM/AA" className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 outline-none font-bold text-sm text-center shadow-inner text-zinc-900 placeholder:text-zinc-400" value={dadosCartao.validade} onChange={(e) => setDadosCartao({...dadosCartao, validade: e.target.value})} />
-                    <input type="text" placeholder="CVV" className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 outline-none font-bold text-sm text-center shadow-inner text-zinc-900 placeholder:text-zinc-400" value={dadosCartao.cvv} onChange={(e) => setDadosCartao({...dadosCartao, cvv: e.target.value})} />
+                    <input 
+                      type="text" 
+                      placeholder="MM/AA" 
+                      className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 outline-none font-bold text-sm text-center shadow-inner text-zinc-900 placeholder:text-zinc-400" 
+                      value={dadosCartao.validade} 
+                      onChange={(e) => setDadosCartao({...dadosCartao, validade: aplicarMascaraValidade(e.target.value)})} 
+                    />
+                    <input 
+                      type="text" 
+                      placeholder="CVV" 
+                      className="p-4 rounded-2xl bg-zinc-50 border border-zinc-200 outline-none font-bold text-sm text-center shadow-inner text-zinc-900 placeholder:text-zinc-400" 
+                      value={dadosCartao.cvv} 
+                      onChange={(e) => setDadosCartao({...dadosCartao, cvv: aplicarMascaraCVV(e.target.value)})} 
+                    />
                   </div>
                 </div>
               )}
@@ -492,7 +522,7 @@ export default function Cliente({
                       <p className="text-xs text-zinc-600 font-medium line-clamp-2 mt-1 leading-relaxed">
                         {item.descricao}
                       </p>
-                      <p className="mt-2.5 font-bold text-green-600 text-sm tracking-tight bg-green-50 w-fit px-2 py-0.5 rounded-md shadow-inner border border-green-100">
+                      <p className="mt-2.5 font-bold text-green-800 text-sm tracking-tight bg-green-50 w-fit px-2 py-0.5 rounded-md shadow-inner border border-green-100">
                         R$ {(Number(item.preco) || 0).toFixed(2)}
                       </p>
                     </div>
