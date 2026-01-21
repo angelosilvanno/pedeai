@@ -8,12 +8,13 @@ import {
   AtSign,
   ChevronRight,
   Eye,
-  EyeOff
+  EyeOff,
+  ArrowLeft
 } from 'lucide-react';
 
 interface AuthProps {
-  telaAuth: 'Login' | 'Cadastro';
-  setTelaAuth: (tela: 'Login' | 'Cadastro') => void;
+  telaAuth: 'Login' | 'Cadastro' | 'Recuperar';
+  setTelaAuth: (tela: 'Login' | 'Cadastro' | 'Recuperar') => void;
   campoLoginIdentificacao: string;
   setCampoLoginIdentificacao: (val: string) => void;
   campoLoginSenha: string;
@@ -66,8 +67,10 @@ export function AuthScreen({
 }: AuthProps) {
   
   const [erro, setErro] = useState<string | null>(null);
+  const [sucesso, setSucesso] = useState<string | null>(null);
   const [genero, setGenero] = useState<'Masculino' | 'Feminino' | 'Outro' | null>(null);
   const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [campoRecuperacao, setCampoRecuperacao] = useState('');
 
   const aplicarMascaraTelefone = (valor: string) => {
     const apenasNumeros = valor.replace(/\D/g, '');
@@ -81,6 +84,7 @@ export function AuthScreen({
 
   const processarLogin = () => {
     setErro(null);
+    setSucesso(null);
     if (!campoLoginIdentificacao || !campoLoginSenha) {
       setErro("Preencha os campos para entrar.");
       return;
@@ -88,8 +92,20 @@ export function AuthScreen({
     handleLogin();
   };
 
+  const processarRecuperacao = () => {
+    setErro(null);
+    setSucesso(null);
+    if (!campoRecuperacao) {
+      setErro("Informe seu e-mail ou username.");
+      return;
+    }
+    setSucesso("Instruções enviadas para o seu e-mail!");
+    setCampoRecuperacao('');
+  };
+
   const processarCadastro = () => {
     setErro(null);
+    setSucesso(null);
     if (!usuarioNomeCompleto || !usuarioUsername || !usuarioEmail || !usuarioSenha || !genero) {
       setErro("Preencha todos os campos obrigatórios.");
       return;
@@ -130,8 +146,14 @@ export function AuthScreen({
         </div>
 
         {erro && (
-          <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded-xl">
+          <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded-xl animate-in fade-in slide-in-from-top-2">
             <p className="text-red-700 text-[11px] font-bold">{erro}</p>
+          </div>
+        )}
+
+        {sucesso && (
+          <div className="bg-green-50 border-l-4 border-green-500 p-3 rounded-xl animate-in fade-in slide-in-from-top-2">
+            <p className="text-green-700 text-[11px] font-bold">{sucesso}</p>
           </div>
         )}
 
@@ -168,7 +190,12 @@ export function AuthScreen({
                   </button>
                 </div>
                 <div className="flex justify-end px-1">
-                  <button className="text-[11px] font-bold text-zinc-400 hover:text-orange-600 transition-colors">Esqueci minha senha</button>
+                  <button 
+                    onClick={() => { setTelaAuth('Recuperar'); setErro(null); setSucesso(null); }}
+                    className="text-[11px] font-bold text-zinc-400 hover:text-orange-600 transition-colors"
+                  >
+                    Esqueci minha senha
+                  </button>
                 </div>
               </div>
             </div>
@@ -196,8 +223,42 @@ export function AuthScreen({
             </button>
 
             <p className="text-center text-zinc-400 font-bold text-[13px]">
-              Novo por aqui? <button onClick={() => { setTelaAuth('Cadastro'); setErro(null); }} className="text-orange-600 font-black hover:underline transition-all">Criar conta</button>
+              Novo por aqui? <button onClick={() => { setTelaAuth('Cadastro'); setErro(null); setSucesso(null); }} className="text-orange-600 font-black hover:underline transition-all">Criar conta</button>
             </p>
+          </div>
+        ) : telaAuth === 'Recuperar' ? (
+          <div className="space-y-6 animate-in slide-in-from-right duration-300">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black text-zinc-900 tracking-tight">Recuperar acesso</h2>
+              <p className="text-zinc-500 text-xs font-medium leading-relaxed">Relaxa! Informe seu e-mail ou nome de usuário e enviaremos as instruções para você criar uma nova senha.</p>
+            </div>
+
+            <div className="relative group">
+              <Mail className="absolute left-4 top-4 text-zinc-400 group-focus-within:text-orange-500 transition-colors" size={18} />
+              <input 
+                type="text" 
+                placeholder="E-mail ou Username" 
+                className="w-full p-4 pl-12 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none focus:bg-white focus:ring-2 ring-orange-500 shadow-inner font-medium transition-all text-sm" 
+                value={campoRecuperacao}
+                onChange={(e) => setCampoRecuperacao(e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-4">
+              <button 
+                onClick={processarRecuperacao} 
+                className="w-full bg-zinc-900 text-white p-4 rounded-2xl font-black text-base shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              >
+                Enviar Instruções
+              </button>
+              
+              <button 
+                onClick={() => { setTelaAuth('Login'); setErro(null); setSucesso(null); }}
+                className="w-full flex items-center justify-center gap-2 text-sm font-black text-zinc-400 hover:text-orange-600 transition-colors py-2"
+              >
+                <ArrowLeft size={16} /> Voltar para o Login
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -208,7 +269,7 @@ export function AuthScreen({
                 <button
                   key={tipo}
                   type="button"
-                  onClick={() => { setTipoUsuario(tipo); setErro(null); }}
+                  onClick={() => { setTipoUsuario(tipo); setErro(null); setSucesso(null); }}
                   className={`flex-1 py-2.5 rounded-xl text-[9px] font-black transition-all ${tipoUsuario === tipo ? 'bg-orange-600 text-white shadow-md' : 'text-zinc-400'}`}
                 >
                   {tipo.toUpperCase()}
@@ -358,7 +419,7 @@ export function AuthScreen({
             </button>
             
             <p className="text-center text-zinc-400 font-bold text-[13px]">
-              Já tem conta? <button onClick={() => { setTelaAuth('Login'); setErro(null); }} className="text-orange-600 font-black hover:underline transition-all">Fazer Login</button>
+              Já tem conta? <button onClick={() => { setTelaAuth('Login'); setErro(null); setSucesso(null); }} className="text-orange-600 font-black hover:underline transition-all">Fazer Login</button>
             </p>
           </div>
         )}
