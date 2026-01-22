@@ -52,11 +52,13 @@ export default function Vendedor({
     const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
 
     return (todasAsLojas || []).find(l => {
-      const lEmail = (l as { email?: string }).email ? String((l as { email?: string }).email).toLowerCase().trim() : '';
+      const lEmail = (l as { email?: string }).email 
+        ? String((l as { email?: string }).email).toLowerCase().trim() 
+        : '';
       const lNome = (l.nome || '').toLowerCase().trim();
       
-      const matchEmail = lEmail !== '' && (lEmail === uEmail || uEmail.includes(lEmail.split('@')[0]) || lEmail.includes(uEmail.split('@')[0]));
-      const matchNome = uNome.includes(lNome) || lNome.includes(uNome) || (lNome.split(' ')[1] && uNome.includes(lNome.split(' ')[1].toLowerCase()));
+      const matchEmail = lEmail !== '' && (lEmail === uEmail || uEmail.includes(lEmail.split('@')[0]));
+      const matchNome = uNome.includes(lNome) || lNome.includes(uNome);
 
       return matchEmail || matchNome;
     });
@@ -67,7 +69,7 @@ export default function Vendedor({
     return (todosOsPedidos || []).filter(p => {
       const nomeLojaPedido = String(p.lojaNome || (p as { loja_nome?: string }).loja_nome || '').toLowerCase().trim();
       const nomeMinhaLoja = minhaLoja.nome.toLowerCase().trim();
-      return nomeLojaPedido === nomeMinhaLoja || nomeLojaPedido.includes(nomeMinhaLoja) || nomeMinhaLoja.includes(nomeLojaPedido);
+      return nomeLojaPedido === nomeMinhaLoja || nomeLojaPedido.includes(nomeMinhaLoja);
     });
   }, [todosOsPedidos, minhaLoja]);
 
@@ -86,7 +88,7 @@ export default function Vendedor({
 
   const salvarNovoProduto = () => {
     if (!minhaLoja) {
-      notify("Erro: Loja não identificada. Verifique seu cadastro.", "erro");
+      notify("Erro: Loja não identificada", "erro");
       return;
     }
 
@@ -124,9 +126,15 @@ export default function Vendedor({
           <User size={28} />
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-black text-zinc-800 tracking-tight leading-none">{minhaLoja?.nome || usuarioNomeCompleto}</h2>
-          <p className="text-orange-600 font-black text-[9px] mt-1.5 uppercase tracking-[0.15em] leading-none bg-orange-50 inline-block px-2 py-1 rounded-md">Gestão Operacional</p>
-          <p className="hidden sm:block text-zinc-400 text-[10px] font-medium mt-1 lowercase leading-none">{usuarioEmail}</p>
+          <h2 className="text-lg font-black text-zinc-800 tracking-tight leading-none">
+            {minhaLoja?.nome || usuarioNomeCompleto}
+          </h2>
+          <p className="text-orange-600 font-black text-[9px] mt-1.5 uppercase tracking-[0.15em] leading-none bg-orange-50 inline-block px-2 py-1 rounded-md">
+            Controle de Pedidos
+          </p>
+          <p className="hidden sm:block text-zinc-400 text-[10px] font-medium mt-1 lowercase leading-none">
+            {usuarioEmail}
+          </p>
         </div>
         <button 
           onClick={confirmarSaida} 
@@ -139,8 +147,12 @@ export default function Vendedor({
       {abaVendedor === 'Pedidos' ? (
         <div className="space-y-6">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">Fluxo de Pedidos</h3>
-            <span className="bg-zinc-100 text-zinc-500 text-[9px] font-bold px-2 py-1 rounded-full uppercase">Ao vivo</span>
+            <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">
+              Fluxo de Pedidos
+            </h3>
+            <span className="bg-zinc-100 text-zinc-500 text-[9px] font-bold px-2 py-1 rounded-full uppercase">
+              Ao vivo
+            </span>
           </div>
           
           {(!pedidosFiltrados || pedidosFiltrados.length === 0) ? (
@@ -148,7 +160,9 @@ export default function Vendedor({
               <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm mb-4">
                 <ShoppingBag size={32} className="text-zinc-200" />
               </div>
-              <p className="font-black text-zinc-300 uppercase tracking-widest text-xs leading-none">Aguardando pedidos...</p>
+              <p className="font-black text-zinc-300 uppercase tracking-widest text-xs leading-none">
+                Aguardando pedidos...
+              </p>
             </div>
           ) : (
             pedidosFiltrados.map(p => {
@@ -187,7 +201,7 @@ export default function Vendedor({
                     </span>
                   </div>
 
-                  <div className="bg-zinc-50/80 p-5 rounded-[28px] space-y-3 border border-zinc-100">
+                  <div className="bg-zinc-50/80 p-5 rounded-[28px] space-y-3 border border-zinc-100 shadow-inner">
                     {itensArray.map((item, idx) => (
                       <div key={idx} className="flex justify-between items-center text-sm font-bold text-zinc-700 leading-none">
                         <span className="flex items-center gap-3">
@@ -195,7 +209,9 @@ export default function Vendedor({
                           {item.categoria === 'Bebida' ? <Droplets size={14} className="text-blue-500" /> : null} 
                           {item.nome}
                         </span>
-                        <span className="bg-white px-2 py-1 rounded-lg border border-zinc-200 text-xs text-zinc-400">x1</span>
+                        <span className="bg-white px-2 py-1 rounded-lg border border-zinc-200 text-xs text-zinc-400">
+                          x1
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -209,12 +225,8 @@ export default function Vendedor({
                     {p.status === 'Pendente' && (
                       <button 
                         onClick={async () => {
-                          try {
-                            await mudarStatusPedidoVendedor(p.id, 'Preparando');
-                            notify("Iniciando preparo!", "sucesso");
-                          } catch {
-                            notify("Erro ao aceitar pedido", "erro");
-                          }
+                          await mudarStatusPedidoVendedor(p.id, 'Preparando');
+                          notify("Pedido aceito com sucesso!", "sucesso");
                         }}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white p-5 rounded-2xl font-black text-[11px] uppercase shadow-lg shadow-green-200 active:scale-95 transition-all leading-none flex items-center justify-center gap-2"
                       >
@@ -225,12 +237,8 @@ export default function Vendedor({
                     {p.status === 'Preparando' && (
                       <button 
                         onClick={async () => {
-                          try {
-                            await mudarStatusPedidoVendedor(p.id, 'Entregue');
-                            notify("Pedido concluído com sucesso!", "sucesso");
-                          } catch {
-                            notify("Erro ao finalizar entrega", "erro");
-                          }
+                          await mudarStatusPedidoVendedor(p.id, 'Entregue');
+                          notify("Pedido finalizado!", "sucesso");
                         }}
                         className="flex-1 bg-zinc-900 hover:bg-black text-white p-5 rounded-2xl font-black text-[11px] uppercase shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 leading-none"
                       >
@@ -259,12 +267,16 @@ export default function Vendedor({
           </button>
 
           <div className="space-y-4">
-            <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase ml-2 tracking-widest leading-none">Gestão de Cardápio</h3>
+            <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase ml-2 tracking-widest leading-none">
+              Gestão de Cardápio
+            </h3>
             
             {(!produtosFiltrados || produtosFiltrados.length === 0) ? (
                <div className="text-center py-20 bg-zinc-50 rounded-[40px] border border-zinc-100 border-dashed">
                  <Utensils size={40} className="mx-auto text-zinc-200 mb-4" />
-                 <p className="text-zinc-300 font-bold uppercase text-[10px] tracking-widest">Nenhum item em seu cardápio</p>
+                 <p className="text-zinc-300 font-bold uppercase text-[10px] tracking-widest">
+                   Nenhum item em seu cardápio
+                 </p>
                </div>
             ) : (
               produtosFiltrados.map((p) => {
@@ -310,7 +322,9 @@ export default function Vendedor({
                 <h3 className="text-xl font-black text-zinc-800 uppercase tracking-tighter leading-none">Novo Item</h3>
                 <p className="text-zinc-400 text-[10px] font-bold mt-2 uppercase tracking-widest">Adicionar ao cardápio</p>
               </div>
-              <button onClick={() => setMostrarModalProduto(false)} className="p-3 bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-800 transition-colors leading-none"><X size={20} /></button>
+              <button onClick={() => setMostrarModalProduto(false)} className="p-3 bg-zinc-100 rounded-full text-zinc-400 hover:text-zinc-800 transition-colors leading-none">
+                <X size={20} />
+              </button>
             </div>
             
             <div className="space-y-5">
