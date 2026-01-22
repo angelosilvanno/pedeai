@@ -67,6 +67,7 @@ export default function Cliente({
   });
 
   const [gerenciandoEnderecos, setGerenciandoEnderecos] = useState(false);
+  const [vendoHistorico, setVendoHistorico] = useState(false);
   const [meusEnderecos, setMeusEnderecos] = useState<{
     id: string, 
     titulo: string, 
@@ -142,6 +143,14 @@ export default function Cliente({
   const totalCarrinho = useMemo(() => 
     carrinho.reduce((acc, item) => acc + (Number(item?.preco) || 0), 0)
   , [carrinho]);
+
+  const pedidosAtivos = useMemo(() => 
+    todosOsPedidos.filter(p => p.status !== 'Entregue')
+  , [todosOsPedidos]);
+
+  const pedidosHistorico = useMemo(() => 
+    todosOsPedidos.filter(p => p.status === 'Entregue')
+  , [todosOsPedidos]);
 
   const realizarPedidoFinal = () => {
     if (carrinho.length === 0) return;
@@ -541,13 +550,13 @@ export default function Cliente({
       ) : abaAtiva === 'Pedidos' ? (
         <div className="p-5 space-y-6 animate-in fade-in duration-300">
           <h2 className="text-2xl font-black text-zinc-950 ml-1">Meus pedidos</h2>
-          {todosOsPedidos.length === 0 ? (
+          {pedidosAtivos.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-zinc-200 shadow-inner">
               <ClipboardList size={40} className="mx-auto text-zinc-200 mb-3" />
-              <p className="font-bold text-zinc-400 uppercase text-[10px] tracking-widest leading-none">Nenhum pedido realizado</p>
+              <p className="font-bold text-zinc-400 uppercase text-[10px] tracking-widest leading-none">Nenhum pedido em andamento</p>
             </div>
           ) : (
-            todosOsPedidos.map((p: Pedido & { loja_nome?: string; lo_nome?: string }) => (
+            pedidosAtivos.map((p: Pedido & { loja_nome?: string; lo_nome?: string }) => (
               <div key={p.id} className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm mb-4 border-l-4 border-l-orange-600 relative transition-transform hover:scale-[1.01]">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1 text-zinc-950">
@@ -620,6 +629,56 @@ export default function Cliente({
                   ))}
                 </div>
             </div>
+          ) : vendoHistorico ? (
+            <div className="space-y-6">
+                <button onClick={() => setVendoHistorico(false)} className="flex items-center gap-2 font-bold text-[10px] uppercase text-orange-600 bg-white border border-zinc-200 px-4 py-2.5 rounded-xl shadow-sm active:scale-95 transition-all"><ArrowLeft size={16} /> Perfil</button>
+                <h2 className="text-2xl font-bold text-zinc-950 ml-1 tracking-tight">Histórico de Pedidos</h2>
+                
+                {pedidosHistorico.length === 0 ? (
+                  <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-zinc-200 shadow-inner">
+                    <ClipboardList size={40} className="mx-auto text-zinc-200 mb-3" />
+                    <p className="font-bold text-zinc-400 uppercase text-[10px] tracking-widest leading-none">Nenhum pedido finalizado</p>
+                  </div>
+                ) : (
+                  pedidosHistorico.map((p: Pedido & { loja_nome?: string; lo_nome?: string }) => (
+                    <div key={p.id} className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm mb-4 border-l-4 border-l-zinc-400 relative transition-transform hover:scale-[1.01]">
+                      <div className="flex justify-between items-start mb-4">
+                        <div className="flex-1 text-zinc-950">
+                          <h3 className="font-black text-base leading-none mb-2 tracking-tight">
+                            {p.lojaNome || p.lo_nome || p.loja_nome || 'Estabelecimento'}
+                          </h3>
+                          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest leading-none">
+                            PEDIDO #{String(p.id).split('-')[0]}
+                          </p>
+                        </div>
+                        <span className="px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm bg-zinc-100 text-zinc-600">
+                          Entregue
+                        </span>
+                      </div>
+                      
+                      <div className="bg-zinc-50 rounded-xl p-4 text-xs text-zinc-700 border border-zinc-200 font-bold mb-4 leading-relaxed italic shadow-inner">
+                        {p.itens?.map(i => i.nome).join(', ')}
+                      </div>
+
+                      <div className="flex justify-between items-end border-t border-zinc-100 pt-4 px-1">
+                          <div>
+                            <p className="text-[9px] text-zinc-500 uppercase font-black mb-1 tracking-widest leading-none">Total Pago</p>
+                            <p className="text-xl font-black text-zinc-950 italic tracking-tighter leading-none">R$ {(Number(p.total) || 0).toFixed(2)}</p>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center gap-1 justify-end text-zinc-700 mb-1.5 font-bold">
+                                <CreditCard size={12} className="text-zinc-500" />
+                                <p className="text-[9px] uppercase font-black leading-none tracking-widest">{p.pagamento}</p>
+                            </div>
+                            <p className="text-[10px] text-zinc-500 font-bold max-w-30 leading-tight truncate italic">
+                              {p.endereco}
+                            </p>
+                          </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+            </div>
           ) : (
             <div className="space-y-10">
               <div className="flex items-center gap-5 py-12 bg-white -mx-5 px-8 rounded-b-[40px] shadow-sm border-b border-zinc-200 relative overflow-hidden group">
@@ -655,7 +714,7 @@ export default function Cliente({
                   <ChevronRight size={18} className="text-zinc-300 group-hover:text-zinc-500" />
                 </button>
 
-                <button onClick={() => setAbaAtiva('Pedidos')} className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-zinc-200 shadow-sm active:scale-95 group transition-all hover:shadow-md">
+                <button onClick={() => setVendoHistorico(true)} className="w-full flex items-center justify-between p-5 bg-white rounded-2xl border border-zinc-200 shadow-sm active:scale-95 group transition-all hover:shadow-md">
                   <div className="flex items-center gap-4">
                      <div className="p-2 bg-orange-50 rounded-xl group-hover:bg-orange-600 transition-colors">
                         <ClipboardList size={20} className="text-orange-600 group-hover:text-white transition-colors" />
@@ -678,7 +737,7 @@ export default function Cliente({
         ].map(item => (
           <button 
             key={item.id} 
-            onClick={() => { setAbaAtiva(item.id as 'Inicio' | 'Pedidos' | 'Perfil'); setLojaSelecionada(null); setEstaFinalizando(false); setGerenciandoEnderecos(false); }} 
+            onClick={() => { setAbaAtiva(item.id as 'Inicio' | 'Pedidos' | 'Perfil'); setLojaSelecionada(null); setEstaFinalizando(false); setGerenciandoEnderecos(false); setVendoHistorico(false); }} 
             className={`flex flex-col items-center gap-1 transition-all duration-300 ${abaAtiva === item.id ? 'text-orange-600 font-black scale-110' : 'text-zinc-500 hover:text-zinc-700'}`}
           >
             {item.i}
