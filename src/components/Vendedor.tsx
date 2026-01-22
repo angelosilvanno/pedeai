@@ -48,22 +48,26 @@ export default function Vendedor({
   const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '', categoria: 'Pizza' });
 
   const minhaLoja = useMemo(() => {
-    const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
     const uEmail = (usuarioEmail || '').toLowerCase().trim();
+    const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
 
     return (todasAsLojas || []).find(l => {
-      const lNome = (l.nome || '').toLowerCase().trim();
       const lEmail = (l as { email?: string }).email ? String((l as { email?: string }).email).toLowerCase().trim() : '';
-      return lNome === uNome || lEmail === uEmail || uNome.includes(lNome) || lNome.includes(uNome);
+      const lNome = (l.nome || '').toLowerCase().trim();
+      
+      const matchEmail = lEmail !== '' && (lEmail === uEmail || uEmail.includes(lEmail.split('@')[0]) || lEmail.includes(uEmail.split('@')[0]));
+      const matchNome = uNome.includes(lNome) || lNome.includes(uNome) || (lNome.split(' ')[1] && uNome.includes(lNome.split(' ')[1].toLowerCase()));
+
+      return matchEmail || matchNome;
     });
-  }, [todasAsLojas, usuarioNomeCompleto, usuarioEmail]);
+  }, [todasAsLojas, usuarioEmail, usuarioNomeCompleto]);
 
   const pedidosFiltrados = useMemo(() => {
     if (!minhaLoja) return [];
     return (todosOsPedidos || []).filter(p => {
       const nomeLojaPedido = String(p.lojaNome || (p as { loja_nome?: string }).loja_nome || '').toLowerCase().trim();
       const nomeMinhaLoja = minhaLoja.nome.toLowerCase().trim();
-      return nomeLojaPedido === nomeMinhaLoja;
+      return nomeLojaPedido === nomeMinhaLoja || nomeLojaPedido.includes(nomeMinhaLoja) || nomeMinhaLoja.includes(nomeLojaPedido);
     });
   }, [todosOsPedidos, minhaLoja]);
 
@@ -82,7 +86,7 @@ export default function Vendedor({
 
   const salvarNovoProduto = () => {
     if (!minhaLoja) {
-      notify("Erro: Loja não identificada", "erro");
+      notify("Erro: Loja não identificada. Verifique seu cadastro.", "erro");
       return;
     }
 
