@@ -6,6 +6,7 @@ export interface Loja {
   status: 'Pendente' | 'Ativa' | 'Bloqueada'; 
   abertura?: string;
   fechamento?: string;
+  email: string;
 }
 
 export interface Produto { 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { 
   Plus, 
   Trash2, 
@@ -14,7 +14,7 @@ import {
   Timer,
   PackageCheck
 } from 'lucide-react'
-import type { Pedido, Produto } from '../types'
+import type { Pedido, Produto, Loja } from '../types'
 
 interface ProdutoComCategoria extends Produto {
   categoria?: string;
@@ -24,6 +24,7 @@ interface VendedorProps {
   todosOsPedidos: Pedido[];
   todosOsProdutos: Produto[];
   setTodosOsProdutos: React.Dispatch<React.SetStateAction<Produto[]>>;
+  todasAsLojas: Loja[];
   notify: (msg: string, tipo?: 'sucesso' | 'erro') => void;
   handleLogout: () => void;
   usuarioNomeCompleto: string;
@@ -35,6 +36,7 @@ export default function Vendedor({
   todosOsPedidos,
   todosOsProdutos, 
   setTodosOsProdutos, 
+  todasAsLojas,
   notify, 
   handleLogout, 
   usuarioNomeCompleto, 
@@ -45,12 +47,40 @@ export default function Vendedor({
   const [mostrarModalProduto, setMostrarModalProduto] = useState(false);
   const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '', categoria: 'Pizza' });
 
+  const minhaLoja = useMemo(() => {
+    return todasAsLojas.find(l => 
+      l.nome.toLowerCase() === usuarioNomeCompleto.toLowerCase() || 
+      l.email === usuarioEmail
+    );
+  }, [todasAsLojas, usuarioNomeCompleto, usuarioEmail]);
+
+  const pedidosFiltrados = useMemo(() => {
+    if (!minhaLoja) return [];
+    return (todosOsPedidos || []).filter(p => {
+      const nomeLojaPedido = String(p.lojaNome || (p as { loja_nome?: string }).loja_nome || '').toLowerCase();
+      return nomeLojaPedido === minhaLoja.nome.toLowerCase();
+    });
+  }, [todosOsPedidos, minhaLoja]);
+
+  const produtosFiltrados = useMemo(() => {
+    if (!minhaLoja) return [];
+    return (todosOsProdutos || []).filter(p => {
+      const pLojaId = String(p.lojaId || (p as { loja_id?: string | number }).loja_id || '');
+      return pLojaId === String(minhaLoja.id);
+    });
+  }, [todosOsProdutos, minhaLoja]);
+
   const confirmarSaida = () => {
     handleLogout();
     notify("Sessão encerrada", "sucesso");
   };
 
   const salvarNovoProduto = () => {
+    if (!minhaLoja) {
+      notify("Erro: Loja não identificada", "erro");
+      return;
+    }
+
     if (!novoProduto.nome || !novoProduto.preco) {
       notify("Preencha todos os campos", "erro");
       return;
@@ -64,35 +94,28 @@ export default function Vendedor({
 
     const itemFormatado: ProdutoComCategoria = {
       id: crypto.randomUUID(), 
-      lojaId: 1, 
+      lojaId: minhaLoja.id, 
       nome: novoProduto.nome, 
       preco: precoNum, 
-      descricao: novoProduto.categoria === 'Bebida' ? "Refrigerante gelado" : "Pizza artesanal",
+      descricao: novoProduto.categoria === 'Bebida' ? "Bebida gelada" : "Item do cardápio",
       categoria: novoProduto.categoria
     };
 
-    setTodosOsProdutos([itemFormatado as Produto, ...todosOsProdutos]);
+    setTodosOsProdutos(prev => [itemFormatado as Produto, ...prev]);
     setNovoProduto({ nome: '', preco: '', categoria: 'Pizza' });
     setMostrarModalProduto(false);
-    notify("Produto adicionado!", "sucesso");
+    notify("Produto adicionado ao seu cardápio!", "sucesso");
   };
-
-  const pedidosFiltrados = (todosOsPedidos || []).filter(p => {
-    const nomeLojaPedido = String(p.lojaNome || (p as { loja_nome?: string }).loja_nome || '').toLowerCase();
-    const nomeVendedor = String(usuarioNomeCompleto || '').toLowerCase();
-    return nomeLojaPedido.includes("pizzaria") || nomeLojaPedido.includes("oliveira") || nomeLojaPedido === nomeVendedor;
-  });
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom duration-500 pb-32">
       
-      {/* Header Refinado - Fix: bg-linear-to-br */}
       <div className="flex items-center gap-4 py-6 border-b border-zinc-100 bg-white/80 backdrop-blur-md sticky top-0 z-40 -mx-5 px-5 mb-2">
         <div className="h-14 w-14 rounded-2xl bg-linear-to-br from-orange-400 to-orange-600 flex items-center justify-center border-2 border-white shadow-lg overflow-hidden text-white">
           <User size={28} />
         </div>
         <div className="flex-1">
-          <h2 className="text-lg font-black text-zinc-800 tracking-tight leading-none">{usuarioNomeCompleto}</h2>
+          <h2 className="text-lg font-black text-zinc-800 tracking-tight leading-none">{minhaLoja?.nome || usuarioNomeCompleto}</h2>
           <p className="text-orange-600 font-black text-[9px] mt-1.5 uppercase tracking-[0.15em] leading-none bg-orange-50 inline-block px-2 py-1 rounded-md">Gestão Operacional</p>
           <p className="hidden sm:block text-zinc-400 text-[10px] font-medium mt-1 lowercase leading-none">{usuarioEmail}</p>
         </div>
@@ -127,7 +150,6 @@ export default function Vendedor({
                   : [];
 
               return (
-                /* Fix: border-l-12 */
                 <div 
                   key={p.id} 
                   className={`bg-white p-6 sm:p-8 rounded-[40px] border border-zinc-100 shadow-sm space-y-6 border-l-12 transition-all relative overflow-hidden ${
@@ -180,7 +202,7 @@ export default function Vendedor({
                         onClick={async () => {
                           try {
                             await mudarStatusPedidoVendedor(p.id, 'Preparando');
-                            notify("Iniciando preparo da pizza!", "sucesso");
+                            notify("Iniciando preparo!", "sucesso");
                           } catch {
                             notify("Erro ao aceitar pedido", "erro");
                           }
@@ -196,7 +218,7 @@ export default function Vendedor({
                         onClick={async () => {
                           try {
                             await mudarStatusPedidoVendedor(p.id, 'Entregue');
-                            notify("Saiu para entrega!", "sucesso");
+                            notify("Pedido concluído com sucesso!", "sucesso");
                           } catch {
                             notify("Erro ao finalizar entrega", "erro");
                           }
@@ -230,13 +252,13 @@ export default function Vendedor({
           <div className="space-y-4">
             <h3 className="px-4 text-[10px] font-black text-zinc-400 uppercase ml-2 tracking-widest leading-none">Gestão de Cardápio</h3>
             
-            {(!todosOsProdutos || todosOsProdutos.length === 0) ? (
+            {(!produtosFiltrados || produtosFiltrados.length === 0) ? (
                <div className="text-center py-20 bg-zinc-50 rounded-[40px] border border-zinc-100 border-dashed">
                  <Utensils size={40} className="mx-auto text-zinc-200 mb-4" />
-                 <p className="text-zinc-300 font-bold uppercase text-[10px] tracking-widest">Nenhum item cadastrado</p>
+                 <p className="text-zinc-300 font-bold uppercase text-[10px] tracking-widest">Nenhum item em seu cardápio</p>
                </div>
             ) : (
-              todosOsProdutos.map((p) => {
+              produtosFiltrados.map((p) => {
                 const pc = p as ProdutoComCategoria;
                 return (
                   <div key={pc.id} className="bg-white p-5 rounded-[30px] border border-zinc-100 flex justify-between items-center shadow-sm group hover:border-orange-200 transition-colors">
@@ -271,7 +293,6 @@ export default function Vendedor({
         </div>
       )}
 
-      {/* Modal Refinado */}
       {mostrarModalProduto && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-zinc-900/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white w-full max-w-md rounded-[45px] p-8 space-y-6 shadow-2xl animate-in slide-in-from-bottom-10 duration-500 border border-zinc-100 mb-20 sm:mb-0">
@@ -334,7 +355,6 @@ export default function Vendedor({
         </div>
       )}
 
-      {/* Nav de Baixo Estilizada - Fix: tracking-widest */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-xl bg-white/90 backdrop-blur-2xl border-t border-zinc-100 px-10 py-6 flex justify-around rounded-t-[50px] shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
         <button onClick={() => setAbaVendedor('Pedidos')} className={`flex flex-col items-center gap-2 transition-all relative ${abaVendedor === 'Pedidos' ? 'text-orange-600 scale-110' : 'text-zinc-300 hover:text-zinc-400'}`}>
           <LayoutDashboard size={24} strokeWidth={abaVendedor === 'Pedidos' ? 2.5 : 2} />
