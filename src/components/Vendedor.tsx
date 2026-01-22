@@ -18,6 +18,27 @@ import type { Pedido, Produto, Loja } from '../types'
 
 interface ProdutoComCategoria extends Produto {
   categoria?: string;
+  loja_id?: string | number;
+}
+
+interface LojaExtended extends Omit<Loja, 'email'> {
+  email?: string;
+  vendedor_email?: string;
+  vendedor?: string;
+  usuario_email?: string;
+}
+
+interface PedidoExtended extends Omit<Pedido, 'lojaId' | 'lojaNome' | 'clienteNome' | 'endereco'> {
+  lojaId?: string;
+  loja_id?: string | number;
+  lojaNome?: string;
+  loja_nome?: string;
+  cliente_nome?: string;
+  clienteNome?: string;
+  endereco_entrega?: string;
+  endereco?: string;
+  vendedor_email?: string;
+  loja_email?: string;
 }
 
 interface VendedorProps {
@@ -48,35 +69,59 @@ export default function Vendedor({
   const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '', categoria: 'Pizza' });
 
   const minhaLoja = useMemo(() => {
+    if (!todasAsLojas || !Array.isArray(todasAsLojas)) return null;
+
     const uEmail = (usuarioEmail || '').toLowerCase().trim();
     const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
+    const uPrefix = uEmail.split('@')[0];
 
-    return (todasAsLojas || []).find(l => {
-      const lEmail = (l as { email?: string }).email 
-        ? String((l as { email?: string }).email).toLowerCase().trim() 
-        : '';
-      const lNome = (l.nome || '').toLowerCase().trim();
+    return (todasAsLojas as LojaExtended[]).find(l => {
+      const lEmail = String(l.email || l.vendedor_email || l.usuario_email || '').toLowerCase().trim();
+      const lNomeLoja = (l.nome || '').toLowerCase().trim();
+      const lVendedor = String(l.vendedor || '').toLowerCase().trim();
       
-      const matchEmail = lEmail !== '' && (lEmail === uEmail || uEmail.includes(lEmail.split('@')[0]));
-      const matchNome = uNome.includes(lNome) || lNome.includes(uNome);
+      const matchEmail = lEmail !== '' && (lEmail === uEmail || lEmail.includes(uPrefix) || uPrefix.includes(lEmail.split('@')[0]));
+      const matchVendedor = lVendedor !== '' && (uNome.includes(lVendedor) || lVendedor.includes(uNome));
+      const matchNomeLoja = lNomeLoja !== '' && (uNome.includes(lNomeLoja) || lNomeLoja.includes(uNome) || uPrefix.includes(lNomeLoja.replace(/\s/g, '')));
 
-      return matchEmail || matchNome;
-    });
+      return matchEmail || matchVendedor || matchNomeLoja;
+    }) || null;
   }, [todasAsLojas, usuarioEmail, usuarioNomeCompleto]);
 
   const pedidosFiltrados = useMemo(() => {
-    if (!minhaLoja) return [];
-    return (todosOsPedidos || []).filter(p => {
-      const nomeLojaPedido = String(p.lojaNome || (p as { loja_nome?: string }).loja_nome || '').toLowerCase().trim();
-      const nomeMinhaLoja = minhaLoja.nome.toLowerCase().trim();
-      return nomeLojaPedido === nomeMinhaLoja || nomeLojaPedido.includes(nomeMinhaLoja);
+    const basePedidos = Array.isArray(todosOsPedidos) ? todosOsPedidos : [];
+    if (basePedidos.length === 0) return [];
+
+    const uEmail = (usuarioEmail || '').toLowerCase().trim();
+    const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
+    const uPrefix = uEmail.split('@')[0];
+
+    return (basePedidos as PedidoExtended[]).filter(p => {
+      const pLojaId = String(p.lojaId || p.loja_id || '');
+      const pLojaNome = String(p.lojaNome || p.loja_nome || '').toLowerCase().trim();
+      const pVendedorEmail = String(p.vendedor_email || p.loja_email || '').toLowerCase().trim();
+      
+      if (minhaLoja) {
+        const minhaLojaId = String(minhaLoja.id);
+        const minhaLojaNome = minhaLoja.nome.toLowerCase().trim();
+
+        if (pLojaId !== '' && pLojaId === minhaLojaId) return true;
+        if (pLojaNome !== '' && (pLojaNome === minhaLojaNome || pLojaNome.includes(minhaLojaNome) || minhaLojaNome.includes(pLojaNome))) return true;
+      }
+
+      if (pVendedorEmail !== '' && (pVendedorEmail === uEmail || pVendedorEmail.includes(uPrefix))) return true;
+      if (pLojaNome !== '' && (uNome.includes(pLojaNome) || pLojaNome.includes(uNome) || pLojaNome.includes(uPrefix) || uPrefix.includes(pLojaNome.replace(/\s/g, '')))) return true;
+
+      return false;
     });
-  }, [todosOsPedidos, minhaLoja]);
+  }, [todosOsPedidos, minhaLoja, usuarioNomeCompleto, usuarioEmail]);
 
   const produtosFiltrados = useMemo(() => {
+    const baseProdutos = Array.isArray(todosOsProdutos) ? todosOsProdutos : [];
     if (!minhaLoja) return [];
-    return (todosOsProdutos || []).filter(p => {
-      const pLojaId = String(p.lojaId || (p as { loja_id?: string | number }).loja_id || '');
+    
+    return (baseProdutos as ProdutoComCategoria[]).filter(p => {
+      const pLojaId = String(p.lojaId || p.loja_id || '');
       return pLojaId === String(minhaLoja.id);
     });
   }, [todosOsProdutos, minhaLoja]);
@@ -165,7 +210,7 @@ export default function Vendedor({
               </p>
             </div>
           ) : (
-            pedidosFiltrados.map(p => {
+            (pedidosFiltrados as PedidoExtended[]).map(p => {
               const itensArray: ProdutoComCategoria[] = Array.isArray(p.itens) 
                 ? (p.itens as ProdutoComCategoria[])
                 : typeof p.itens === 'string' 
@@ -182,7 +227,7 @@ export default function Vendedor({
                   <div className="flex justify-between items-start">
                     <div>
                       <h4 className="font-black text-zinc-800 text-xl tracking-tight leading-none">
-                        {p.clienteNome || (p as { cliente_nome?: string }).cliente_nome || 'Cliente'}
+                        {p.clienteNome || p.cliente_nome || 'Cliente'}
                       </h4>
                       <div className="flex items-center gap-3 mt-2">
                         <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-tight flex items-center gap-1 leading-none bg-zinc-50 px-2 py-1 rounded-md border border-zinc-100">
@@ -218,7 +263,7 @@ export default function Vendedor({
 
                   <div className="flex items-start gap-2 px-2 text-xs font-bold text-zinc-500 tracking-tight leading-tight">
                     <MapPin size={16} className="text-orange-500 shrink-0" /> 
-                    <span className="uppercase">{p.endereco}</span>
+                    <span className="uppercase">{p.endereco || p.endereco_entrega}</span>
                   </div>
 
                   <div className="flex gap-3 pt-2">
