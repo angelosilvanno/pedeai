@@ -48,17 +48,22 @@ export default function Vendedor({
   const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '', categoria: 'Pizza' });
 
   const minhaLoja = useMemo(() => {
-    return (todasAsLojas || []).find(l => 
-      l.nome.toLowerCase() === usuarioNomeCompleto.toLowerCase() || 
-      l.email === usuarioEmail
-    );
+    const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
+    const uEmail = (usuarioEmail || '').toLowerCase().trim();
+
+    return (todasAsLojas || []).find(l => {
+      const lNome = (l.nome || '').toLowerCase().trim();
+      const lEmail = (l as { email?: string }).email ? String((l as { email?: string }).email).toLowerCase().trim() : '';
+      return lNome === uNome || lEmail === uEmail || uNome.includes(lNome) || lNome.includes(uNome);
+    });
   }, [todasAsLojas, usuarioNomeCompleto, usuarioEmail]);
 
   const pedidosFiltrados = useMemo(() => {
     if (!minhaLoja) return [];
     return (todosOsPedidos || []).filter(p => {
-      const nomeLojaPedido = String(p.lojaNome || (p as { loja_nome?: string }).loja_nome || '').toLowerCase();
-      return nomeLojaPedido === minhaLoja.nome.toLowerCase();
+      const nomeLojaPedido = String(p.lojaNome || (p as { loja_nome?: string }).loja_nome || '').toLowerCase().trim();
+      const nomeMinhaLoja = minhaLoja.nome.toLowerCase().trim();
+      return nomeLojaPedido === nomeMinhaLoja;
     });
   }, [todosOsPedidos, minhaLoja]);
 
