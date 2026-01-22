@@ -47,7 +47,7 @@ export default function App() {
   });
 
   const [cidadeUsuario, setCidadeUsuario] = useState('Localizando...');
-  const [telaAuth, setTelaAuth] = useState<'Login' | 'Cadastro'>('Login');
+  const [telaAuth, setTelaAuth] = useState<'Login' | 'Cadastro' | 'Recuperar'>('Login');
   
   const [formNome, setFormNome] = useState('');
   const [formUsername, setFormUsername] = useState('');
@@ -78,7 +78,7 @@ export default function App() {
     setFormNomeLoja('');
   };
 
-  const alternarTelaAuth = (tela: 'Login' | 'Cadastro') => {
+  const alternarTelaAuth = (tela: 'Login' | 'Cadastro' | 'Recuperar') => {
     setTelaAuth(tela);
     limparFormulario();
   };
@@ -131,8 +131,8 @@ export default function App() {
           
         } catch {
           setTodasAsLojas([
-            { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa' },
-            { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa' },
+            { id: 1, nome: "Pizzaria Oliveira", categoria: "Pizzas", imagem: "Pizza", status: 'Ativa', email: "pizzariaoliveira26@gmail.com" },
+            { id: 2, nome: "Burger da Mari", categoria: "Lanches", imagem: "UtensilsCrossed", status: 'Ativa', email: "mari@burger.com" },
           ]);
         }
       };
@@ -353,6 +353,7 @@ export default function App() {
                 todosOsPedidos={todosOsPedidos}
                 todosOsProdutos={todosOsProdutos}
                 setTodosOsProdutos={setTodosOsProdutos}
+                todasAsLojas={todasAsLojas}
                 notify={notify}
                 handleLogout={handleLogout}
                 usuarioNomeCompleto={usuarioNomeCompleto}

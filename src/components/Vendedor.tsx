@@ -48,7 +48,7 @@ export default function Vendedor({
   const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '', categoria: 'Pizza' });
 
   const minhaLoja = useMemo(() => {
-    return todasAsLojas.find(l => 
+    return (todasAsLojas || []).find(l => 
       l.nome.toLowerCase() === usuarioNomeCompleto.toLowerCase() || 
       l.email === usuarioEmail
     );
