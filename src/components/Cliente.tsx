@@ -52,6 +52,7 @@ export default function Cliente({
 }: ClienteProps) {
   const [abaAtiva, setAbaAtiva] = useState<'Inicio' | 'Pedidos' | 'Perfil'>('Inicio');
   const [busca, setBusca] = useState('');
+  const [categoriaSelecionada, setCategoriaSelecionada] = useState<string | null>(null);
   const [lojaSelecionada, setLojaSelecionada] = useState<Loja | null>(null);
   const [carrinho, setCarrinho] = useState<Produto[]>([]);
   const [estaFinalizando, setEstaFinalizando] = useState(false);
@@ -124,11 +125,13 @@ export default function Cliente({
   };
 
   const lojasFiltradas = useMemo(() => {
-    return (todasAsLojas || []).filter(l => 
-      l?.status === 'Ativa' && 
-      l?.nome?.toLowerCase().includes(busca.toLowerCase())
-    );
-  }, [busca, todasAsLojas]);
+    return (todasAsLojas || []).filter(l => {
+      const matchStatus = l?.status === 'Ativa';
+      const matchBusca = l?.nome?.toLowerCase().includes(busca.toLowerCase());
+      const matchCategoria = !categoriaSelecionada || l?.categoria === categoriaSelecionada;
+      return matchStatus && matchBusca && matchCategoria;
+    });
+  }, [busca, todasAsLojas, categoriaSelecionada]);
   
   const cardapioParaExibir = useMemo(() => {
     if (!lojaSelecionada || !todosOsProdutos) return [];
@@ -456,45 +459,56 @@ export default function Cliente({
                   { n: 'Doces', i: '🍩' },
                   { n: 'Açaí', i: '🍇' }
                 ].map(cat => (
-                  <button key={cat.n} className="flex flex-col items-center gap-2 min-w-18.75 group active:scale-90 transition-transform">
-                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-md border border-zinc-200 group-hover:border-orange-200 group-hover:shadow-lg transition-all">
+                  <button 
+                    key={cat.n} 
+                    onClick={() => setCategoriaSelecionada(categoriaSelecionada === cat.n ? null : cat.n)}
+                    className="flex flex-col items-center gap-2 min-w-18.75 group active:scale-90 transition-transform"
+                  >
+                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl shadow-md border transition-all ${categoriaSelecionada === cat.n ? 'bg-orange-600 border-orange-600 text-white' : 'bg-white border-zinc-200 group-hover:border-orange-200 group-hover:shadow-lg'}`}>
                       {cat.i}
                     </div>
-                    <span className="text-[10px] font-bold text-zinc-700 uppercase tracking-tight">{cat.n}</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-tight ${categoriaSelecionada === cat.n ? 'text-orange-600' : 'text-zinc-700'}`}>{cat.n}</span>
                   </button>
                 ))}
               </div>
 
               <div className="grid gap-3 px-1">
                 <h2 className="text-lg font-black flex items-center gap-2 text-zinc-950 ml-1">Destaques da Cidade <UtensilsCrossed size={16} className="text-orange-500" /></h2>
-                {lojasFiltradas.map(loja => {
-                  const aberto = estaAberto(loja.abertura || "00:00", loja.fechamento || "23:59");
-                  return (
-                    <div key={loja.id} onClick={() => setLojaSelecionada(loja)} className="relative flex items-center rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group active:scale-[0.98]">
-                      <div className={`absolute left-0 top-6 bottom-6 w-1 rounded-r-full ${aberto ? 'bg-green-500 shadow-md shadow-green-100' : 'bg-zinc-300'}`}></div>
-                      <div className="h-16 w-16 flex items-center justify-center rounded-xl bg-zinc-50 border border-zinc-200 group-hover:bg-orange-50 transition-colors shadow-inner overflow-hidden">
-                        {getStoreIcon(loja.imagem)}
-                      </div>
-                      <div className="ml-4 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-zinc-950 text-sm leading-none">{loja.nome}</h3>
-                          <span className="flex items-center gap-0.5 text-orange-600 font-bold text-[10px] bg-orange-50 px-1.5 py-0.5 rounded-full"><Star size={10} fill="currentColor" /> 5.0</span>
+                {lojasFiltradas.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-3xl border border-zinc-100">
+                    <Search size={32} className="mx-auto text-zinc-200 mb-2" />
+                    <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Nenhum local encontrado</p>
+                  </div>
+                ) : (
+                  lojasFiltradas.map(loja => {
+                    const aberto = estaAberto(loja.abertura || "00:00", loja.fechamento || "23:59");
+                    return (
+                      <div key={loja.id} onClick={() => setLojaSelecionada(loja)} className="relative flex items-center rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden group active:scale-[0.98]">
+                        <div className={`absolute left-0 top-6 bottom-6 w-1 rounded-r-full ${aberto ? 'bg-green-500 shadow-md shadow-green-100' : 'bg-zinc-300'}`}></div>
+                        <div className="h-16 w-16 flex items-center justify-center rounded-xl bg-zinc-50 border border-zinc-200 group-hover:bg-orange-50 transition-colors shadow-inner overflow-hidden">
+                          {getStoreIcon(loja.imagem)}
                         </div>
-                        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider mt-1.5 leading-none">{loja.categoria}</p>
-                        <div className="flex items-center gap-3 mt-3">
-                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase shadow-sm ${aberto ? 'text-green-600 bg-green-50' : 'text-zinc-600 bg-zinc-100'}`}>
-                            {aberto ? 'Aberto' : 'Fechado'}
-                          </span>
-                          <span className="text-[10px] text-zinc-700 font-bold flex items-center gap-1 leading-none">
-                            <Clock size={12} className="text-zinc-500" /> 
-                            {loja.abertura} - {loja.fechamento}
-                          </span>
+                        <div className="ml-4 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-zinc-950 text-sm leading-none">{loja.nome}</h3>
+                            <span className="flex items-center gap-0.5 text-orange-600 font-bold text-[10px] bg-orange-50 px-1.5 py-0.5 rounded-full"><Star size={10} fill="currentColor" /> 5.0</span>
+                          </div>
+                          <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider mt-1.5 leading-none">{loja.categoria}</p>
+                          <div className="flex items-center gap-3 mt-3">
+                            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase shadow-sm ${aberto ? 'text-green-600 bg-green-50' : 'text-zinc-600 bg-zinc-100'}`}>
+                              {aberto ? 'Aberto' : 'Fechado'}
+                            </span>
+                            <span className="text-[10px] text-zinc-700 font-bold flex items-center gap-1 leading-none">
+                              <Clock size={12} className="text-zinc-500" /> 
+                              {loja.abertura} - {loja.fechamento}
+                            </span>
+                          </div>
                         </div>
+                        <ChevronRight size={18} className="text-zinc-300 group-hover:text-orange-500 transition-colors" />
                       </div>
-                      <ChevronRight size={18} className="text-zinc-300 group-hover:text-orange-500 transition-colors" />
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
