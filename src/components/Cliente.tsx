@@ -128,7 +128,19 @@ export default function Cliente({
     return (todasAsLojas || []).filter(l => {
       const matchStatus = l?.status === 'Ativa';
       const matchBusca = l?.nome?.toLowerCase().includes(busca.toLowerCase());
-      const matchCategoria = !categoriaSelecionada || l?.categoria === categoriaSelecionada;
+      
+      let matchCategoria = true;
+      if (categoriaSelecionada) {
+        const catLoja = (l?.categoria || '').toUpperCase();
+        const catFiltro = categoriaSelecionada.toUpperCase();
+        
+        if (catFiltro === 'DOCES') {
+          matchCategoria = catLoja === 'DOCERIA' || catLoja === 'DOCES';
+        } else {
+          matchCategoria = catLoja === catFiltro;
+        }
+      }
+      
       return matchStatus && matchBusca && matchCategoria;
     });
   }, [busca, todasAsLojas, categoriaSelecionada]);
