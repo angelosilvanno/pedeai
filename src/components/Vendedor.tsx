@@ -65,6 +65,7 @@ export default function Vendedor({
   mudarStatusPedidoVendedor  
 }: VendedorProps) {
   const [abaVendedor, setAbaVendedor] = useState<'Pedidos' | 'Cardapio'>('Pedidos');
+  const [subAbaPedidos, setSubAbaPedidos] = useState<'Ativos' | 'Concluidos'>('Ativos');
   const [mostrarModalProduto, setMostrarModalProduto] = useState(false);
   const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '', categoria: 'Pizza' });
 
@@ -115,6 +116,13 @@ export default function Vendedor({
       return false;
     });
   }, [todosOsPedidos, minhaLoja, usuarioNomeCompleto, usuarioEmail]);
+
+  const pedidosExibidos = useMemo(() => {
+    if (subAbaPedidos === 'Ativos') {
+      return pedidosFiltrados.filter(p => p.status === 'Pendente' || p.status === 'Preparando');
+    }
+    return pedidosFiltrados.filter(p => p.status === 'Entregue');
+  }, [pedidosFiltrados, subAbaPedidos]);
 
   const produtosFiltrados = useMemo(() => {
     const baseProdutos = Array.isArray(todosOsProdutos) ? todosOsProdutos : [];
@@ -191,26 +199,43 @@ export default function Vendedor({
 
       {abaVendedor === 'Pedidos' ? (
         <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-            <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">
-              Fluxo de Pedidos
-            </h3>
-            <span className="bg-zinc-100 text-zinc-500 text-[9px] font-bold px-2 py-1 rounded-full uppercase">
-              Ao vivo
-            </span>
+          <div className="flex flex-col gap-4 px-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] leading-none">
+                Fluxo de Pedidos
+              </h3>
+              <span className="bg-zinc-100 text-zinc-500 text-[9px] font-bold px-2 py-1 rounded-full uppercase">
+                Ao vivo
+              </span>
+            </div>
+
+            <div className="bg-zinc-100 p-1 rounded-2xl flex items-center shadow-inner">
+              <button 
+                onClick={() => setSubAbaPedidos('Ativos')}
+                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${subAbaPedidos === 'Ativos' ? 'bg-white text-orange-600 shadow-sm' : 'text-zinc-400'}`}
+              >
+                Ativos ({pedidosFiltrados.filter(p => p.status !== 'Entregue').length})
+              </button>
+              <button 
+                onClick={() => setSubAbaPedidos('Concluidos')}
+                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${subAbaPedidos === 'Concluidos' ? 'bg-white text-green-600 shadow-sm' : 'text-zinc-400'}`}
+              >
+                Concluídos ({pedidosFiltrados.filter(p => p.status === 'Entregue').length})
+              </button>
+            </div>
           </div>
           
-          {(!pedidosFiltrados || pedidosFiltrados.length === 0) ? (
+          {(!pedidosExibidos || pedidosExibidos.length === 0) ? (
             <div className="py-24 text-center bg-zinc-50/50 rounded-[40px] border-2 border-dashed border-zinc-100">
               <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-sm mb-4">
                 <ShoppingBag size={32} className="text-zinc-200" />
               </div>
               <p className="font-black text-zinc-300 uppercase tracking-widest text-xs leading-none">
-                Aguardando pedidos...
+                {subAbaPedidos === 'Ativos' ? 'Nenhum pedido ativo...' : 'Nenhum pedido concluído...'}
               </p>
             </div>
           ) : (
-            (pedidosFiltrados as PedidoExtended[]).map(p => {
+            (pedidosExibidos as PedidoExtended[]).map(p => {
               const itensArray: ProdutoComCategoria[] = Array.isArray(p.itens) 
                 ? (p.itens as ProdutoComCategoria[])
                 : typeof p.itens === 'string' 
