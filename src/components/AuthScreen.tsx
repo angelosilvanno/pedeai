@@ -307,7 +307,7 @@ export function AuthScreen({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-3">
                   {tipoUsuario === 'Vendedor' && (
                     <div className="relative group animate-in slide-in-from-top duration-300">
                       <Store className="absolute left-4 top-3.5 text-orange-400 group-focus-within:text-orange-600 transition-colors" size={16} />
@@ -321,29 +321,31 @@ export function AuthScreen({
                     </div>
                   )}
                   
-                  <div className="relative group">
-                    <AtSign className="absolute left-4 top-3.5 text-zinc-400 group-focus-within:text-orange-500 transition-colors" size={16} />
-                    <input 
-                      type="text" 
-                      placeholder="Username" 
-                      className="w-full p-3.5 pl-11 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none focus:bg-white focus:ring-2 ring-orange-500 shadow-inner font-medium text-sm transition-all" 
-                      value={usuarioUsername}
-                      onChange={(e) => setUsuarioUsername(e.target.value)}
-                    />
-                  </div>
-
-                  {tipoUsuario !== 'Admin' && (
+                  <div className={tipoUsuario !== 'Admin' ? "grid grid-cols-2 gap-3" : "grid grid-cols-1"}>
                     <div className="relative group">
-                      <Phone className="absolute left-4 top-3.5 text-zinc-400 group-focus-within:text-orange-500 transition-colors" size={16} />
+                      <AtSign className="absolute left-4 top-3.5 text-zinc-400 group-focus-within:text-orange-500 transition-colors" size={16} />
                       <input 
-                        type="tel" 
-                        placeholder="(00) 00000-0000" 
+                        type="text" 
+                        placeholder="Username" 
                         className="w-full p-3.5 pl-11 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none focus:bg-white focus:ring-2 ring-orange-500 shadow-inner font-medium text-sm transition-all" 
-                        value={usuarioTelefone}
-                        onChange={(e) => setUsuarioTelefone(aplicarMascaraTelefone(e.target.value))}
+                        value={usuarioUsername}
+                        onChange={(e) => setUsuarioUsername(e.target.value)}
                       />
                     </div>
-                  )}
+
+                    {tipoUsuario !== 'Admin' && (
+                      <div className="relative group">
+                        <Phone className="absolute left-4 top-3.5 text-zinc-400 group-focus-within:text-orange-500 transition-colors" size={16} />
+                        <input 
+                          type="tel" 
+                          placeholder="(00) 00000-0000" 
+                          className="w-full p-3.5 pl-11 bg-zinc-50 border border-zinc-100 rounded-2xl outline-none focus:bg-white focus:ring-2 ring-orange-500 shadow-inner font-medium text-sm transition-all" 
+                          value={usuarioTelefone}
+                          onChange={(e) => setUsuarioTelefone(aplicarMascaraTelefone(e.target.value))}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="py-1">
