@@ -233,6 +233,16 @@ export default function Cliente({
     notify("Endereço removido.");
   };
 
+  const irParaInicio = () => {
+    setAbaAtiva('Inicio');
+    setLojaSelecionada(null);
+    setEstaFinalizando(false);
+    setGerenciandoEnderecos(false);
+    setVendoHistorico(false);
+    setCategoriaSelecionada(null);
+    setBusca('');
+  };
+
   return (
     <div className="min-h-screen pb-44 bg-[#F8F9FA] font-sans text-zinc-900">
       
@@ -757,13 +767,13 @@ export default function Cliente({
       
       <nav className="fixed bottom-0 left-0 right-0 z-40 mx-auto max-w-xl bg-white/95 backdrop-blur-md border-t border-zinc-200 p-5 flex justify-around rounded-t-4xl shadow-[0_-8px_30px_rgba(0,0,0,0.05)]">
         {[
-          { id: 'Inicio', i: <Home size={22} />, l: 'Início' },
-          { id: 'Pedidos', i: <ClipboardList size={22} />, l: 'Pedidos' },
-          { id: 'Perfil', i: <User size={22} />, l: 'Perfil' }
+          { id: 'Inicio', i: <Home size={22} />, l: 'Início', action: irParaInicio },
+          { id: 'Pedidos', i: <ClipboardList size={22} />, l: 'Pedidos', action: () => { setAbaAtiva('Pedidos'); setLojaSelecionada(null); setEstaFinalizando(false); setGerenciandoEnderecos(false); setVendoHistorico(false); } },
+          { id: 'Perfil', i: <User size={22} />, l: 'Perfil', action: () => { setAbaAtiva('Perfil'); setLojaSelecionada(null); setEstaFinalizando(false); setGerenciandoEnderecos(false); setVendoHistorico(false); } }
         ].map(item => (
           <button 
             key={item.id} 
-            onClick={() => { setAbaAtiva(item.id as 'Inicio' | 'Pedidos' | 'Perfil'); setLojaSelecionada(null); setEstaFinalizando(false); setGerenciandoEnderecos(false); setVendoHistorico(false); }} 
+            onClick={item.action} 
             className={`flex flex-col items-center gap-1 transition-all duration-300 ${abaAtiva === item.id ? 'text-orange-600 font-black scale-110' : 'text-zinc-500 hover:text-zinc-700'}`}
           >
             {item.i}
