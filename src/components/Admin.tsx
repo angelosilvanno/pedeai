@@ -38,7 +38,7 @@ export default function Admin({
   usuarioNomeCompleto, 
   usuarioEmail 
 }: AdminProps) {
-  const [abaAdmin, setAbaAdmin] = useState<'Dash' | 'Lojas'>('Dash');
+  const [abaAdmin, setAbaAdmin] = useState<'Dash' | 'Estabelecimentos'>('Dash');
   const [isModalAvisoAberto, setIsModalAvisoAberto] = useState(false);
   const [mensagemAviso, setMensagemAviso] = useState('');
 
@@ -56,7 +56,7 @@ export default function Admin({
       notify("Escreva uma mensagem antes de enviar.", "erro");
       return;
     }
-    notify("Aviso enviado para todos os parceiros!");
+    notify("Aviso enviado para todos os estabelecimentos parceiros!");
     setMensagemAviso('');
     setIsModalAvisoAberto(false);
   };
@@ -72,12 +72,12 @@ export default function Admin({
     setIsModalCupomAberto(false);
   };
 
-  const enviarNotificacaoLojas = () => {
+  const enviarNotificacaoEstabelecimentos = () => {
     if (!mensagemNotificacao.trim()) {
       notify("Digite o conteúdo da notificação.", "erro");
       return;
     }
-    notify("Notificação enviada para as lojas!");
+    notify("Notificação enviada para os estabelecimentos!");
     setMensagemNotificacao('');
     setIsModalNotificarAberto(false);
   };
@@ -155,7 +155,7 @@ export default function Admin({
                 <div className="p-2 bg-blue-50 text-blue-500 rounded-xl group-hover:bg-blue-500 group-hover:text-white transition-colors">
                   <Bell size={18} />
                 </div>
-                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter text-center leading-tight">Notificar Lojas</span>
+                <span className="text-[9px] font-black text-zinc-600 uppercase tracking-tighter text-center leading-tight">Notificar Estabelecimentos</span>
               </button>
 
               <button 
@@ -173,7 +173,7 @@ export default function Admin({
         </div>
       ) : (
         <div className="space-y-5 px-1">
-          <h3 className="text-[10px] font-black text-zinc-400 uppercase ml-4 tracking-[0.2em] leading-none">Gestão de Lojas</h3>
+          <h3 className="text-[10px] font-black text-zinc-400 uppercase ml-4 tracking-[0.2em] leading-none">Gestão de Estabelecimentos</h3>
           
           {todasAsLojas.map(loja => (
             <div key={loja.id} className="bg-white p-5 rounded-[35px] border border-zinc-100 flex items-center justify-between shadow-sm hover:shadow-md transition-all group">
@@ -194,10 +194,10 @@ export default function Admin({
                   <button 
                     onClick={() => { 
                       setTodasAsLojas(todasAsLojas.map(l => l.id === loja.id ? {...l, status: 'Bloqueada'} : l)); 
-                      notify("Loja bloqueada."); 
+                      notify("Estabelecimento bloqueado."); 
                     }}
                     className="h-12 w-12 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-90 leading-none"
-                    title="Bloquear Loja"
+                    title="Bloquear Estabelecimento"
                   >
                     <Lock size={18} />
                   </button>
@@ -205,7 +205,7 @@ export default function Admin({
                   <button 
                     onClick={() => { 
                       setTodasAsLojas(todasAsLojas.map(l => l.id === loja.id ? {...l, status: 'Ativa'} : l)); 
-                      notify("Loja ativada!"); 
+                      notify("Estabelecimento ativado!"); 
                     }}
                     className="h-12 px-6 bg-zinc-900 text-white rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-black transition-all active:scale-90 leading-none"
                   >
@@ -267,7 +267,7 @@ export default function Admin({
                 <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
                   <Bell size={20} />
                 </div>
-                <h4 className="font-black text-zinc-800 uppercase text-xs tracking-widest">Notificar Parceiros</h4>
+                <h4 className="font-black text-zinc-800 uppercase text-xs tracking-widest">Notificar Estabelecimentos</h4>
               </div>
               <button onClick={() => setIsModalNotificarAberto(false)} className="p-2 text-zinc-400 hover:text-zinc-800 transition-colors">
                 <X size={20} />
@@ -275,12 +275,12 @@ export default function Admin({
             </div>
             <textarea 
               className="w-full h-32 p-5 bg-zinc-50 border border-zinc-100 rounded-3xl outline-none focus:ring-2 ring-blue-400 font-medium text-sm resize-none"
-              placeholder="Digite a notificação interna para os lojistas..."
+              placeholder="Digite a notificação interna para os parceiros..."
               value={mensagemNotificacao}
               onChange={(e) => setMensagemNotificacao(e.target.value)}
             />
             <button 
-              onClick={enviarNotificacaoLojas}
+              onClick={enviarNotificacaoEstabelecimentos}
               className="w-full mt-4 bg-blue-600 text-white p-5 rounded-3xl font-black text-sm uppercase tracking-widest shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               Enviar Notificação <Send size={16} />
@@ -328,11 +328,11 @@ export default function Admin({
           <span className="text-[10px] font-black uppercase tracking-tighter leading-none">Métricas</span>
         </button>
         <button 
-          onClick={() => setAbaAdmin('Lojas')} 
-          className={`flex flex-col items-center gap-1.5 transition-all ${abaAdmin === 'Lojas' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}
+          onClick={() => setAbaAdmin('Estabelecimentos')} 
+          className={`flex flex-col items-center gap-1.5 transition-all ${abaAdmin === 'Estabelecimentos' ? 'text-orange-600 scale-110' : 'text-zinc-300'}`}
         >
           <Store size={24} />
-          <span className="text-[10px] font-black uppercase tracking-tighter leading-none">Parceiros</span>
+          <span className="text-[10px] font-black uppercase tracking-tighter leading-none">Comércio</span>
         </button>
       </nav>
       
