@@ -76,13 +76,14 @@ export default function Vendedor({
   const minhaLoja = useMemo(() => {
     if (!todasAsLojas || !Array.isArray(todasAsLojas)) return null;
 
-    const uId = usuarioId;
+    const uId = String(usuarioId || '');
     const uEmail = (usuarioEmail || '').toLowerCase().trim();
     const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
     const uPrefix = uEmail.split('@')[0];
 
     return (todasAsLojas as LojaExtended[]).find(l => {
-      if (l.vendedor_id && l.vendedor_id === uId) return true;
+      const lVendedorId = String(l.vendedor_id || '');
+      if (uId !== '' && lVendedorId === uId) return true;
 
       const lEmail = String(l.email || l.vendedor_email || l.usuario_email || '').toLowerCase().trim();
       const lNomeLoja = (l.nome || '').toLowerCase().trim();
@@ -100,12 +101,13 @@ export default function Vendedor({
     const basePedidos = Array.isArray(todosOsPedidos) ? todosOsPedidos : [];
     if (basePedidos.length === 0) return [];
 
-    const uId = usuarioId;
+    const uId = String(usuarioId || '');
     const uEmail = (usuarioEmail || '').toLowerCase().trim();
     const uPrefix = uEmail.split('@')[0];
 
     return (basePedidos as PedidoExtended[]).filter(p => {
-      if (p.vendedor_id && p.vendedor_id === uId) return true;
+      const pVendedorId = String(p.vendedor_id || '');
+      if (uId !== '' && pVendedorId === uId) return true;
 
       const pLojaId = String(p.lojaId || p.loja_id || '');
       const pLojaNome = String(p.lojaNome || p.loja_nome || '').toLowerCase().trim();
@@ -188,10 +190,10 @@ export default function Vendedor({
         </div>
         <div className="flex-1">
           <h2 className="text-lg font-black text-zinc-800 tracking-tight leading-none">
-            {minhaLoja?.nome || usuarioNomeCompleto}
+            {minhaLoja ? minhaLoja.nome : usuarioNomeCompleto}
           </h2>
           <p className="text-orange-600 font-black text-[9px] mt-1.5 uppercase tracking-[0.15em] leading-none bg-orange-50 inline-block px-2 py-1 rounded-md">
-            Controle de Pedidos
+            {minhaLoja ? "Controle de Pedidos" : "Vendedor não vinculado"}
           </p>
           <p className="hidden sm:block text-zinc-400 text-[10px] font-medium mt-1 lowercase leading-none">
             {usuarioEmail}
