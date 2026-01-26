@@ -33,6 +33,7 @@ interface PedidoExtended extends Omit<Pedido, 'lojaId' | 'lojaNome' | 'clienteNo
   lojaId?: string;
   loja_id?: string | number;
   lojaNome?: string;
+  lo_nome?: string;
   loja_nome?: string;
   cliente_nome?: string;
   clienteNome?: string;
@@ -73,21 +74,27 @@ export default function Vendedor({
   const [mostrarModalProduto, setMostrarModalProduto] = useState(false);
   const [novoProduto, setNovoProduto] = useState({ nome: '', preco: '', categoria: 'Pizza' });
 
+  const normalizar = (txt: string) => 
+    txt.toLowerCase()
+       .normalize("NFD")
+       .replace(/[\u0300-\u036f]/g, "")
+       .trim();
+
   const minhaLoja = useMemo(() => {
     if (!todasAsLojas || !Array.isArray(todasAsLojas)) return null;
 
     const uId = String(usuarioId || '');
-    const uEmail = (usuarioEmail || '').toLowerCase().trim();
-    const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
+    const uEmail = normalizar(usuarioEmail || '');
+    const uNome = normalizar(usuarioNomeCompleto || '');
     const uPrefix = uEmail.split('@')[0];
 
     return (todasAsLojas as LojaExtended[]).find(l => {
       const lVendedorId = String(l.vendedor_id || '');
       if (uId !== '' && lVendedorId === uId) return true;
 
-      const lEmail = String(l.email || l.vendedor_email || l.usuario_email || '').toLowerCase().trim();
-      const lNomeLoja = (l.nome || '').toLowerCase().trim();
-      const lVendedor = String(l.vendedor || '').toLowerCase().trim();
+      const lEmail = normalizar(l.email || l.vendedor_email || l.usuario_email || '');
+      const lNomeLoja = normalizar(l.nome || '');
+      const lVendedor = normalizar(l.vendedor || '');
       
       const matchEmail = lEmail !== '' && (lEmail === uEmail || lEmail.includes(uPrefix) || uPrefix.includes(lEmail.split('@')[0]));
       const matchVendedor = lVendedor !== '' && (uNome.includes(lVendedor) || lVendedor.includes(uNome));
@@ -102,7 +109,7 @@ export default function Vendedor({
     if (basePedidos.length === 0) return [];
 
     const uId = String(usuarioId || '');
-    const uEmail = (usuarioEmail || '').toLowerCase().trim();
+    const uEmail = normalizar(usuarioEmail || '');
     const uPrefix = uEmail.split('@')[0];
 
     return (basePedidos as PedidoExtended[]).filter(p => {
@@ -110,12 +117,12 @@ export default function Vendedor({
       if (uId !== '' && pVendedorId === uId) return true;
 
       const pLojaId = String(p.lojaId || p.loja_id || '');
-      const pLojaNome = String(p.lojaNome || p.loja_nome || '').toLowerCase().trim();
-      const pVendedorEmail = String(p.vendedor_email || p.loja_email || '').toLowerCase().trim();
+      const pLojaNome = normalizar(p.lojaNome || p.lo_nome || p.loja_nome || '');
+      const pVendedorEmail = normalizar(p.vendedor_email || p.loja_email || '');
       
       if (minhaLoja) {
         const minhaLojaId = String(minhaLoja.id);
-        const minhaLojaNome = minhaLoja.nome.toLowerCase().trim();
+        const minhaLojaNome = normalizar(minhaLoja.nome);
 
         if (pLojaId !== '' && pLojaId === minhaLojaId) return true;
         if (pLojaNome !== '' && (pLojaNome === minhaLojaNome || pLojaNome.includes(minhaLojaNome) || minhaLojaNome.includes(pLojaNome))) return true;
