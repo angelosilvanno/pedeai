@@ -56,6 +56,7 @@ export default function Cliente({
   const [lojaSelecionada, setLojaSelecionada] = useState<Loja | null>(null);
   const [carrinho, setCarrinho] = useState<Produto[]>([]);
   const [estaFinalizando, setEstaFinalizando] = useState(false);
+  const [isEnviandoPedido, setIsEnviandoPedido] = useState(false);
   const [enderecoEntrega, setEnderecoEntrega] = useState('');
   const [novoEndereco, setNovoEndereco] = useState('');
   const [formaPagamento, setFormaPagamento] = useState('Dinheiro');
@@ -168,7 +169,7 @@ export default function Cliente({
   , [todosOsPedidos]);
 
   const realizarPedidoFinal = () => {
-    if (carrinho.length === 0) return;
+    if (isEnviandoPedido || carrinho.length === 0) return;
 
     const enderecoFinal = novoEndereco.trim() || enderecoEntrega;
     if (!enderecoFinal || enderecoFinal.includes("não definido")) {
@@ -181,6 +182,8 @@ export default function Cliente({
 
     if (!lojaSelecionada) return notify("Erro: Estabelecimento não selecionado.", 'erro');
     
+    setIsEnviandoPedido(true);
+
     const idPedido = crypto.randomUUID();
 
     const novoPedido: Pedido = {
@@ -206,6 +209,7 @@ export default function Cliente({
     setDadosCartao({ numero: '', nome: '', validade: '', cvv: '' });
     
     notify("Pedido enviado com sucesso!");
+    setIsEnviandoPedido(false);
   };
 
   const salvarEnderecoModal = () => {
@@ -436,10 +440,10 @@ export default function Cliente({
 
             <button 
               onClick={realizarPedidoFinal}
-              disabled={(!enderecoEntrega && !novoEndereco)}
-              className={`w-full py-5 rounded-2xl font-bold text-lg shadow-lg transition-all active:scale-95 mb-10 ${ (enderecoEntrega || novoEndereco) ? "bg-orange-600 text-white shadow-orange-200/50" : "bg-zinc-300 text-zinc-500 cursor-not-allowed"}`}
+              disabled={isEnviandoPedido || (!enderecoEntrega && !novoEndereco)}
+              className={`w-full py-5 rounded-2xl font-bold text-lg shadow-lg transition-all active:scale-95 mb-10 ${ (enderecoEntrega || novoEndereco) && !isEnviandoPedido ? "bg-orange-600 text-white shadow-orange-200/50" : "bg-zinc-300 text-zinc-500 cursor-not-allowed"}`}
             >
-              Confirmar Pedido!
+              {isEnviandoPedido ? "Enviando..." : "Confirmar Pedido!"}
             </button>
           </div>
         ) : !lojaSelecionada ? (
