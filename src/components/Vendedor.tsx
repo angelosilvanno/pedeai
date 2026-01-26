@@ -26,6 +26,7 @@ interface LojaExtended extends Omit<Loja, 'email'> {
   vendedor_email?: string;
   vendedor?: string;
   usuario_email?: string;
+  vendedor_id?: string;
 }
 
 interface PedidoExtended extends Omit<Pedido, 'lojaId' | 'lojaNome' | 'clienteNome' | 'endereco'> {
@@ -39,6 +40,7 @@ interface PedidoExtended extends Omit<Pedido, 'lojaId' | 'lojaNome' | 'clienteNo
   endereco?: string;
   vendedor_email?: string;
   loja_email?: string;
+  vendedor_id?: string;
 }
 
 interface VendedorProps {
@@ -50,6 +52,7 @@ interface VendedorProps {
   handleLogout: () => void;
   usuarioNomeCompleto: string;
   usuarioEmail: string;
+  usuarioId: string;
   mudarStatusPedidoVendedor: (pedidoId: string, novoStatus: Pedido['status']) => Promise<void>;
 }
 
@@ -62,6 +65,7 @@ export default function Vendedor({
   handleLogout, 
   usuarioNomeCompleto, 
   usuarioEmail,
+  usuarioId,
   mudarStatusPedidoVendedor  
 }: VendedorProps) {
   const [abaVendedor, setAbaVendedor] = useState<'Pedidos' | 'Cardapio'>('Pedidos');
@@ -72,11 +76,14 @@ export default function Vendedor({
   const minhaLoja = useMemo(() => {
     if (!todasAsLojas || !Array.isArray(todasAsLojas)) return null;
 
+    const uId = usuarioId;
     const uEmail = (usuarioEmail || '').toLowerCase().trim();
     const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
     const uPrefix = uEmail.split('@')[0];
 
     return (todasAsLojas as LojaExtended[]).find(l => {
+      if (l.vendedor_id && l.vendedor_id === uId) return true;
+
       const lEmail = String(l.email || l.vendedor_email || l.usuario_email || '').toLowerCase().trim();
       const lNomeLoja = (l.nome || '').toLowerCase().trim();
       const lVendedor = String(l.vendedor || '').toLowerCase().trim();
@@ -87,17 +94,19 @@ export default function Vendedor({
 
       return matchEmail || matchVendedor || matchNomeLoja;
     }) || null;
-  }, [todasAsLojas, usuarioEmail, usuarioNomeCompleto]);
+  }, [todasAsLojas, usuarioEmail, usuarioNomeCompleto, usuarioId]);
 
   const pedidosFiltrados = useMemo(() => {
     const basePedidos = Array.isArray(todosOsPedidos) ? todosOsPedidos : [];
     if (basePedidos.length === 0) return [];
 
+    const uId = usuarioId;
     const uEmail = (usuarioEmail || '').toLowerCase().trim();
-    const uNome = (usuarioNomeCompleto || '').toLowerCase().trim();
     const uPrefix = uEmail.split('@')[0];
 
     return (basePedidos as PedidoExtended[]).filter(p => {
+      if (p.vendedor_id && p.vendedor_id === uId) return true;
+
       const pLojaId = String(p.lojaId || p.loja_id || '');
       const pLojaNome = String(p.lojaNome || p.loja_nome || '').toLowerCase().trim();
       const pVendedorEmail = String(p.vendedor_email || p.loja_email || '').toLowerCase().trim();
@@ -111,11 +120,10 @@ export default function Vendedor({
       }
 
       if (pVendedorEmail !== '' && (pVendedorEmail === uEmail || pVendedorEmail.includes(uPrefix))) return true;
-      if (pLojaNome !== '' && (uNome.includes(pLojaNome) || pLojaNome.includes(uNome) || pLojaNome.includes(uPrefix) || uPrefix.includes(pLojaNome.replace(/\s/g, '')))) return true;
 
       return false;
     });
-  }, [todosOsPedidos, minhaLoja, usuarioNomeCompleto, usuarioEmail]);
+  }, [todosOsPedidos, minhaLoja, usuarioEmail, usuarioId]);
 
   const pedidosExibidos = useMemo(() => {
     if (subAbaPedidos === 'Ativos') {
