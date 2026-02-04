@@ -56,7 +56,7 @@ npm run dev
 - Lucide-React (Ícones)
 
 **Back-end:**
-- Node.js
+- ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
 - Express
-- PostgreSQL (via Supabase)
+- ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)
 - whatsapp-web.js (Automação)
