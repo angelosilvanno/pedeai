@@ -1,73 +1,62 @@
-# React + TypeScript + Vite
+# PedeAí - Delivery Profissional
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+O PedeAí é um sistema de delivery completo e profissional, projetado especificamente para atender as dinâmicas de cidades pequenas. O sistema conecta comerciantes locais e clientes de forma ágil, contando com automação de notificações via WhatsApp para manter todos informados sobre o status dos pedidos.
 
-Currently, two official plugins are available:
+## 🔥 Introdução
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Este projeto visa solucionar a carência de plataformas de delivery em regiões menores, oferecendo uma interface intuitiva para três perfis de usuários:
+- **Clientes:** Podem navegar por lojas, gerenciar endereços, montar sacolas e acompanhar pedidos em tempo real.
+- **Vendedores:** Gerenciam seu cardápio, recebem pedidos, alteram status de produção e visualizam métricas de vendas.
+- **Administradores:** Controlam a entrada de novos parceiros, gerenciam cupons de desconto, bloqueiam/desbloqueiam estabelecimentos e acompanham o faturamento global da plataforma.
 
-## React Compiler
+### ⚙️ Pré-requisitos
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Para rodar este projeto, você precisará ter instalado:
+- Node.js (versão 18 ou superior)
+- Gerenciador de pacotes NPM, Yarn ou PNPM
+- Uma conta no Supabase para o banco de dados PostgreSQL
+- Um dispositivo com WhatsApp para a automação de mensagens
 
-## Expanding the ESLint configuration
+### 🔨 Guia de instalação
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Siga o passo a passo abaixo para configurar o ambiente de desenvolvimento:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Clone o repositório:
+```bash
+git clone https://github.com/seu-usuario/pedeai.git
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Entre na pasta do projeto:
+```bash
+cd pedeai
 ```
+
+3. Instale as dependências:
+```bash
+npm install
+```
+
+4. Configure as variáveis de ambiente no arquivo `.env` (baseie-se no `.env.example`):
+```env
+VITE_SUPABASE_URL=sua_url_do_supabase
+VITE_SUPABASE_ANON_KEY=sua_chave_anon_do_supabase
+```
+
+5. Execute o projeto:
+```bash
+npm run dev
+```
+
+## 📦 Tecnologias usadas:
+
+**Front-end:**
+- React 19 (Vite)
+- TypeScript
+- Tailwind CSS
+- Lucide-React (Ícones)
+
+**Back-end:**
+- Node.js
+- Express
+- PostgreSQL (via Supabase)
+- whatsapp-web.js (Automação)
