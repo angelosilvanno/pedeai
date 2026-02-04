@@ -1,4 +1,4 @@
-# PedeAí - Delivery Profissional
+# PedeAí - Sistema de Delivery 
 
 O PedeAí é um sistema de delivery completo feito para facilitar o comércio em cidades pequenas. Ele aproxima os comerciantes dos clientes com uma interface simples e rápida, contando com avisos automáticos pelo WhatsApp para ninguém perder o status do pedido.
 
